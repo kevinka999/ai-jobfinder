@@ -1,0 +1,394 @@
+# Product Spec
+
+## Overview
+
+AI Jobfinder is a single-user MVP application that helps a user find job opportunities that match their resume, import structured job data, generate temporary cover letters, and track application progress.
+
+The application does not scrape job platforms directly. Instead, it generates a deterministic prompt that the user can paste into an external AI agent with browsing/search tools. The user then pastes the returned JSON into this app. The app validates the imported jobs, detects possible duplicates, stores jobs, supports cover-letter generation, and tracks applications.
+
+The MVP is single-user and has no login. The backend still stores `userId` on all collections so multi-user support can be added later.
+
+## Technology Decisions
+
+- Frontend: React, TypeScript, Vite.
+- Backend: NestJS, REST API, MongoDB, Mongoose.
+- Repository layout: same repository with separate `frontend/` and `backend/` directories.
+- No formal monorepo tooling for MVP.
+- No tRPC for MVP.
+- No API version prefix such as `/api/v1`.
+- No authentication for MVP.
+- Backend uses one default user internally.
+- All domain records still include `userId`.
+- AI provider is accessed through an interface contract.
+- OpenAI is the first concrete AI provider implementation.
+- PDF generation is implemented in NestJS first.
+- Generated PDFs are returned directly through the API as `application/pdf`.
+- No S3, cloud file storage, or persistent PDF URLs for MVP.
+
+## Core Principles
+
+- Resume data is user-provided Markdown text.
+- AI is used only for:
+  - extracting resume job-title keywords and technical-skill keywords;
+  - generating cover-letter drafts;
+  - revising cover-letter drafts.
+- AI is not used to generate the scraping prompt.
+- The scraping prompt is deterministic backend text filled with stored user keywords and search filters.
+- The app does not directly scrape LinkedIn, StepStone, Karriere, or Willhaben Jobs.
+- Generated cover-letter drafts and PDFs are helper outputs only and are not stored.
+- Job data is stored so the user can still inspect job descriptions after original postings disappear.
+
+## Source Platforms
+
+The MVP supports hardcoded source platform IDs in both frontend and backend:
+
+```ts
+[
+  { id: "linkedin", label: "LinkedIn" },
+  { id: "stepstone", label: "StepStone" },
+  { id: "karriere", label: "Karriere" },
+  { id: "willhaben", label: "Willhaben Jobs" }
+]
+```
+
+`sourcePlatformId` is stored on imported jobs. It is a string ID, not a display label.
+
+## Page 1: User Profile
+
+The User Profile page lets the user paste their technical resume and experience as Markdown text.
+
+### User Actions
+
+- Paste or edit resume Markdown.
+- Save resume Markdown.
+- View extracted job-title keywords.
+- View extracted technical-skill keywords.
+
+### Save Resume Behavior
+
+When the user saves the resume:
+
+1. Frontend sends the Markdown text to the backend.
+2. Backend calls the AI provider to extract:
+   - `jobTitleKeywords`;
+   - `technicalSkillKeywords`.
+3. If extraction succeeds, backend saves the resume Markdown and replaces the stored generated keywords.
+4. Backend returns the updated profile.
+5. If extraction fails, nothing is saved. The user must retry.
+
+There is no Markdown validation for MVP beyond accepting text from the request.
+
+There is no separate keyword editing or keyword saving feature for MVP. Generated keywords are replaced every time the resume is saved successfully.
+
+The cover-letter template is not editable in the user profile. Cover-letter structure and base instructions are hardcoded in the backend prompt.
+
+## Page 2: Job Search
+
+The Job Search page helps the user prepare and import external AI search results.
+
+### User Inputs
+
+- Source platforms: multi-select from hardcoded options:
+  - LinkedIn;
+  - StepStone;
+  - Karriere;
+  - Willhaben Jobs.
+- Cities: free-text multi-input.
+- Work models: multi-select:
+  - onsite;
+  - hybrid;
+  - remote.
+
+### Generate Prompt Action
+
+The user clicks a button to generate a search prompt.
+
+Backend receives:
+
+- selected `sourcePlatformIds`;
+- selected cities;
+- selected work models.
+
+Backend loads the default user's stored keywords and fills a deterministic prompt template. The prompt instructs the external AI agent to search the selected platforms, locations, work models, job-title keywords, and technical-skill keywords, then return a JSON object with a `jobs` array.
+
+The prompt must request the required import fields and may request optional enrichment fields.
+
+### External AI Result Format
+
+The external AI result must be pasted as a JSON object:
+
+```json
+{
+  "jobs": [
+    {
+      "companyName": "Example GmbH",
+      "title": "Frontend Developer",
+      "applicationUrl": "https://example.com/jobs/123",
+      "description": "Full job description...",
+      "sourcePlatformId": "linkedin",
+      "location": "Vienna",
+      "workModel": "hybrid",
+      "salaryText": "EUR 60,000 to EUR 75,000",
+      "techStack": ["React", "TypeScript", "Node.js"],
+      "matchingScore": 86,
+      "matchingReason": "Strong match for React, TypeScript, Node.js, and frontend experience."
+    }
+  ]
+}
+```
+
+### Import JSON Action
+
+The user pastes JSON into the frontend.
+
+Frontend behavior:
+
+1. Parse the pasted JSON before submission.
+2. If JSON syntax is invalid, show a client-side error.
+3. If JSON is valid, send the parsed object to the backend.
+
+Backend behavior:
+
+1. Strictly validate the object and every `jobs[]` item.
+2. Import valid job rows.
+3. Skip invalid rows and return row-level errors.
+4. Detect duplicates among valid rows.
+5. Create each valid job as `active` or `draft`.
+6. Return an import summary.
+
+There is no duplicate-review modal during import.
+
+### Import Status Behavior
+
+Jobs have only one `status` field:
+
+- `draft`;
+- `active`;
+- `applied`.
+
+If an imported job does not match an existing active or applied job, it is created with `status = "active"`.
+
+If an imported job matches an existing active or applied job by duplicate rules, it is created with `status = "draft"` and stores the existing possible duplicate job ID in:
+
+```ts
+metadata.possibleDuplicatedJobId
+```
+
+## Duplicate Detection
+
+Duplicate detection is user-scoped. If a future second user imports the same job, it creates a separate job record for that user.
+
+Duplicate detection compares new imported jobs only against the current user's existing jobs with:
+
+- `status = "active"`;
+- `status = "applied"`.
+
+Existing draft jobs are ignored during duplicate detection.
+
+An imported job becomes `draft` if either of these deterministic rules matches:
+
+1. normalized `applicationUrl` matches an existing active or applied job;
+2. normalized `companyName` plus normalized `title` matches an existing active or applied job.
+
+No fuzzy matching, duplicate confidence, duplicate reason, or duplicate candidate array is needed for MVP.
+
+## Page 3: Jobs To Apply
+
+The Jobs page is the working area for reviewing imported jobs and applying to active jobs.
+
+It has two main sections:
+
+- Draft jobs table;
+- Active jobs table.
+
+Applied jobs may remain visible as disabled/read-only rows for context, but the Applications page is the main place to manage them.
+
+### Draft Jobs Table
+
+Draft jobs are possible duplicates.
+
+Draft jobs show enough information for the user to decide whether to keep or delete them. The table should also expose the possible duplicated job reference when `metadata.possibleDuplicatedJobId` exists, so the user can compare the imported draft with the existing job.
+
+Draft job actions are intentionally limited:
+
+- Keep;
+- Delete.
+
+Keep behavior:
+
+- updates `job.status` from `draft` to `active`;
+- the job becomes available in the active job workflow.
+
+Delete behavior:
+
+- hard-deletes the draft job.
+
+Draft jobs cannot generate cover letters and cannot be marked as applied.
+
+### Active Jobs Table
+
+Active jobs are real opportunities in the user's job pool.
+
+Active job row fields should include at minimum:
+
+- company name;
+- title;
+- application URL;
+- source platform;
+- location if available;
+- work model if available;
+- matching score if available.
+
+Active job actions:
+
+- open details/edit drawer;
+- generate cover letter;
+- mark as applied.
+
+### Job Details/Edit Drawer
+
+The details drawer preserves job information that may disappear from the source platform later.
+
+It should show and allow editing of job fields such as:
+
+- company name;
+- title;
+- application URL;
+- source platform ID;
+- description;
+- location;
+- work model;
+- salary text;
+- tech stack;
+- matching score;
+- matching reason;
+- posted date;
+- apply deadline;
+- contact info;
+- raw text.
+
+Jobs can be edited from both:
+
+- the Jobs page;
+- the Applications page.
+
+### Generate Cover Letter Flow
+
+Cover-letter generation is only available for jobs with `status = "active"`.
+
+The cover-letter drawer is a wizard.
+
+Step 1: Instructions
+
+- User can optionally provide job-specific instructions, topics, or personal angles.
+- Examples:
+  - mention a specific technology;
+  - emphasize local availability;
+  - adjust tone;
+  - focus on a particular qualification.
+
+Step 2: Read-only draft and revisions
+
+- Backend generates a cover-letter draft using:
+  - hardcoded cover-letter system/template prompt;
+  - user's stored resume Markdown;
+  - job details;
+  - optional user instructions from step 1.
+- The generated draft is read-only.
+- User cannot directly edit draft text.
+- User can provide revision instructions.
+- Backend revises the draft through the AI provider.
+- The user can repeat revision instructions as many times as needed.
+- Example revision instruction:
+  - `Change the word "a" to "b" in sentence X`.
+
+Step 3: PDF generation
+
+- User confirms the current draft.
+- Frontend sends the final draft text to the backend.
+- Backend generates a PDF in NestJS.
+- Backend returns the PDF directly in the API response with `Content-Type: application/pdf`.
+- Frontend downloads the returned PDF blob.
+
+Generated cover-letter drafts and PDFs are not stored.
+
+### Mark As Applied
+
+Mark as applied is only available for jobs with `status = "active"`.
+
+When the user marks a job as applied:
+
+1. Backend sets `job.status = "applied"`.
+2. Backend creates one application record if one does not already exist for that job.
+3. New application status starts as `applied`.
+4. The application `createdAt` timestamp is the applied date.
+5. The job row becomes disabled/read-only in the Jobs page if still displayed.
+
+## Page 4: Applications Tracking
+
+The Applications page tracks jobs after the user has applied.
+
+It displays applications joined with job details.
+
+### Application Table Fields
+
+The table should show:
+
+- company name;
+- job title;
+- application URL;
+- current application status;
+- application created date;
+- last updated date.
+
+### Application Actions
+
+The only primary action is opening the application/job details drawer.
+
+Inside the drawer, the user can:
+
+- view job details;
+- edit job details;
+- edit root-level application notes;
+- change application status;
+- view application status history.
+
+### Application Statuses
+
+Application status starts as:
+
+- `applied`.
+
+It can move to:
+
+- `interviewing`;
+- `technical_test`;
+- `offer`;
+- `rejected`;
+- `closed`.
+
+When status changes:
+
+- `applications.status` is updated;
+- a new status history entry is appended;
+- `updatedAt` is updated.
+
+Status history entries do not store notes. Notes are only stored at the root of the application record.
+
+## Non-Goals For MVP
+
+- No user authentication.
+- No multi-user UI.
+- No direct scraping.
+- No browser automation inside the app.
+- No tRPC.
+- No formal monorepo package/workspace setup.
+- No API version prefix.
+- No cover-letter persistence.
+- No PDF persistence.
+- No S3 or file storage.
+- No keyword editing UI.
+- No editable cover-letter template UI.
+- No background job queue.
+- No fuzzy duplicate matching.
+- No duplicate review modal at import time.
