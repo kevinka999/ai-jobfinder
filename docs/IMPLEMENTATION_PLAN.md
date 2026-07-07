@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This plan sequences the MVP implementation for AI Jobfinder based on the agreed product spec, API contract, and domain model.
+This plan sequences the MVP implementation for AI Jobfinder based on the agreed product spec, [API contract](API_CONTRACT.md), and [domain model](DOMAIN_MODEL.md).
 
 The goal is to build the useful workflow first:
 
@@ -30,6 +30,10 @@ Do not add formal monorepo tooling for MVP.
 
 ## Phase 1: Backend Foundation
 
+- [ ] Phase complete
+
+References: [API contract overview](API_CONTRACT.md#overview), [shared API types](API_CONTRACT.md#shared-types), [domain model overview](DOMAIN_MODEL.md#overview), and [data ownership rules](DOMAIN_MODEL.md#data-ownership-and-isolation).
+
 ### Tasks
 
 - Scaffold NestJS app in `backend/`.
@@ -51,6 +55,10 @@ Do not add formal monorepo tooling for MVP.
 - No `/api/v1` prefix is configured.
 
 ## Phase 2: Domain Schemas
+
+- [ ] Phase complete
+
+References: [Domain model](DOMAIN_MODEL.md) and [shared API types](API_CONTRACT.md#shared-types).
 
 ### Tasks
 
@@ -74,12 +82,16 @@ Do not add formal monorepo tooling for MVP.
 
 ### Acceptance Criteria
 
-- Schemas match `DOMAIN_MODEL.md`.
+- Schemas match [DOMAIN_MODEL.md](DOMAIN_MODEL.md).
 - Jobs support `draft`, `active`, and `applied`.
 - Applications support status history without notes.
 - Generated cover letters are not represented in persistence.
 
 ## Phase 3: AI Provider Abstraction
+
+- [ ] Phase complete
+
+References: [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain), [AI provider contract](API_CONTRACT.md#ai-provider-contract), [user profile API](API_CONTRACT.md#user-profile-api), and [cover letter API](API_CONTRACT.md#cover-letter-api).
 
 ### Tasks
 
@@ -100,6 +112,10 @@ Do not add formal monorepo tooling for MVP.
 
 ## Phase 4: User Profile API
 
+- [ ] Phase complete
+
+References: [User profile API](API_CONTRACT.md#user-profile-api), [User domain](DOMAIN_MODEL.md#user), and [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain).
+
 ### Tasks
 
 - Implement `GET /users/profile`.
@@ -119,6 +135,10 @@ Do not add formal monorepo tooling for MVP.
 
 ## Phase 5: Job Search Prompt API
 
+- [ ] Phase complete
+
+References: [Job search prompt API](API_CONTRACT.md#job-search-prompt-api), [User domain](DOMAIN_MODEL.md#user), [SourcePlatformId](DOMAIN_MODEL.md#sourceplatformid), and [WorkModel](DOMAIN_MODEL.md#workmodel).
+
 ### Tasks
 
 - Implement `POST /job-search/prompt`.
@@ -137,6 +157,10 @@ Do not add formal monorepo tooling for MVP.
 - Prompt instructs external AI to return JSON only.
 
 ## Phase 6: Job Import API
+
+- [ ] Phase complete
+
+References: [Job import API](API_CONTRACT.md#job-import-api), [Job domain](DOMAIN_MODEL.md#job), and [duplicate detection rules](DOMAIN_MODEL.md#duplicate-detection-rules).
 
 ### Tasks
 
@@ -178,6 +202,10 @@ Do not add formal monorepo tooling for MVP.
 
 ## Phase 7: Jobs API
 
+- [ ] Phase complete
+
+References: [Jobs API](API_CONTRACT.md#jobs-api), [Job domain](DOMAIN_MODEL.md#job), [job workflow rules](DOMAIN_MODEL.md#job-workflow-rules), and [Application domain](DOMAIN_MODEL.md#application).
+
 ### Tasks
 
 - Implement `GET /jobs`.
@@ -200,6 +228,10 @@ Do not add formal monorepo tooling for MVP.
 
 ## Phase 8: Applications API
 
+- [ ] Phase complete
+
+References: [Applications API](API_CONTRACT.md#applications-api), [Application domain](DOMAIN_MODEL.md#application), and [application workflow rules](DOMAIN_MODEL.md#application-workflow-rules).
+
 ### Tasks
 
 - Implement `GET /applications`.
@@ -220,6 +252,10 @@ Do not add formal monorepo tooling for MVP.
 - `createdAt` acts as applied date.
 
 ## Phase 9: Cover Letter And PDF API
+
+- [ ] Phase complete
+
+References: [Cover letter API](API_CONTRACT.md#cover-letter-api), [cover letter domain](DOMAIN_MODEL.md#cover-letter-domain), [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain), and [job workflow rules](DOMAIN_MODEL.md#job-workflow-rules).
 
 ### Tasks
 
@@ -245,6 +281,10 @@ Do not add formal monorepo tooling for MVP.
 - No PDF is stored.
 
 ## Phase 10: Frontend Foundation
+
+- [ ] Phase complete
+
+References: [API contract overview](API_CONTRACT.md#overview), [shared API types](API_CONTRACT.md#shared-types), and [data ownership rules](DOMAIN_MODEL.md#data-ownership-and-isolation).
 
 ### Tasks
 
@@ -274,6 +314,10 @@ Do not add formal monorepo tooling for MVP.
 
 ## Phase 11: User Profile Frontend
 
+- [ ] Phase complete
+
+References: [User profile API](API_CONTRACT.md#user-profile-api) and [User domain](DOMAIN_MODEL.md#user).
+
 ### Tasks
 
 - Build resume Markdown textarea.
@@ -290,6 +334,10 @@ Do not add formal monorepo tooling for MVP.
 - Failed save leaves UI clear that nothing changed.
 
 ## Phase 12: Job Search Frontend
+
+- [ ] Phase complete
+
+References: [Job search prompt API](API_CONTRACT.md#job-search-prompt-api), [job import API](API_CONTRACT.md#job-import-api), and [duplicate detection rules](DOMAIN_MODEL.md#duplicate-detection-rules).
 
 ### Tasks
 
@@ -315,6 +363,10 @@ Do not add formal monorepo tooling for MVP.
 
 ## Phase 13: Jobs Frontend
 
+- [ ] Phase complete
+
+References: [Jobs API](API_CONTRACT.md#jobs-api), [cover letter API](API_CONTRACT.md#cover-letter-api), and [job workflow rules](DOMAIN_MODEL.md#job-workflow-rules).
+
 ### Tasks
 
 - Build Draft jobs table.
@@ -339,6 +391,10 @@ Do not add formal monorepo tooling for MVP.
 
 ## Phase 14: Cover Letter Frontend
 
+- [ ] Phase complete
+
+References: [Cover letter API](API_CONTRACT.md#cover-letter-api) and [cover letter domain](DOMAIN_MODEL.md#cover-letter-domain).
+
 ### Tasks
 
 - Build cover-letter wizard drawer.
@@ -358,6 +414,10 @@ Do not add formal monorepo tooling for MVP.
 
 ## Phase 15: Applications Frontend
 
+- [ ] Phase complete
+
+References: [Applications API](API_CONTRACT.md#applications-api), [Jobs API](API_CONTRACT.md#jobs-api), and [Application domain](DOMAIN_MODEL.md#application).
+
 ### Tasks
 
 - Build applications table.
@@ -376,6 +436,10 @@ Do not add formal monorepo tooling for MVP.
 - Job details can be edited from Applications page.
 
 ## Phase 16: Tests And Verification
+
+- [ ] Phase complete
+
+References: [API contract](API_CONTRACT.md) and [domain model](DOMAIN_MODEL.md).
 
 ### Backend Test Focus
 
