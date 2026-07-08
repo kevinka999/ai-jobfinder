@@ -6,6 +6,10 @@ import { ApplicationsController } from './application/use-cases/applications/app
 import { GetApplicationUseCase } from './application/use-cases/applications/get-application.use-case';
 import { ListApplicationsUseCase } from './application/use-cases/applications/list-applications.use-case';
 import { UpdateApplicationUseCase } from './application/use-cases/applications/update-application.use-case';
+import { CoverLettersController } from './application/use-cases/cover-letters/cover-letters.controller';
+import { GenerateCoverLetterDraftUseCase } from './application/use-cases/cover-letters/generate-cover-letter-draft.use-case';
+import { GenerateCoverLetterPdfUseCase } from './application/use-cases/cover-letters/generate-cover-letter-pdf.use-case';
+import { ReviseCoverLetterDraftUseCase } from './application/use-cases/cover-letters/revise-cover-letter-draft.use-case';
 import { GenerateJobSearchPromptUseCase } from './application/use-cases/job-search/generate-job-search-prompt.use-case';
 import { JobSearchController } from './application/use-cases/job-search/job-search.controller';
 import { ApplyJobUseCase } from './application/use-cases/jobs/apply-job.use-case';
@@ -23,6 +27,7 @@ import { UsersController } from './application/use-cases/users/users.controller'
 import { AiModule } from './infrastructure/ai/ai.module';
 import { validateEnvironment } from './infrastructure/config/validate-environment';
 import { DatabaseModule } from './infrastructure/database/database.module';
+import { PdfModule } from './infrastructure/pdf/pdf.module';
 
 @Module({
   imports: [
@@ -32,6 +37,7 @@ import { DatabaseModule } from './infrastructure/database/database.module';
     }),
     AiModule,
     DatabaseModule,
+    PdfModule,
   ],
   controllers: [
     AppController,
@@ -39,6 +45,7 @@ import { DatabaseModule } from './infrastructure/database/database.module';
     JobSearchController,
     JobsController,
     ApplicationsController,
+    CoverLettersController,
   ],
   providers: [
     AppService,
@@ -56,6 +63,9 @@ import { DatabaseModule } from './infrastructure/database/database.module';
     ListApplicationsUseCase,
     GetApplicationUseCase,
     UpdateApplicationUseCase,
+    GenerateCoverLetterDraftUseCase,
+    ReviseCoverLetterDraftUseCase,
+    GenerateCoverLetterPdfUseCase,
   ],
 })
 export class AppModule {}

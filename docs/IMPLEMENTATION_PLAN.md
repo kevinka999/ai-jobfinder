@@ -253,7 +253,7 @@ References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placem
 
 ## Phase 9: Cover Letter And PDF API
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [application ports](../backend/docs/ARCHITECTURE.md#application-ports), [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placement), [Cover letter API](API_CONTRACT.md#cover-letter-api), [cover letter domain](DOMAIN_MODEL.md#cover-letter-domain), [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain), and [job workflow rules](DOMAIN_MODEL.md#job-workflow-rules).
 
