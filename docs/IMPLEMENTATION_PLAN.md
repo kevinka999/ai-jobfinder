@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This plan sequences the MVP implementation for AI Jobfinder based on the agreed product spec, [API contract](API_CONTRACT.md), and [domain model](DOMAIN_MODEL.md).
+This plan sequences the MVP implementation for AI Jobfinder based on the agreed product spec, [API contract](API_CONTRACT.md), [domain model](DOMAIN_MODEL.md), and [backend architecture](../backend/docs/ARCHITECTURE.md).
 
 The goal is to build the useful workflow first:
 
@@ -30,9 +30,9 @@ Do not add formal monorepo tooling for MVP.
 
 ## Phase 1: Backend Foundation
 
-- [ ] Phase complete
+- [x] Phase complete
 
-References: [API contract overview](API_CONTRACT.md#overview), [shared API types](API_CONTRACT.md#shared-types), [domain model overview](DOMAIN_MODEL.md#overview), and [data ownership rules](DOMAIN_MODEL.md#data-ownership-and-isolation).
+References: [backend source shape](../backend/docs/ARCHITECTURE.md#source-shape), [dependency direction](../backend/docs/ARCHITECTURE.md#dependency-direction), [naming rules](../backend/docs/ARCHITECTURE.md#naming), [API contract overview](API_CONTRACT.md#overview), [shared API types](API_CONTRACT.md#shared-types), [domain model overview](DOMAIN_MODEL.md#overview), and [data ownership rules](DOMAIN_MODEL.md#data-ownership-and-isolation).
 
 ### Tasks
 
@@ -58,7 +58,7 @@ References: [API contract overview](API_CONTRACT.md#overview), [shared API types
 
 - [ ] Phase complete
 
-References: [Domain model](DOMAIN_MODEL.md) and [shared API types](API_CONTRACT.md#shared-types).
+References: [backend core rules](../backend/docs/ARCHITECTURE.md#core-rules), [backend source shape](../backend/docs/ARCHITECTURE.md#source-shape), [Domain model](DOMAIN_MODEL.md), and [shared API types](API_CONTRACT.md#shared-types).
 
 ### Tasks
 
@@ -91,7 +91,7 @@ References: [Domain model](DOMAIN_MODEL.md) and [shared API types](API_CONTRACT.
 
 - [ ] Phase complete
 
-References: [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain), [AI provider contract](API_CONTRACT.md#ai-provider-contract), [user profile API](API_CONTRACT.md#user-profile-api), and [cover letter API](API_CONTRACT.md#cover-letter-api).
+References: [dependency injection](../backend/docs/ARCHITECTURE.md#dependency-injection), [application ports](../backend/docs/ARCHITECTURE.md#application-ports), [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain), [AI provider contract](API_CONTRACT.md#ai-provider-contract), [user profile API](API_CONTRACT.md#user-profile-api), and [cover letter API](API_CONTRACT.md#cover-letter-api).
 
 ### Tasks
 
@@ -105,7 +105,7 @@ References: [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain), [AI provid
 
 ### Acceptance Criteria
 
-- Domain services depend on the provider interface, not OpenAI directly.
+- Use cases depend on the provider interface, not OpenAI directly.
 - OpenAI implementation is the only implementation wired for MVP.
 - Keyword extraction returns `jobTitleKeywords` and `technicalSkillKeywords`.
 - Cover-letter methods return `draftMarkdown`.
@@ -114,7 +114,7 @@ References: [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain), [AI provid
 
 - [ ] Phase complete
 
-References: [User profile API](API_CONTRACT.md#user-profile-api), [User domain](DOMAIN_MODEL.md#user), and [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain).
+References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placement), [User profile API](API_CONTRACT.md#user-profile-api), [User domain](DOMAIN_MODEL.md#user), and [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain).
 
 ### Tasks
 
@@ -137,7 +137,7 @@ References: [User profile API](API_CONTRACT.md#user-profile-api), [User domain](
 
 - [ ] Phase complete
 
-References: [Job search prompt API](API_CONTRACT.md#job-search-prompt-api), [User domain](DOMAIN_MODEL.md#user), [SourcePlatformId](DOMAIN_MODEL.md#sourceplatformid), and [WorkModel](DOMAIN_MODEL.md#workmodel).
+References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placement), [Job search prompt API](API_CONTRACT.md#job-search-prompt-api), [User domain](DOMAIN_MODEL.md#user), [SourcePlatformId](DOMAIN_MODEL.md#sourceplatformid), and [WorkModel](DOMAIN_MODEL.md#workmodel).
 
 ### Tasks
 
@@ -160,7 +160,7 @@ References: [Job search prompt API](API_CONTRACT.md#job-search-prompt-api), [Use
 
 - [ ] Phase complete
 
-References: [Job import API](API_CONTRACT.md#job-import-api), [Job domain](DOMAIN_MODEL.md#job), and [duplicate detection rules](DOMAIN_MODEL.md#duplicate-detection-rules).
+References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placement), [Job import API](API_CONTRACT.md#job-import-api), [Job domain](DOMAIN_MODEL.md#job), and [duplicate detection rules](DOMAIN_MODEL.md#duplicate-detection-rules).
 
 ### Tasks
 
@@ -204,7 +204,7 @@ References: [Job import API](API_CONTRACT.md#job-import-api), [Job domain](DOMAI
 
 - [ ] Phase complete
 
-References: [Jobs API](API_CONTRACT.md#jobs-api), [Job domain](DOMAIN_MODEL.md#job), [job workflow rules](DOMAIN_MODEL.md#job-workflow-rules), and [Application domain](DOMAIN_MODEL.md#application).
+References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placement), [Jobs API](API_CONTRACT.md#jobs-api), [Job domain](DOMAIN_MODEL.md#job), [job workflow rules](DOMAIN_MODEL.md#job-workflow-rules), and [Application domain](DOMAIN_MODEL.md#application).
 
 ### Tasks
 
@@ -230,7 +230,7 @@ References: [Jobs API](API_CONTRACT.md#jobs-api), [Job domain](DOMAIN_MODEL.md#j
 
 - [ ] Phase complete
 
-References: [Applications API](API_CONTRACT.md#applications-api), [Application domain](DOMAIN_MODEL.md#application), and [application workflow rules](DOMAIN_MODEL.md#application-workflow-rules).
+References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placement), [Applications API](API_CONTRACT.md#applications-api), [Application domain](DOMAIN_MODEL.md#application), and [application workflow rules](DOMAIN_MODEL.md#application-workflow-rules).
 
 ### Tasks
 
@@ -255,7 +255,7 @@ References: [Applications API](API_CONTRACT.md#applications-api), [Application d
 
 - [ ] Phase complete
 
-References: [Cover letter API](API_CONTRACT.md#cover-letter-api), [cover letter domain](DOMAIN_MODEL.md#cover-letter-domain), [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain), and [job workflow rules](DOMAIN_MODEL.md#job-workflow-rules).
+References: [application ports](../backend/docs/ARCHITECTURE.md#application-ports), [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placement), [Cover letter API](API_CONTRACT.md#cover-letter-api), [cover letter domain](DOMAIN_MODEL.md#cover-letter-domain), [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain), and [job workflow rules](DOMAIN_MODEL.md#job-workflow-rules).
 
 ### Tasks
 
@@ -439,7 +439,7 @@ References: [Applications API](API_CONTRACT.md#applications-api), [Jobs API](API
 
 - [ ] Phase complete
 
-References: [API contract](API_CONTRACT.md) and [domain model](DOMAIN_MODEL.md).
+References: [backend architecture](../backend/docs/ARCHITECTURE.md), [API contract](API_CONTRACT.md), and [domain model](DOMAIN_MODEL.md).
 
 ### Backend Test Focus
 
@@ -468,6 +468,7 @@ References: [API contract](API_CONTRACT.md) and [domain model](DOMAIN_MODEL.md).
 ## Implementation Notes
 
 - Keep DTOs explicit in the backend.
+- Keep backend implementation aligned with [backend architecture](../backend/docs/ARCHITECTURE.md).
 - Do not build auth until the core workflow works.
 - Do not add tRPC.
 - Do not add `/api/v1`.
