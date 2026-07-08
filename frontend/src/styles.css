@@ -305,6 +305,124 @@ th {
   gap: 18px;
 }
 
+.form-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.inline-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.inline-input-row .field > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.removable-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  border: 1px solid #c8d9d4;
+  border-radius: 7px;
+  background: #f4fbf8;
+  color: #155f56;
+  cursor: pointer;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.split-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.section-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-title-row h2,
+.section-stack h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.prompt-box {
+  min-height: 320px;
+  background: #f8fafb;
+  font-family:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 13px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.summary-value {
+  border: 1px solid #d7dde1;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.summary-value strong,
+.summary-value span {
+  display: block;
+}
+
+.summary-value strong {
+  font-size: 22px;
+}
+
+.summary-value span {
+  color: #69747c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.invalid-list {
+  display: grid;
+  gap: 8px;
+}
+
+.invalid-row {
+  border: 1px solid #e4aaaa;
+  border-radius: 8px;
+  background: #fff7f7;
+  padding: 10px;
+}
+
+.invalid-row ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
 .keyword-section h2 {
   margin: 0 0 10px;
   font-size: 15px;
@@ -436,6 +554,11 @@ th {
   }
 
   .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .split-grid,
+  .summary-grid {
     grid-template-columns: 1fr;
   }
 }

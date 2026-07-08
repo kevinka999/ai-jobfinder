@@ -335,7 +335,7 @@ References: [User profile API](API_CONTRACT.md#user-profile-api) and [User domai
 
 ## Phase 12: Job Search Frontend
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [Job search prompt API](API_CONTRACT.md#job-search-prompt-api), [job import API](API_CONTRACT.md#job-import-api), and [duplicate detection rules](DOMAIN_MODEL.md#duplicate-detection-rules).
 
