@@ -228,7 +228,7 @@ References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placem
 
 ## Phase 8: Applications API
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placement), [Applications API](API_CONTRACT.md#applications-api), [Application domain](DOMAIN_MODEL.md#application), and [application workflow rules](DOMAIN_MODEL.md#application-workflow-rules).
 

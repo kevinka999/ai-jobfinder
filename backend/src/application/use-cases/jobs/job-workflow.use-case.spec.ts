@@ -40,7 +40,10 @@ describe('job workflow use cases', () => {
     };
     applicationRepository = {
       create: jest.fn(),
+      findById: jest.fn(),
       findByUserAndJobId: jest.fn(),
+      list: jest.fn(),
+      updateTracking: jest.fn(),
     };
   });
 

@@ -2,6 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ApplicationsController } from './application/use-cases/applications/applications.controller';
+import { GetApplicationUseCase } from './application/use-cases/applications/get-application.use-case';
+import { ListApplicationsUseCase } from './application/use-cases/applications/list-applications.use-case';
+import { UpdateApplicationUseCase } from './application/use-cases/applications/update-application.use-case';
 import { GenerateJobSearchPromptUseCase } from './application/use-cases/job-search/generate-job-search-prompt.use-case';
 import { JobSearchController } from './application/use-cases/job-search/job-search.controller';
 import { ApplyJobUseCase } from './application/use-cases/jobs/apply-job.use-case';
@@ -34,6 +38,7 @@ import { DatabaseModule } from './infrastructure/database/database.module';
     UsersController,
     JobSearchController,
     JobsController,
+    ApplicationsController,
   ],
   providers: [
     AppService,
@@ -48,6 +53,9 @@ import { DatabaseModule } from './infrastructure/database/database.module';
     KeepDraftJobUseCase,
     DeleteDraftJobUseCase,
     ApplyJobUseCase,
+    ListApplicationsUseCase,
+    GetApplicationUseCase,
+    UpdateApplicationUseCase,
   ],
 })
 export class AppModule {}

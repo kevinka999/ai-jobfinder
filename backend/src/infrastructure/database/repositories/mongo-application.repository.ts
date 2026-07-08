@@ -6,6 +6,7 @@ import {
   CreateApplicationInput,
 } from '../../../application/ports/application-repository.port';
 import type { Application as DomainApplication } from '../../../domain/applications/application';
+import type { ApplicationStatus } from '../../../domain/applications/application-status';
 import {
   Application,
   ApplicationDocument,
@@ -34,6 +35,24 @@ export class MongoApplicationRepository implements ApplicationRepository {
     return mapApplicationDocument(application);
   }
 
+  async findById(input: {
+    userId: string;
+    applicationId: string;
+  }): Promise<DomainApplication | null> {
+    if (!Types.ObjectId.isValid(input.applicationId)) {
+      return null;
+    }
+
+    const application = await this.applicationModel
+      .findOne({
+        _id: new Types.ObjectId(input.applicationId),
+        userId: input.userId,
+      })
+      .exec();
+
+    return application ? mapApplicationDocument(application) : null;
+  }
+
   async findByUserAndJobId(input: {
     userId: string;
     jobId: string;
@@ -47,6 +66,75 @@ export class MongoApplicationRepository implements ApplicationRepository {
         userId: input.userId,
         jobId: new Types.ObjectId(input.jobId),
       })
+      .exec();
+
+    return application ? mapApplicationDocument(application) : null;
+  }
+
+  async list(input: {
+    userId: string;
+    status?: ApplicationStatus;
+  }): Promise<DomainApplication[]> {
+    const applications = await this.applicationModel
+      .find({
+        userId: input.userId,
+        ...(input.status ? { status: input.status } : {}),
+      })
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return applications.map((application) =>
+      mapApplicationDocument(application),
+    );
+  }
+
+  async updateTracking(input: {
+    userId: string;
+    applicationId: string;
+    status?: ApplicationStatus;
+    notes?: string;
+    statusChangedAt?: Date;
+  }): Promise<DomainApplication | null> {
+    if (!Types.ObjectId.isValid(input.applicationId)) {
+      return null;
+    }
+
+    const update: {
+      $set?: Record<string, string>;
+      $push?: {
+        statusHistory: {
+          status: ApplicationStatus;
+          changedAt: Date;
+        };
+      };
+    } = {};
+
+    if (input.status !== undefined) {
+      update.$set = { ...(update.$set ?? {}), status: input.status };
+    }
+
+    if (input.notes !== undefined) {
+      update.$set = { ...(update.$set ?? {}), notes: input.notes };
+    }
+
+    if (input.status !== undefined && input.statusChangedAt) {
+      update.$push = {
+        statusHistory: {
+          status: input.status,
+          changedAt: input.statusChangedAt,
+        },
+      };
+    }
+
+    const application = await this.applicationModel
+      .findOneAndUpdate(
+        {
+          _id: new Types.ObjectId(input.applicationId),
+          userId: input.userId,
+        },
+        update,
+        { new: true, runValidators: true },
+      )
       .exec();
 
     return application ? mapApplicationDocument(application) : null;
