@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { USER_REPOSITORY } from '../../application/ports/user-repository.port';
 import { MongoUserRepository } from './repositories/mongo-user.repository';
+import { Application, ApplicationSchema } from './schemas/application.schema';
+import { Job, JobSchema } from './schemas/job.schema';
 import { User, UserSchema } from './schemas/user.schema';
 
 @Module({
@@ -13,7 +15,11 @@ import { User, UserSchema } from './schemas/user.schema';
         uri: configService.getOrThrow<string>('MONGODB_URI'),
       }),
     }),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: Application.name, schema: ApplicationSchema },
+      { name: Job.name, schema: JobSchema },
+      { name: User.name, schema: UserSchema },
+    ]),
   ],
   providers: [
     {

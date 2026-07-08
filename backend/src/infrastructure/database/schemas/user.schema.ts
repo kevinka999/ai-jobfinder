@@ -12,13 +12,13 @@ export type UserDocument = HydratedDocument<User>;
 export class User {
   _id!: string;
 
-  @Prop({ default: '', type: String })
+  @Prop({ default: '', required: true, type: String })
   resumeMarkdown!: string;
 
-  @Prop({ default: [], type: [String] })
+  @Prop({ default: [], required: true, type: [String] })
   jobTitleKeywords!: string[];
 
-  @Prop({ default: [], type: [String] })
+  @Prop({ default: [], required: true, type: [String] })
   technicalSkillKeywords!: string[];
 
   createdAt!: Date;

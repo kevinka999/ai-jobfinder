@@ -56,7 +56,7 @@ References: [backend source shape](../backend/docs/ARCHITECTURE.md#source-shape)
 
 ## Phase 2: Domain Schemas
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [backend core rules](../backend/docs/ARCHITECTURE.md#core-rules), [backend source shape](../backend/docs/ARCHITECTURE.md#source-shape), [Domain model](DOMAIN_MODEL.md), and [shared API types](API_CONTRACT.md#shared-types).
 
