@@ -1,11 +1,13 @@
 import {
   CheckCircle,
+  Download,
   Edit3,
   ExternalLink,
   Mail,
   RefreshCw,
   ShieldCheck,
   Trash2,
+  Wand2,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/Button';
@@ -16,7 +18,7 @@ import { ErrorState } from '../components/ErrorState';
 import { Textarea, TextInput } from '../components/Field';
 import { LoadingState } from '../components/LoadingState';
 import { StatusBadge } from '../components/StatusBadge';
-import { apiRequest } from '../lib/api';
+import { apiBlob, apiRequest } from '../lib/api';
 import {
   ApplicationResponse,
   JobEditableFields,
@@ -447,14 +449,20 @@ function CoverLetterDrawer({
   onClose: () => void;
 }) {
   const [instructions, setInstructions] = useState('');
+  const [revisionInstructions, setRevisionInstructions] = useState('');
   const [draftMarkdown, setDraftMarkdown] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isRevising, setIsRevising] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setInstructions('');
+    setRevisionInstructions('');
     setDraftMarkdown('');
     setError(null);
+    setMessage(null);
   }, [job]);
 
   async function generateDraft() {
@@ -464,6 +472,7 @@ function CoverLetterDrawer({
 
     setIsGenerating(true);
     setError(null);
+    setMessage(null);
 
     try {
       const result = await apiRequest<DraftResponse>('/cover-letters/draft', {
@@ -475,10 +484,66 @@ function CoverLetterDrawer({
       });
 
       setDraftMarkdown(result.draftMarkdown);
+      setRevisionInstructions('');
     } catch (caughtError) {
       setError(getErrorMessage(caughtError));
     } finally {
       setIsGenerating(false);
+    }
+  }
+
+  async function reviseDraft() {
+    if (!job || !draftMarkdown || !revisionInstructions.trim()) {
+      return;
+    }
+
+    setIsRevising(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const result = await apiRequest<DraftResponse>('/cover-letters/revise', {
+        body: JSON.stringify({
+          jobId: job.id,
+          currentDraftMarkdown: draftMarkdown,
+          revisionInstructions,
+        }),
+        method: 'POST',
+      });
+
+      setDraftMarkdown(result.draftMarkdown);
+      setRevisionInstructions('');
+    } catch (caughtError) {
+      setError(getErrorMessage(caughtError));
+    } finally {
+      setIsRevising(false);
+    }
+  }
+
+  async function downloadPdf() {
+    if (!job || !draftMarkdown) {
+      return;
+    }
+
+    setIsDownloading(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const result = await apiBlob('/cover-letters/pdf', {
+        body: JSON.stringify({
+          jobId: job.id,
+          finalDraftMarkdown: draftMarkdown,
+        }),
+        method: 'POST',
+      });
+
+      downloadBlob(result.blob, result.filename);
+      setMessage('PDF downloaded');
+    } catch (caughtError) {
+      setError(getErrorMessage(caughtError));
+    } finally {
+      setIsDownloading(false);
     }
   }
 
@@ -489,6 +554,7 @@ function CoverLetterDrawer({
       title={job ? `Cover Letter - ${job.companyName}` : 'Cover Letter'}
     >
       {error ? <ErrorState message={error} /> : null}
+      {message ? <div className="success-line">{message}</div> : null}
       <div className="drawer-section">
         <Textarea
           label="Instructions"
@@ -510,6 +576,33 @@ function CoverLetterDrawer({
           rows={14}
           value={draftMarkdown}
         />
+        <Textarea
+          label="Revision instructions"
+          onChange={(event) => setRevisionInstructions(event.target.value)}
+          rows={4}
+          value={revisionInstructions}
+        />
+        <div className="drawer-actions">
+          <Button
+            disabled={
+              isRevising ||
+              !draftMarkdown ||
+              revisionInstructions.trim().length === 0
+            }
+            icon={<Wand2 size={16} />}
+            onClick={reviseDraft}
+          >
+            {isRevising ? 'Revising' : 'Revise'}
+          </Button>
+          <Button
+            disabled={isDownloading || !draftMarkdown}
+            icon={<Download size={16} />}
+            onClick={downloadPdf}
+            variant="primary"
+          >
+            {isDownloading ? 'Preparing' : 'Download PDF'}
+          </Button>
+        </div>
       </div>
     </Drawer>
   );
@@ -565,4 +658,16 @@ function getSourceLabel(sourcePlatformId: SourcePlatformId): string {
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unexpected error';
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }

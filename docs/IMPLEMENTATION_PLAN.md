@@ -391,7 +391,7 @@ References: [Jobs API](API_CONTRACT.md#jobs-api), [cover letter API](API_CONTRAC
 
 ## Phase 14: Cover Letter Frontend
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [Cover letter API](API_CONTRACT.md#cover-letter-api) and [cover letter domain](DOMAIN_MODEL.md#cover-letter-domain).
 
