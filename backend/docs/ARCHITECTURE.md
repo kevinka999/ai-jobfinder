@@ -3,6 +3,7 @@
 ## Core Rules
 
 - Controllers are thin HTTP adapters. They validate/map request data and call one use case.
+- Controllers and DTOs live beside their related use case under `application/use-cases/`. They are still presentation-layer files, but colocating them keeps this small project easier to scan and maintain.
 - Use cases own application workflow. They coordinate domain rules, repositories, AI providers, PDF generation, and transactions when needed.
 - Domain code is pure TypeScript. It must not import NestJS, Mongoose, HTTP clients, AI SDKs, or environment config.
 - Infrastructure implements application ports and may import domain types for mapping/persistence. Use cases depend on interfaces/tokens, not concrete MongoDB, OpenAI, HTTP, or PDF classes.
@@ -16,21 +17,21 @@
 Allowed direction:
 
 ```text
-http/controller -> application/use-case -> domain
-                         |
-                         v
-                 application/ports <- infrastructure
-                                      -> domain
+application/use-cases/*/*.controller -> application/use-cases/*/*.use-case -> domain
+                                                       |
+                                                       v
+                                               application/ports <- infrastructure
+                                                                    -> domain
 ```
 
 Allowed dependencies:
 
-- HTTP controllers depend on application use cases.
-- Use cases depend on domain code and application ports.
+- Controllers and DTOs depend on NestJS, validation libraries, and their colocated use cases.
+- Use case classes depend on domain code and application ports.
 - Infrastructure depends on application ports and may depend on domain code for mapping.
 - Nest modules wire concrete infrastructure providers to application tokens.
 
-Forbidden: domain importing framework/infrastructure code, use cases importing concrete providers, repositories calling use cases, or providers owning workflow decisions.
+Forbidden: domain importing framework/infrastructure code, `*.use-case.ts` files importing HTTP controllers/DTOs or concrete providers, repositories calling use cases, or providers owning workflow decisions.
 
 ## Source Shape
 
@@ -47,6 +48,14 @@ src/
   application/
     ports/
     use-cases/
+      users/
+        users.controller.ts
+        user-profile-response.dto.ts
+        resolve-default-user.use-case.ts
+      jobs/
+        jobs.controller.ts
+        import-jobs.dto.ts
+        import-jobs.use-case.ts
 
   infrastructure/
     ai/
@@ -54,20 +63,18 @@ src/
     pdf/
     config/
 
-  http/
-    controllers/
-    dtos/
-
   app.module.ts
 ```
 
 Layer meaning:
 
 - `domain/` contains entities, value objects, and pure domain services.
-- `application/use-cases/` contains one class per workflow, such as `SaveResumeUseCase` or `ImportJobsUseCase`.
+- `application/use-cases/` contains feature/workflow folders. Each folder may contain the controller, DTOs, and one or more use cases for that workflow area.
+- `*.controller.ts` and `*.dto.ts` files are presentation-layer files even though they are colocated with the use case.
+- `*.use-case.ts` files own application workflow, such as `SaveResumeUseCase` or `ImportJobsUseCase`, and must not depend on controllers or DTOs.
 - `application/ports/` contains contracts used by use cases.
 - `infrastructure/` contains Nest providers that implement ports.
-- `http/` contains controllers and DTOs. DTOs should match `API_CONTRACT.md`.
+- DTOs should match `API_CONTRACT.md`.
 
 If a feature is tiny, avoid creating empty folders just to satisfy this sketch.
 
@@ -114,6 +121,7 @@ Do not create ports for deterministic logic that is internal to the app. For exa
 - Every file name must be kebab-case, including controllers, DTOs, modules, schemas, repositories, use cases, and tests.
 - Files: `import-jobs.use-case.ts`, `mongo-job.repository.ts`, `job-response.dto.ts`, `jobs.controller.ts`.
 - Suffixes: `UseCase` for workflows, `Repository` for persistence, `Provider` for AI/third-party implementations.
+- Place controller and DTO files in the same `application/use-cases/<feature>/` folder as the related use case files.
 
 ## When To Update This File
 
