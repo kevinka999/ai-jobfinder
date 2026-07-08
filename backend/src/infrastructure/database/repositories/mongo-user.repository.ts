@@ -42,4 +42,38 @@ export class MongoUserRepository implements UserRepository {
       updatedAt: user.updatedAt,
     };
   }
+
+  async saveResumeWithKeywords(input: {
+    resumeMarkdown: string;
+    jobTitleKeywords: string[];
+    technicalSkillKeywords: string[];
+  }): Promise<UserProfile> {
+    const user = await this.userModel
+      .findByIdAndUpdate(
+        DEFAULT_USER_ID,
+        {
+          $set: {
+            resumeMarkdown: input.resumeMarkdown,
+            jobTitleKeywords: input.jobTitleKeywords,
+            technicalSkillKeywords: input.technicalSkillKeywords,
+          },
+        },
+        {
+          new: true,
+          setDefaultsOnInsert: true,
+          upsert: true,
+        },
+      )
+      .orFail()
+      .exec();
+
+    return {
+      id: user._id,
+      resumeMarkdown: user.resumeMarkdown,
+      jobTitleKeywords: user.jobTitleKeywords,
+      technicalSkillKeywords: user.technicalSkillKeywords,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
 }

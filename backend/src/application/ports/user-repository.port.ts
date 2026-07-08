@@ -4,4 +4,9 @@ export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
 
 export interface UserRepository {
   resolveDefaultUser(): Promise<UserProfile>;
+  saveResumeWithKeywords(input: {
+    resumeMarkdown: string;
+    jobTitleKeywords: string[];
+    technicalSkillKeywords: string[];
+  }): Promise<UserProfile>;
 }

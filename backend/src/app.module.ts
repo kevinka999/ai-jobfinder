@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ResolveDefaultUserUseCase } from './application/use-cases/users/resolve-default-user.use-case';
+import { SaveResumeUseCase } from './application/use-cases/users/save-resume.use-case';
 import { UsersController } from './application/use-cases/users/users.controller';
 import { AiModule } from './infrastructure/ai/ai.module';
 import { validateEnvironment } from './infrastructure/config/validate-environment';
@@ -18,6 +19,6 @@ import { DatabaseModule } from './infrastructure/database/database.module';
     DatabaseModule,
   ],
   controllers: [AppController, UsersController],
-  providers: [AppService, ResolveDefaultUserUseCase],
+  providers: [AppService, ResolveDefaultUserUseCase, SaveResumeUseCase],
 })
 export class AppModule {}
