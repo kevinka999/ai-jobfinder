@@ -89,7 +89,7 @@ References: [backend core rules](../backend/docs/ARCHITECTURE.md#core-rules), [b
 
 ## Phase 3: AI Provider Abstraction
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [dependency injection](../backend/docs/ARCHITECTURE.md#dependency-injection), [application ports](../backend/docs/ARCHITECTURE.md#application-ports), [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain), [AI provider contract](API_CONTRACT.md#ai-provider-contract), [user profile API](API_CONTRACT.md#user-profile-api), and [cover letter API](API_CONTRACT.md#cover-letter-api).
 
@@ -112,7 +112,7 @@ References: [dependency injection](../backend/docs/ARCHITECTURE.md#dependency-in
 
 ## Phase 4: User Profile API
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placement), [User profile API](API_CONTRACT.md#user-profile-api), [User domain](DOMAIN_MODEL.md#user), and [AI provider domain](DOMAIN_MODEL.md#ai-provider-domain).
 
@@ -135,7 +135,7 @@ References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placem
 
 ## Phase 5: Job Search Prompt API
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placement), [Job search prompt API](API_CONTRACT.md#job-search-prompt-api), [User domain](DOMAIN_MODEL.md#user), [SourcePlatformId](DOMAIN_MODEL.md#sourceplatformid), and [WorkModel](DOMAIN_MODEL.md#workmodel).
 
