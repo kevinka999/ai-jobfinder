@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ResolveDefaultUserUseCase } from './application/use-cases/users/resolve-default-user.use-case';
 import { UsersController } from './application/use-cases/users/users.controller';
+import { AiModule } from './infrastructure/ai/ai.module';
 import { validateEnvironment } from './infrastructure/config/validate-environment';
 import { DatabaseModule } from './infrastructure/database/database.module';
 
@@ -13,6 +14,7 @@ import { DatabaseModule } from './infrastructure/database/database.module';
       isGlobal: true,
       validate: validateEnvironment,
     }),
+    AiModule,
     DatabaseModule,
   ],
   controllers: [AppController, UsersController],

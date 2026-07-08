@@ -1,5 +1,7 @@
 type EnvironmentConfig = {
   MONGODB_URI?: string;
+  OPENAI_API_KEY?: string;
+  OPENAI_MODEL?: string;
   PORT?: string;
 };
 
@@ -14,6 +16,8 @@ export function validateEnvironment(
 
   return {
     MONGODB_URI: config.MONGODB_URI ?? 'mongodb://localhost:27017/ai-jobfinder',
+    OPENAI_API_KEY: config.OPENAI_API_KEY ?? '',
+    OPENAI_MODEL: config.OPENAI_MODEL ?? 'gpt-4.1-mini',
     PORT: port,
   };
 }
