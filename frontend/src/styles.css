@@ -284,6 +284,51 @@ th {
   color: #9e2c2c;
 }
 
+.success-line {
+  border: 1px solid #a9d0c8;
+  border-radius: 8px;
+  background: #f1fbf8;
+  padding: 12px 14px;
+  color: #16665c;
+  font-weight: 700;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.side-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.keyword-section h2 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.keyword-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.keyword-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border: 1px solid #c8d9d4;
+  border-radius: 7px;
+  background: #f4fbf8;
+  color: #155f56;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -388,5 +433,9 @@ th {
 
   .main-surface {
     padding: 16px;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
   }
 }

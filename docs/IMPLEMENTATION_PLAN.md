@@ -314,7 +314,7 @@ References: [API contract overview](API_CONTRACT.md#overview), [shared API types
 
 ## Phase 11: User Profile Frontend
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [User profile API](API_CONTRACT.md#user-profile-api) and [User domain](DOMAIN_MODEL.md#user).
 
