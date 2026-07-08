@@ -133,7 +133,7 @@ export class MongoApplicationRepository implements ApplicationRepository {
           userId: input.userId,
         },
         update,
-        { new: true, runValidators: true },
+        { returnDocument: 'after', runValidators: true },
       )
       .exec();
 

@@ -1,4 +1,7 @@
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import type { Job } from '../../../domain/jobs/job';
 import type { UserProfile } from '../../../domain/users/user-profile';
 import type { AiProvider } from '../../ports/ai-provider.port';
@@ -143,6 +146,22 @@ describe('cover letter use cases', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
 
     expect(aiProvider.generateCoverLetterDraft).not.toHaveBeenCalled();
+  });
+
+  it('returns a clean server error when draft generation fails', async () => {
+    aiProvider.generateCoverLetterDraft.mockRejectedValue(
+      new Error('missing key'),
+    );
+
+    await expect(
+      new GenerateCoverLetterDraftUseCase(
+        userRepository,
+        jobRepository,
+        aiProvider,
+      ).execute({
+        jobId: '64a000000000000000000001',
+      }),
+    ).rejects.toBeInstanceOf(InternalServerErrorException);
   });
 });
 

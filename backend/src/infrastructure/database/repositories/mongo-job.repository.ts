@@ -131,7 +131,7 @@ export class MongoJobRepository implements JobRepository {
             ...buildNormalizedFieldUpdates(input.fields),
           },
         },
-        { new: true, runValidators: true },
+        { returnDocument: 'after', runValidators: true },
       )
       .exec();
 
@@ -154,7 +154,7 @@ export class MongoJobRepository implements JobRepository {
           userId: input.userId,
         },
         { $set: { status: input.status } },
-        { new: true, runValidators: true },
+        { returnDocument: 'after', runValidators: true },
       )
       .exec();
 

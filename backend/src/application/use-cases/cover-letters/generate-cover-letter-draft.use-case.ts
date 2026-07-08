@@ -1,4 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { AI_PROVIDER } from '../../ports/ai-provider.port';
 import type { AiProvider } from '../../ports/ai-provider.port';
 import { JOB_REPOSITORY } from '../../ports/job-repository.port';
@@ -31,10 +35,16 @@ export class GenerateCoverLetterDraftUseCase {
       jobId: input.jobId,
     });
 
-    return this.aiProvider.generateCoverLetterDraft({
-      resumeMarkdown: user.resumeMarkdown,
-      job: toCoverLetterJobInput(job),
-      userInstructions: input.userInstructions,
-    });
+    try {
+      return await this.aiProvider.generateCoverLetterDraft({
+        resumeMarkdown: user.resumeMarkdown,
+        job: toCoverLetterJobInput(job),
+        userInstructions: input.userInstructions,
+      });
+    } catch {
+      throw new InternalServerErrorException(
+        'Could not generate the cover-letter draft.',
+      );
+    }
   }
 }

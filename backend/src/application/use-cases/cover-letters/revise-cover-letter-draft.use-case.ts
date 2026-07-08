@@ -1,4 +1,8 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { AI_PROVIDER } from '../../ports/ai-provider.port';
 import type { AiProvider } from '../../ports/ai-provider.port';
 import { JOB_REPOSITORY } from '../../ports/job-repository.port';
@@ -32,11 +36,17 @@ export class ReviseCoverLetterDraftUseCase {
       jobId: input.jobId,
     });
 
-    return this.aiProvider.reviseCoverLetterDraft({
-      resumeMarkdown: user.resumeMarkdown,
-      job: toCoverLetterRevisionJobInput(job),
-      currentDraftMarkdown: input.currentDraftMarkdown,
-      revisionInstructions: input.revisionInstructions,
-    });
+    try {
+      return await this.aiProvider.reviseCoverLetterDraft({
+        resumeMarkdown: user.resumeMarkdown,
+        job: toCoverLetterRevisionJobInput(job),
+        currentDraftMarkdown: input.currentDraftMarkdown,
+        revisionInstructions: input.revisionInstructions,
+      });
+    } catch {
+      throw new InternalServerErrorException(
+        'Could not revise the cover-letter draft.',
+      );
+    }
   }
 }

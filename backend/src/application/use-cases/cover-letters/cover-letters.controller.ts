@@ -1,4 +1,4 @@
-import { Body, Controller, Header, Post, Res } from '@nestjs/common';
+import { Body, Controller, Post, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import {
   CoverLetterDraftResponseDto,
@@ -40,7 +40,6 @@ export class CoverLettersController {
   }
 
   @Post('pdf')
-  @Header('Content-Type', 'application/pdf')
   async generatePdf(
     @Body() request: GenerateCoverLetterPdfRequestDto,
     @Res() response: Response,
@@ -50,6 +49,7 @@ export class CoverLettersController {
       finalDraftMarkdown: request.finalDraftMarkdown,
     });
 
+    response.setHeader('Content-Type', 'application/pdf');
     response.setHeader(
       'Content-Disposition',
       `attachment; filename="${result.filename}"`,

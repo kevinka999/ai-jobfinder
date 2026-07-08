@@ -25,7 +25,7 @@ export class MongoUserRepository implements UserRepository {
           },
         },
         {
-          new: true,
+          returnDocument: 'after',
           setDefaultsOnInsert: true,
           upsert: true,
         },
@@ -59,7 +59,7 @@ export class MongoUserRepository implements UserRepository {
           },
         },
         {
-          new: true,
+          returnDocument: 'after',
           setDefaultsOnInsert: true,
           upsert: true,
         },
