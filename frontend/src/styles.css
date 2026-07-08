@@ -466,11 +466,37 @@ th {
   margin-top: 12px;
 }
 
+.drawer-section h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
 .drawer-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 16px;
+}
+
+.history-list {
+  display: grid;
+  gap: 8px;
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #d7dde1;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.history-row span:last-child {
+  color: #68737b;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .keyword-section h2 {

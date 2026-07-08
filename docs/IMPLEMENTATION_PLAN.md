@@ -414,7 +414,7 @@ References: [Cover letter API](API_CONTRACT.md#cover-letter-api) and [cover lett
 
 ## Phase 15: Applications Frontend
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [Applications API](API_CONTRACT.md#applications-api), [Jobs API](API_CONTRACT.md#jobs-api), and [Application domain](DOMAIN_MODEL.md#application).
 
