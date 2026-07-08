@@ -202,7 +202,7 @@ References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placem
 
 ## Phase 7: Jobs API
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placement), [Jobs API](API_CONTRACT.md#jobs-api), [Job domain](DOMAIN_MODEL.md#job), [job workflow rules](DOMAIN_MODEL.md#job-workflow-rules), and [Application domain](DOMAIN_MODEL.md#application).
 

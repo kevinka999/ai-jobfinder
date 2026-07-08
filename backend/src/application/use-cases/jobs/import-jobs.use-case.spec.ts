@@ -29,7 +29,12 @@ describe('ImportJobsUseCase', () => {
     };
     jobRepository = {
       create: jest.fn(),
+      delete: jest.fn(),
       findDuplicateCandidate: jest.fn(),
+      findById: jest.fn(),
+      list: jest.fn(),
+      updateEditableFields: jest.fn(),
+      updateStatus: jest.fn(),
     };
     useCase = new ImportJobsUseCase(userRepository, jobRepository);
   });

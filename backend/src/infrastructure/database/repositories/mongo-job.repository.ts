@@ -3,9 +3,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import {
   CreateJobInput,
+  JobEditableFields,
   JobRepository,
 } from '../../../application/ports/job-repository.port';
 import type { Job as DomainJob } from '../../../domain/jobs/job';
+import type { JobStatus } from '../../../domain/jobs/job-status';
 import {
   normalizeApplicationUrl,
   normalizeComparableText,
@@ -34,6 +36,21 @@ export class MongoJobRepository implements JobRepository {
     return mapJobDocument(job);
   }
 
+  async delete(input: { userId: string; jobId: string }): Promise<boolean> {
+    if (!Types.ObjectId.isValid(input.jobId)) {
+      return false;
+    }
+
+    const result = await this.jobModel
+      .deleteOne({
+        _id: new Types.ObjectId(input.jobId),
+        userId: input.userId,
+      })
+      .exec();
+
+    return result.deletedCount === 1;
+  }
+
   async findDuplicateCandidate(input: {
     userId: string;
     applicationUrl: string;
@@ -59,6 +76,112 @@ export class MongoJobRepository implements JobRepository {
 
     return job ? mapJobDocument(job) : null;
   }
+
+  async findById(input: {
+    userId: string;
+    jobId: string;
+  }): Promise<DomainJob | null> {
+    if (!Types.ObjectId.isValid(input.jobId)) {
+      return null;
+    }
+
+    const job = await this.jobModel
+      .findOne({
+        _id: new Types.ObjectId(input.jobId),
+        userId: input.userId,
+      })
+      .exec();
+
+    return job ? mapJobDocument(job) : null;
+  }
+
+  async list(input: {
+    userId: string;
+    status?: JobStatus;
+  }): Promise<DomainJob[]> {
+    const jobs = await this.jobModel
+      .find({
+        userId: input.userId,
+        ...(input.status ? { status: input.status } : {}),
+      })
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return jobs.map((job) => mapJobDocument(job));
+  }
+
+  async updateEditableFields(input: {
+    userId: string;
+    jobId: string;
+    fields: Partial<JobEditableFields>;
+  }): Promise<DomainJob | null> {
+    if (!Types.ObjectId.isValid(input.jobId)) {
+      return null;
+    }
+
+    const job = await this.jobModel
+      .findOneAndUpdate(
+        {
+          _id: new Types.ObjectId(input.jobId),
+          userId: input.userId,
+        },
+        {
+          $set: {
+            ...input.fields,
+            ...buildNormalizedFieldUpdates(input.fields),
+          },
+        },
+        { new: true, runValidators: true },
+      )
+      .exec();
+
+    return job ? mapJobDocument(job) : null;
+  }
+
+  async updateStatus(input: {
+    userId: string;
+    jobId: string;
+    status: JobStatus;
+  }): Promise<DomainJob | null> {
+    if (!Types.ObjectId.isValid(input.jobId)) {
+      return null;
+    }
+
+    const job = await this.jobModel
+      .findOneAndUpdate(
+        {
+          _id: new Types.ObjectId(input.jobId),
+          userId: input.userId,
+        },
+        { $set: { status: input.status } },
+        { new: true, runValidators: true },
+      )
+      .exec();
+
+    return job ? mapJobDocument(job) : null;
+  }
+}
+
+function buildNormalizedFieldUpdates(
+  fields: Partial<JobEditableFields>,
+): Record<string, string> {
+  const updates: Record<string, string> = {};
+
+  if (fields.applicationUrl !== undefined) {
+    updates.normalizedApplicationUrl = normalizeApplicationUrl(
+      fields.applicationUrl,
+    );
+  }
+
+  if (fields.companyName !== undefined) {
+    updates.normalizedCompanyName = normalizeComparableText(fields.companyName);
+  }
+
+  if (fields.title !== undefined) {
+    updates.normalizedTitle = normalizeComparableText(fields.title);
+  }
+
+  return updates;
 }
 
 function mapJobDocument(job: JobDocument): DomainJob {

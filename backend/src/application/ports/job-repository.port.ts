@@ -31,10 +31,23 @@ export type CreateJobInput = JobEditableFields & {
 
 export interface JobRepository {
   create(input: CreateJobInput): Promise<Job>;
+  delete(input: { userId: string; jobId: string }): Promise<boolean>;
   findDuplicateCandidate(input: {
     userId: string;
     applicationUrl: string;
     companyName: string;
     title: string;
+  }): Promise<Job | null>;
+  findById(input: { userId: string; jobId: string }): Promise<Job | null>;
+  list(input: { userId: string; status?: JobStatus }): Promise<Job[]>;
+  updateEditableFields(input: {
+    userId: string;
+    jobId: string;
+    fields: Partial<JobEditableFields>;
+  }): Promise<Job | null>;
+  updateStatus(input: {
+    userId: string;
+    jobId: string;
+    status: JobStatus;
   }): Promise<Job | null>;
 }

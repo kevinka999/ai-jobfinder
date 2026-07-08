@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { APPLICATION_REPOSITORY } from '../../application/ports/application-repository.port';
 import { JOB_REPOSITORY } from '../../application/ports/job-repository.port';
 import { USER_REPOSITORY } from '../../application/ports/user-repository.port';
+import { MongoApplicationRepository } from './repositories/mongo-application.repository';
 import { MongoJobRepository } from './repositories/mongo-job.repository';
 import { MongoUserRepository } from './repositories/mongo-user.repository';
 import { Application, ApplicationSchema } from './schemas/application.schema';
@@ -25,6 +27,10 @@ import { User, UserSchema } from './schemas/user.schema';
   ],
   providers: [
     {
+      provide: APPLICATION_REPOSITORY,
+      useClass: MongoApplicationRepository,
+    },
+    {
       provide: JOB_REPOSITORY,
       useClass: MongoJobRepository,
     },
@@ -33,6 +39,6 @@ import { User, UserSchema } from './schemas/user.schema';
       useClass: MongoUserRepository,
     },
   ],
-  exports: [JOB_REPOSITORY, USER_REPOSITORY],
+  exports: [APPLICATION_REPOSITORY, JOB_REPOSITORY, USER_REPOSITORY],
 })
 export class DatabaseModule {}
