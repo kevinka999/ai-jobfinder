@@ -363,7 +363,7 @@ References: [Job search prompt API](API_CONTRACT.md#job-search-prompt-api), [job
 
 ## Phase 13: Jobs Frontend
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [Jobs API](API_CONTRACT.md#jobs-api), [cover letter API](API_CONTRACT.md#cover-letter-api), and [job workflow rules](DOMAIN_MODEL.md#job-workflow-rules).
 

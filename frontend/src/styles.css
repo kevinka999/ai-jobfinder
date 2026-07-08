@@ -423,6 +423,56 @@ th {
   padding-left: 18px;
 }
 
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.job-title-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.job-title-cell strong,
+.job-title-cell span,
+.job-title-cell a {
+  display: block;
+}
+
+.job-title-cell span {
+  color: #68737b;
+  font-size: 13px;
+}
+
+.job-title-cell a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.edit-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.drawer-section {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.drawer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
 .keyword-section h2 {
   margin: 0 0 10px;
   font-size: 15px;
@@ -558,7 +608,8 @@ th {
   }
 
   .split-grid,
-  .summary-grid {
+  .summary-grid,
+  .edit-form-grid {
     grid-template-columns: 1fr;
   }
 }
