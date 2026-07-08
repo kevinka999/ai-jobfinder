@@ -158,7 +158,7 @@ References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placem
 
 ## Phase 6: Job Import API
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placement), [Job import API](API_CONTRACT.md#job-import-api), [Job domain](DOMAIN_MODEL.md#job), and [duplicate detection rules](DOMAIN_MODEL.md#duplicate-detection-rules).
 
