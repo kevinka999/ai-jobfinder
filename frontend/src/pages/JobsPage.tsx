@@ -119,16 +119,19 @@ export function JobsPage() {
       header: 'Actions',
       render: (job) => (
         <div className="table-actions">
-          <Button icon={<ShieldCheck size={15} />} onClick={() => keepDraft(job)}>
-            Keep
-          </Button>
           <Button
+            aria-label="Keep draft"
+            className="icon-button"
+            icon={<ShieldCheck size={15} />}
+            onClick={() => keepDraft(job)}
+          />
+          <Button
+            aria-label="Delete draft"
+            className="icon-button"
             icon={<Trash2 size={15} />}
             onClick={() => deleteDraft(job)}
             variant="danger"
-          >
-            Delete
-          </Button>
+          />
         </div>
       ),
     },
@@ -159,19 +162,25 @@ export function JobsPage() {
       header: 'Actions',
       render: (job) => (
         <div className="table-actions">
-          <Button icon={<Edit3 size={15} />} onClick={() => setEditingJob(job)}>
-            Edit
-          </Button>
-          <Button icon={<Mail size={15} />} onClick={() => setCoverLetterJob(job)}>
-            Letter
-          </Button>
           <Button
+            aria-label="Edit job"
+            className="icon-button"
+            icon={<Edit3 size={15} />}
+            onClick={() => setEditingJob(job)}
+          />
+          <Button
+            aria-label="Create cover letter"
+            className="icon-button"
+            icon={<Mail size={15} />}
+            onClick={() => setCoverLetterJob(job)}
+          />
+          <Button
+            aria-label="Mark as applied"
+            className="icon-button"
             icon={<CheckCircle size={15} />}
             onClick={() => markApplied(job)}
             variant="primary"
-          >
-            Applied
-          </Button>
+          />
         </div>
       ),
     },
@@ -189,9 +198,14 @@ export function JobsPage() {
     {
       header: 'Actions',
       render: (job) => (
-        <Button icon={<Edit3 size={15} />} onClick={() => setEditingJob(job)}>
-          Edit
-        </Button>
+        <div className="table-actions">
+          <Button
+            aria-label="Edit job"
+            className="icon-button"
+            icon={<Edit3 size={15} />}
+            onClick={() => setEditingJob(job)}
+          />
+        </div>
       ),
     },
   ];

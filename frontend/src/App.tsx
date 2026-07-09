@@ -21,7 +21,6 @@ export function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-block">
-          <span className="brand-mark">AJ</span>
           <div>
             <strong>AI Jobfinder</strong>
             <span>Private workspace</span>

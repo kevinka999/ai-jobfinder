@@ -64,19 +64,6 @@ a {
   font-size: 12px;
 }
 
-.brand-mark {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border: 1px solid #b9cbc7;
-  border-radius: 8px;
-  background: #dcefeb;
-  color: #135f56;
-  font-size: 13px;
-  font-weight: 700;
-}
-
 .nav-list {
   display: grid;
   gap: 4px;
@@ -425,8 +412,9 @@ th {
 
 .table-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
+  white-space: nowrap;
 }
 
 .job-title-cell {

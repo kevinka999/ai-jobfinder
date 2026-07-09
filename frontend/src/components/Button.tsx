@@ -20,7 +20,7 @@ export function Button({
       {...props}
     >
       {icon}
-      <span>{children}</span>
+      {children ? <span>{children}</span> : null}
     </button>
   );
 }
