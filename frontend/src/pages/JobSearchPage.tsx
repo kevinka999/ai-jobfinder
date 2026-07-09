@@ -1,8 +1,8 @@
 import { Clipboard, Plus, Search, Upload, X } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../components/Button';
-import { ErrorState } from '../components/ErrorState';
 import { MultiSelect } from '../components/MultiSelect';
+import { useToast } from '../components/toastContext';
 import {
   fieldClassName,
   fieldLabelClassName,
@@ -17,7 +17,6 @@ import {
   panelSectionClass,
   panelTitleClass,
   panelTitleRowClass,
-  successLineClass,
 } from '../design/classes';
 import { apiRequest } from '../lib/api';
 import {
@@ -49,8 +48,7 @@ export function JobSearchPage() {
   );
   const [isGenerating, setIsGenerating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const toast = useToast();
 
   function addCity() {
     const nextCity = cityInput.trim();
@@ -66,8 +64,6 @@ export function JobSearchPage() {
 
   async function generatePrompt() {
     setIsGenerating(true);
-    setError(null);
-    setCopyMessage(null);
 
     try {
       const result = await apiRequest<PromptResponse>('/job-search/prompt', {
@@ -80,21 +76,25 @@ export function JobSearchPage() {
       });
 
       setPrompt(result.prompt);
+      toast.success('Prompt generated');
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError));
+      toast.error(`Could not generate prompt: ${getErrorMessage(caughtError)}`);
     } finally {
       setIsGenerating(false);
     }
   }
 
   async function copyPrompt() {
-    await navigator.clipboard.writeText(prompt);
-    setCopyMessage('Prompt copied');
+    try {
+      await navigator.clipboard.writeText(prompt);
+      toast.success('Prompt copied');
+    } catch (caughtError) {
+      toast.error(`Could not copy prompt: ${getErrorMessage(caughtError)}`);
+    }
   }
 
   async function importJobs() {
     setIsImporting(true);
-    setError(null);
     setImportResult(null);
 
     let parsedJson: unknown;
@@ -102,7 +102,7 @@ export function JobSearchPage() {
     try {
       parsedJson = JSON.parse(jsonText);
     } catch {
-      setError('Pasted JSON is not valid.');
+      toast.error('Pasted JSON is not valid.');
       setIsImporting(false);
       return;
     }
@@ -114,8 +114,9 @@ export function JobSearchPage() {
       });
 
       setImportResult(result);
+      toast.success('Jobs imported');
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError));
+      toast.error(`Could not import jobs: ${getErrorMessage(caughtError)}`);
     } finally {
       setIsImporting(false);
     }
@@ -139,8 +140,6 @@ export function JobSearchPage() {
           {isGenerating ? 'Generating' : 'Generate Prompt'}
         </Button>
       </div>
-      {error ? <ErrorState message={error} /> : null}
-      {copyMessage ? <div className={successLineClass}>{copyMessage}</div> : null}
       <div className={`${panelClass} grid gap-section`}>
         <MultiSelect
           label="Source platforms"

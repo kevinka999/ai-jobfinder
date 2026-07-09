@@ -1,10 +1,11 @@
 import { Edit3, RefreshCw, Save } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '../components/Button';
 import { DataTable } from '../components/DataTable';
 import type { DataTableColumn } from '../components/DataTable';
 import { Drawer } from '../components/Drawer';
 import { ErrorState } from '../components/ErrorState';
+import { useToast } from '../components/toastContext';
 import {
   fieldClassName,
   fieldLabelClassName,
@@ -24,7 +25,6 @@ import {
   pageStackClass,
   pageTitleClass,
   panelSectionClass,
-  successLineClass,
   tableActionsClass,
 } from '../design/classes';
 import { apiRequest } from '../lib/api';
@@ -51,23 +51,29 @@ export function ApplicationsPage() {
     useState<ApplicationResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const toast = useToast();
 
-  useEffect(() => {
-    void loadApplications();
-  }, []);
-
-  async function loadApplications() {
+  const loadApplications = useCallback(async (showSuccessToast = false) => {
     setIsLoading(true);
     setError(null);
 
     try {
       setApplications(await apiRequest<ApplicationResponse[]>('/applications'));
+      if (showSuccessToast) {
+        toast.success('Applications refreshed');
+      }
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError));
+      const message = getErrorMessage(caughtError);
+      setError(message);
+      toast.error(`Could not load applications: ${message}`);
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [toast]);
+
+  useEffect(() => {
+    void loadApplications();
+  }, [loadApplications]);
 
   const columns: Array<DataTableColumn<ApplicationResponse>> = [
     {
@@ -109,7 +115,10 @@ export function ApplicationsPage() {
     <section className={pageStackClass}>
       <div className={pageHeadingClass}>
         <h1 className={pageTitleClass}>Applications</h1>
-        <Button icon={<RefreshCw size={16} />} onClick={loadApplications}>
+        <Button
+          icon={<RefreshCw size={16} />}
+          onClick={() => loadApplications(true)}
+        >
           Refresh
         </Button>
       </div>
@@ -149,17 +158,14 @@ function ApplicationDrawer({
   const [jobForm, setJobForm] = useState<JobFormState>(() =>
     toJobFormState(application?.job),
   );
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
   const [isSavingApplication, setIsSavingApplication] = useState(false);
   const [isSavingJob, setIsSavingJob] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     setStatus(application?.status ?? 'applied');
     setNotes(application?.notes ?? '');
     setJobForm(toJobFormState(application?.job));
-    setError(null);
-    setMessage(null);
   }, [application]);
 
   async function saveApplication() {
@@ -168,8 +174,6 @@ function ApplicationDrawer({
     }
 
     setIsSavingApplication(true);
-    setError(null);
-    setMessage(null);
 
     try {
       const updatedApplication = await apiRequest<ApplicationResponse>(
@@ -180,10 +184,10 @@ function ApplicationDrawer({
         },
       );
 
-      setMessage('Application saved');
       await onSaved(updatedApplication);
+      toast.success('Application saved');
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError));
+      toast.error(`Could not save application: ${getErrorMessage(caughtError)}`);
     } finally {
       setIsSavingApplication(false);
     }
@@ -195,8 +199,6 @@ function ApplicationDrawer({
     }
 
     setIsSavingJob(true);
-    setError(null);
-    setMessage(null);
 
     try {
       await apiRequest<JobResponse>(`/jobs/${application.job.id}`, {
@@ -207,10 +209,10 @@ function ApplicationDrawer({
         `/applications/${application.id}`,
       );
 
-      setMessage('Job saved');
       await onSaved(updatedApplication);
+      toast.success('Job saved');
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError));
+      toast.error(`Could not save job: ${getErrorMessage(caughtError)}`);
     } finally {
       setIsSavingJob(false);
     }
@@ -222,8 +224,6 @@ function ApplicationDrawer({
       open={!!application}
       title={application?.job?.companyName ?? 'Application'}
     >
-      {error ? <ErrorState message={error} /> : null}
-      {message ? <div className={successLineClass}>{message}</div> : null}
       <div className={drawerSectionClass}>
         <h3 className="m-0 text-[15px] font-bold text-app-text">Application</h3>
         <label className={fieldClassName}>

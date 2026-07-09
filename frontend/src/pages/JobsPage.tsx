@@ -9,7 +9,7 @@ import {
   Trash2,
   Wand2,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/Button';
 import { DataTable } from '../components/DataTable';
 import type { DataTableColumn } from '../components/DataTable';
@@ -25,6 +25,7 @@ import {
 import { JobTitleCell } from '../components/JobTitleCell';
 import { LoadingState } from '../components/LoadingState';
 import { Stepper } from '../components/Stepper';
+import { useToast } from '../components/toastContext';
 import {
   drawerActionsClass,
   drawerSectionClass,
@@ -34,7 +35,6 @@ import {
   pageTitleClass,
   panelSectionClass,
   panelTitleClass,
-  successLineClass,
   tableActionsClass,
 } from '../design/classes';
 import { apiBlob, apiRequest } from '../lib/api';
@@ -71,6 +71,7 @@ export function JobsPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingJob, setEditingJob] = useState<JobResponse | null>(null);
   const [coverLetterJob, setCoverLetterJob] = useState<JobResponse | null>(null);
+  const toast = useToast();
 
   const draftJobs = useMemo(
     () => jobs.filter((job) => job.status === 'draft'),
@@ -81,51 +82,60 @@ export function JobsPage() {
     [jobs],
   );
 
-  useEffect(() => {
-    void loadJobs();
-  }, []);
-
-  async function loadJobs() {
+  const loadJobs = useCallback(async (showSuccessToast = false) => {
     setIsLoading(true);
     setError(null);
 
     try {
       setJobs(await apiRequest<JobResponse[]>('/jobs'));
+      if (showSuccessToast) {
+        toast.success('Jobs refreshed');
+      }
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError));
+      const message = getErrorMessage(caughtError);
+      setError(message);
+      toast.error(`Could not load jobs: ${message}`);
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [toast]);
+
+  useEffect(() => {
+    void loadJobs();
+  }, [loadJobs]);
 
   async function keepDraft(job: JobResponse) {
-    await mutateJob(() =>
-      apiRequest<JobResponse>(`/jobs/${job.id}/keep`, { method: 'POST' }),
+    await mutateJob(
+      () => apiRequest<JobResponse>(`/jobs/${job.id}/keep`, { method: 'POST' }),
+      'Draft kept',
     );
   }
 
   async function deleteDraft(job: JobResponse) {
-    await mutateJob(() =>
-      apiRequest<{ deleted: true }>(`/jobs/${job.id}`, { method: 'DELETE' }),
+    await mutateJob(
+      () =>
+        apiRequest<{ deleted: true }>(`/jobs/${job.id}`, { method: 'DELETE' }),
+      'Draft deleted',
     );
   }
 
   async function markApplied(job: JobResponse) {
-    await mutateJob(() =>
-      apiRequest<ApplicationResponse>(`/jobs/${job.id}/apply`, {
-        method: 'POST',
-      }),
+    await mutateJob(
+      () =>
+        apiRequest<ApplicationResponse>(`/jobs/${job.id}/apply`, {
+          method: 'POST',
+        }),
+      'Application created',
     );
   }
 
-  async function mutateJob(action: () => Promise<unknown>) {
-    setError(null);
-
+  async function mutateJob(action: () => Promise<unknown>, successMessage: string) {
     try {
       await action();
+      toast.success(successMessage);
       await loadJobs();
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError));
+      toast.error(`Could not update job: ${getErrorMessage(caughtError)}`);
     }
   }
 
@@ -208,7 +218,7 @@ export function JobsPage() {
     <section className={pageStackClass}>
       <div className={pageHeadingClass}>
         <h1 className={pageTitleClass}>Jobs</h1>
-        <Button icon={<RefreshCw size={16} />} onClick={loadJobs}>
+        <Button icon={<RefreshCw size={16} />} onClick={() => loadJobs(true)}>
           Refresh
         </Button>
       </div>
@@ -258,12 +268,11 @@ function JobEditDrawer({
   onSaved: () => Promise<void>;
 }) {
   const [form, setForm] = useState<JobFormState>(() => toJobFormState(job));
-  const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     setForm(toJobFormState(job));
-    setError(null);
   }, [job]);
 
   async function saveJob() {
@@ -272,7 +281,6 @@ function JobEditDrawer({
     }
 
     setIsSaving(true);
-    setError(null);
 
     try {
       await apiRequest<JobResponse>(`/jobs/${job.id}`, {
@@ -280,8 +288,9 @@ function JobEditDrawer({
         method: 'PATCH',
       });
       await onSaved();
+      toast.success('Job saved');
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError));
+      toast.error(`Could not save job: ${getErrorMessage(caughtError)}`);
     } finally {
       setIsSaving(false);
     }
@@ -289,7 +298,6 @@ function JobEditDrawer({
 
   return (
     <Drawer onClose={onClose} open={!!job} title="Job Details">
-      {error ? <ErrorState message={error} /> : null}
       <div className={editFormGridClass}>
         <TextInput
           label="Company"
@@ -443,16 +451,13 @@ function CoverLetterDrawer({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRevising, setIsRevising] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     setCurrentStep(0);
     setInstructions('');
     setRevisionInstructions('');
     setDraftMarkdown('');
-    setError(null);
-    setMessage(null);
   }, [job]);
 
   async function generateDraft() {
@@ -461,8 +466,6 @@ function CoverLetterDrawer({
     }
 
     setIsGenerating(true);
-    setError(null);
-    setMessage(null);
 
     try {
       const result = await apiRequest<DraftResponse>('/cover-letters/draft', {
@@ -476,8 +479,11 @@ function CoverLetterDrawer({
       setDraftMarkdown(result.draftMarkdown);
       setRevisionInstructions('');
       setCurrentStep(1);
+      toast.success('Cover letter draft generated');
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError));
+      toast.error(
+        `Could not generate cover letter draft: ${getErrorMessage(caughtError)}`,
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -489,8 +495,6 @@ function CoverLetterDrawer({
     }
 
     setIsRevising(true);
-    setError(null);
-    setMessage(null);
 
     try {
       const result = await apiRequest<DraftResponse>('/cover-letters/revise', {
@@ -504,8 +508,9 @@ function CoverLetterDrawer({
 
       setDraftMarkdown(result.draftMarkdown);
       setRevisionInstructions('');
+      toast.success('Draft revised');
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError));
+      toast.error(`Could not revise draft: ${getErrorMessage(caughtError)}`);
     } finally {
       setIsRevising(false);
     }
@@ -517,8 +522,6 @@ function CoverLetterDrawer({
     }
 
     setIsDownloading(true);
-    setError(null);
-    setMessage(null);
 
     try {
       const result = await apiBlob('/cover-letters/pdf', {
@@ -530,9 +533,9 @@ function CoverLetterDrawer({
       });
 
       downloadBlob(result.blob, toCoverLetterPdfFilename(job.companyName));
-      setMessage('PDF downloaded');
+      toast.success('PDF downloaded');
     } catch (caughtError) {
-      setError(getErrorMessage(caughtError));
+      toast.error(`Could not download PDF: ${getErrorMessage(caughtError)}`);
     } finally {
       setIsDownloading(false);
     }
@@ -546,8 +549,6 @@ function CoverLetterDrawer({
     >
       <div className="grid gap-cluster">
         <Stepper currentStep={currentStep} steps={COVER_LETTER_STEPS} />
-        {error ? <ErrorState message={error} /> : null}
-        {message ? <div className={successLineClass}>{message}</div> : null}
       </div>
       {currentStep === 0 ? (
         <div className={drawerSectionClass}>

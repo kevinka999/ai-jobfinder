@@ -17,9 +17,6 @@ export const panelTitleRowClass =
 
 export const panelTitleClass = 'm-0 text-base font-bold text-app-text';
 
-export const successLineClass =
-  'rounded-panel border border-brand-200 bg-brand-50 px-3.5 py-3 font-bold text-brand-700';
-
 export const tableActionsClass = 'flex flex-nowrap gap-inline whitespace-nowrap';
 
 export const drawerSectionClass = 'mt-3 grid gap-cluster';

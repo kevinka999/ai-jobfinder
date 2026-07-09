@@ -4,12 +4,12 @@ import { Button } from '../components/Button';
 import { ErrorState } from '../components/ErrorState';
 import { LoadingState } from '../components/LoadingState';
 import { Textarea } from '../components/Field';
+import { useToast } from '../components/toastContext';
 import {
   pageHeadingClass,
   pageStackClass,
   pageTitleClass,
   panelClass,
-  successLineClass,
 } from '../design/classes';
 import { apiRequest } from '../lib/api';
 import type { UserProfileResponse } from '../lib/types';
@@ -20,7 +20,7 @@ export function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     let ignore = false;
@@ -39,7 +39,9 @@ export function ProfilePage() {
         }
       } catch (caughtError) {
         if (!ignore) {
-          setError(getErrorMessage(caughtError));
+          const message = getErrorMessage(caughtError);
+          setError(message);
+          toast.error(`Could not load profile: ${message}`);
         }
       } finally {
         if (!ignore) {
@@ -53,12 +55,10 @@ export function ProfilePage() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [toast]);
 
   async function saveResume() {
     setIsSaving(true);
-    setError(null);
-    setSaveMessage(null);
 
     try {
       const nextProfile = await apiRequest<UserProfileResponse>(
@@ -71,9 +71,11 @@ export function ProfilePage() {
 
       setProfile(nextProfile);
       setResumeMarkdown(nextProfile.resumeMarkdown);
-      setSaveMessage('Resume saved');
+      toast.success('Resume saved');
     } catch (caughtError) {
-      setError(`${getErrorMessage(caughtError)} The previous profile is unchanged.`);
+      toast.error(
+        `${getErrorMessage(caughtError)} The previous profile is unchanged.`,
+      );
     } finally {
       setIsSaving(false);
     }
@@ -94,7 +96,6 @@ export function ProfilePage() {
       </div>
       {isLoading ? <LoadingState label="Loading profile" /> : null}
       {error ? <ErrorState message={error} /> : null}
-      {saveMessage ? <div className={successLineClass}>{saveMessage}</div> : null}
       <div className="grid grid-cols-1 items-start gap-section md:grid-cols-[minmax(0,1fr)_320px]">
         <div className={panelClass}>
           <Textarea
