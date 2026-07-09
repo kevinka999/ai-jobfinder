@@ -2,6 +2,7 @@ import {
   CheckCircle,
   Download,
   Edit3,
+  LoaderCircle,
   Mail,
   RefreshCw,
   ShieldCheck,
@@ -23,6 +24,7 @@ import {
 } from '../components/Field';
 import { JobTitleCell } from '../components/JobTitleCell';
 import { LoadingState } from '../components/LoadingState';
+import { Stepper } from '../components/Stepper';
 import {
   drawerActionsClass,
   drawerSectionClass,
@@ -54,6 +56,14 @@ type JobFormState = Omit<JobEditableFields, 'techStack' | 'matchingScore'> & {
 type DraftResponse = {
   draftMarkdown: string;
 };
+
+const COVER_LETTER_STEPS = [
+  { id: 'instructions', label: 'Instructions' },
+  { id: 'draft', label: 'Draft' },
+  { id: 'pdf', label: 'PDF' },
+];
+
+type CoverLetterStep = 0 | 1 | 2;
 
 export function JobsPage() {
   const [jobs, setJobs] = useState<JobResponse[]>([]);
@@ -426,6 +436,7 @@ function CoverLetterDrawer({
   job: JobResponse | null;
   onClose: () => void;
 }) {
+  const [currentStep, setCurrentStep] = useState<CoverLetterStep>(0);
   const [instructions, setInstructions] = useState('');
   const [revisionInstructions, setRevisionInstructions] = useState('');
   const [draftMarkdown, setDraftMarkdown] = useState('');
@@ -436,6 +447,7 @@ function CoverLetterDrawer({
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
+    setCurrentStep(0);
     setInstructions('');
     setRevisionInstructions('');
     setDraftMarkdown('');
@@ -463,6 +475,7 @@ function CoverLetterDrawer({
 
       setDraftMarkdown(result.draftMarkdown);
       setRevisionInstructions('');
+      setCurrentStep(1);
     } catch (caughtError) {
       setError(getErrorMessage(caughtError));
     } finally {
@@ -516,7 +529,7 @@ function CoverLetterDrawer({
         method: 'POST',
       });
 
-      downloadBlob(result.blob, result.filename);
+      downloadBlob(result.blob, toCoverLetterPdfFilename(job.companyName));
       setMessage('PDF downloaded');
     } catch (caughtError) {
       setError(getErrorMessage(caughtError));
@@ -531,58 +544,123 @@ function CoverLetterDrawer({
       open={!!job}
       title={job ? `Cover Letter - ${job.companyName}` : 'Cover Letter'}
     >
-      {error ? <ErrorState message={error} /> : null}
-      {message ? <div className={successLineClass}>{message}</div> : null}
-      <div className={drawerSectionClass}>
-        <Textarea
-          label="Instructions"
-          onChange={(event) => setInstructions(event.target.value)}
-          rows={4}
-          value={instructions}
-        />
-        <Button
-          disabled={isGenerating}
-          icon={<Mail size={16} />}
-          onClick={generateDraft}
-          variant="primary"
-        >
-          {isGenerating ? 'Generating' : 'Generate Draft'}
-        </Button>
-        <Textarea
-          label="Draft"
-          readOnly
-          rows={14}
-          value={draftMarkdown}
-        />
-        <Textarea
-          label="Revision instructions"
-          onChange={(event) => setRevisionInstructions(event.target.value)}
-          rows={4}
-          value={revisionInstructions}
-        />
-        <div className={drawerActionsClass}>
-          <Button
-            disabled={
-              isRevising ||
-              !draftMarkdown ||
-              revisionInstructions.trim().length === 0
-            }
-            icon={<Wand2 size={16} />}
-            onClick={reviseDraft}
-          >
-            {isRevising ? 'Revising' : 'Revise'}
-          </Button>
-          <Button
-            disabled={isDownloading || !draftMarkdown}
-            icon={<Download size={16} />}
-            onClick={downloadPdf}
-            variant="primary"
-          >
-            {isDownloading ? 'Preparing' : 'Download PDF'}
-          </Button>
-        </div>
+      <div className="grid gap-cluster">
+        <Stepper currentStep={currentStep} steps={COVER_LETTER_STEPS} />
+        {error ? <ErrorState message={error} /> : null}
+        {message ? <div className={successLineClass}>{message}</div> : null}
       </div>
+      {currentStep === 0 ? (
+        <div className={drawerSectionClass}>
+          <p className="m-0 rounded-panel border border-app-border bg-app-surface-muted px-3.5 py-3 text-sm leading-6 text-app-text-soft">
+            These notes guide the first draft: tone, personal angles,
+            technologies to emphasize, or details the job description does not
+            make obvious.
+          </p>
+          <Textarea
+            label="Instructions"
+            onChange={(event) => setInstructions(event.target.value)}
+            rows={8}
+            value={instructions}
+          />
+          {isGenerating ? <InlineLoading label="Generating first draft" /> : null}
+          <div className={drawerActionsClass}>
+            <Button disabled={isGenerating} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              disabled={isGenerating}
+              icon={<Mail size={16} />}
+              onClick={generateDraft}
+              variant="primary"
+            >
+              {isGenerating ? 'Generating' : 'Generate Draft'}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+      {currentStep === 1 ? (
+        <div className={drawerSectionClass}>
+          <Textarea
+            label="Draft"
+            readOnly
+            rows={16}
+            value={draftMarkdown}
+          />
+          <Textarea
+            label="Follow-up instructions"
+            onChange={(event) => setRevisionInstructions(event.target.value)}
+            rows={5}
+            value={revisionInstructions}
+          />
+          {isRevising ? <InlineLoading label="Revising draft" /> : null}
+          <div className={drawerActionsClass}>
+            <Button
+              disabled={isRevising}
+              onClick={() => setCurrentStep(0)}
+            >
+              Back
+            </Button>
+            <Button
+              disabled={
+                isRevising ||
+                !draftMarkdown ||
+                revisionInstructions.trim().length === 0
+              }
+              icon={<Wand2 size={16} />}
+              onClick={reviseDraft}
+            >
+              {isRevising ? 'Revising' : 'Revise'}
+            </Button>
+            <Button
+              disabled={isRevising || !draftMarkdown}
+              onClick={() => setCurrentStep(2)}
+              variant="primary"
+            >
+              Continue
+            </Button>
+          </div>
+        </div>
+      ) : null}
+      {currentStep === 2 ? (
+        <div className={drawerSectionClass}>
+          <Textarea
+            label="Final draft"
+            readOnly
+            rows={16}
+            value={draftMarkdown}
+          />
+          {isDownloading ? <InlineLoading label="Preparing PDF" /> : null}
+          <div className={drawerActionsClass}>
+            <Button
+              disabled={isDownloading}
+              onClick={() => setCurrentStep(1)}
+            >
+              Back
+            </Button>
+            <Button
+              disabled={isDownloading || !draftMarkdown}
+              icon={<Download size={16} />}
+              onClick={downloadPdf}
+              variant="primary"
+            >
+              {isDownloading ? 'Preparing' : 'Generate PDF'}
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </Drawer>
+  );
+}
+
+function InlineLoading({ label }: { label: string }) {
+  return (
+    <div
+      aria-live="polite"
+      className="inline-flex items-center gap-inline text-sm font-semibold text-brand-700"
+    >
+      <LoaderCircle aria-hidden="true" className="animate-spin" size={16} />
+      <span>{label}</span>
+    </div>
   );
 }
 
@@ -648,4 +726,10 @@ function downloadBlob(blob: Blob, filename: string) {
   anchor.click();
   anchor.remove();
   URL.revokeObjectURL(url);
+}
+
+function toCoverLetterPdfFilename(companyName: string) {
+  const safeCompanyName = companyName.trim().replace(/[/:\\]/g, '-');
+
+  return `${safeCompanyName}-cover-letter.pdf`;
 }
