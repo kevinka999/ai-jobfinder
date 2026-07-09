@@ -13,6 +13,7 @@ describe('GenerateJobSearchPromptUseCase', () => {
   beforeEach(() => {
     userRepository = {
       resolveDefaultUser: jest.fn(),
+      saveCoverLetterInstructionTemplate: jest.fn(),
       saveResumeWithKeywords: jest.fn(),
     };
 
@@ -23,6 +24,7 @@ describe('GenerateJobSearchPromptUseCase', () => {
     const profile: UserProfile = {
       id: 'default-user',
       resumeMarkdown: '# Resume',
+      coverLetterInstructionTemplate: '',
       jobTitleKeywords: ['Frontend Developer', 'Full Stack Developer'],
       technicalSkillKeywords: ['React', 'TypeScript', 'NestJS'],
       createdAt: now,

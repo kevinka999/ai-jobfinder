@@ -16,12 +16,13 @@ Every persisted record includes `userId`, even though MVP has only one default i
 
 ## User
 
-The user document stores the user's resume Markdown and generated keyword data.
+The user document stores the user's resume Markdown, reusable cover-letter instruction prefill, and generated keyword data.
 
 ```ts
 type User = {
   _id: string;
   resumeMarkdown: string;
+  coverLetterInstructionTemplate: string;
   jobTitleKeywords: string[];
   technicalSkillKeywords: string[];
   createdAt: Date;
@@ -38,6 +39,10 @@ MongoDB document ID. This is also the `userId` referenced by jobs and applicatio
 `resumeMarkdown`
 
 Raw Markdown text pasted by the user. The app does not validate Markdown structure in MVP.
+
+`coverLetterInstructionTemplate`
+
+Reusable instruction text used to prefill step one of the cover-letter generator drawer. It can be edited freely for each generation and is saved separately from the resume and generated keywords.
 
 `jobTitleKeywords`
 
@@ -73,8 +78,9 @@ Standard timestamps.
 - No login or authentication.
 - Saving a resume must also successfully extract keywords.
 - If keyword extraction fails, the user document is not changed.
+- Saving the cover-letter instruction template does not extract keywords or modify the resume.
 - There is no manual keyword editing UI for MVP.
-- There is no stored cover-letter template on the user document.
+- There is no stored cover-letter structure/template on the user document.
 
 ## Job
 
@@ -412,7 +418,7 @@ There is no stored generated draft.
 
 There is no stored generated PDF.
 
-There is no user-editable cover-letter template in the database.
+There is no user-editable cover-letter structure/template in the database.
 
 The cover-letter base structure/template is hardcoded in the backend prompt.
 

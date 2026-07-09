@@ -44,6 +44,7 @@ import {
   JobResponse,
   SOURCE_PLATFORMS,
   SourcePlatformId,
+  UserProfileResponse,
   WORK_MODEL_OPTIONS,
   WorkModel,
 } from '../lib/types';
@@ -481,17 +482,56 @@ function CoverLetterDrawer({
   const [instructions, setInstructions] = useState('');
   const [revisionInstructions, setRevisionInstructions] = useState('');
   const [draftMarkdown, setDraftMarkdown] = useState('');
+  const [isLoadingInstructionTemplate, setIsLoadingInstructionTemplate] =
+    useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRevising, setIsRevising] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
+    let ignore = false;
+
     setCurrentStep(0);
     setInstructions('');
     setRevisionInstructions('');
     setDraftMarkdown('');
-  }, [job]);
+
+    if (!job) {
+      setIsLoadingInstructionTemplate(false);
+      return;
+    }
+
+    async function loadInstructionTemplate() {
+      setIsLoadingInstructionTemplate(true);
+
+      try {
+        const profile =
+          await apiRequest<UserProfileResponse>('/users/profile');
+
+        if (!ignore) {
+          setInstructions(profile.coverLetterInstructionTemplate);
+        }
+      } catch (caughtError) {
+        if (!ignore) {
+          setInstructions('');
+          toast.error(
+            `Could not load instruction template: ${getErrorMessage(caughtError)}`,
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoadingInstructionTemplate(false);
+        }
+      }
+    }
+
+    void loadInstructionTemplate();
+
+    return () => {
+      ignore = true;
+    };
+  }, [job, toast]);
 
   async function generateDraft() {
     if (!job) {
@@ -591,18 +631,25 @@ function CoverLetterDrawer({
             make obvious.
           </p>
           <Textarea
+            disabled={isLoadingInstructionTemplate}
             label="Instructions"
             onChange={(event) => setInstructions(event.target.value)}
             rows={8}
             value={instructions}
           />
+          {isLoadingInstructionTemplate ? (
+            <InlineLoading label="Loading saved instructions" />
+          ) : null}
           {isGenerating ? <InlineLoading label="Generating first draft" /> : null}
           <div className={drawerActionsClass}>
-            <Button disabled={isGenerating} onClick={onClose}>
+            <Button
+              disabled={isGenerating || isLoadingInstructionTemplate}
+              onClick={onClose}
+            >
               Cancel
             </Button>
             <Button
-              disabled={isGenerating}
+              disabled={isGenerating || isLoadingInstructionTemplate}
               icon={<Mail size={16} />}
               isLoading={isGenerating}
               onClick={generateDraft}

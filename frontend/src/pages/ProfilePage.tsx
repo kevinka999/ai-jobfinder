@@ -17,8 +17,14 @@ import type { UserProfileResponse } from '../lib/types';
 export function ProfilePage() {
   const [profile, setProfile] = useState<UserProfileResponse | null>(null);
   const [resumeMarkdown, setResumeMarkdown] = useState('');
+  const [
+    coverLetterInstructionTemplate,
+    setCoverLetterInstructionTemplate,
+  ] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingResume, setIsSavingResume] = useState(false);
+  const [isSavingInstructionTemplate, setIsSavingInstructionTemplate] =
+    useState(false);
   const [error, setError] = useState<string | null>(null);
   const toast = useToast();
 
@@ -36,6 +42,9 @@ export function ProfilePage() {
         if (!ignore) {
           setProfile(nextProfile);
           setResumeMarkdown(nextProfile.resumeMarkdown);
+          setCoverLetterInstructionTemplate(
+            nextProfile.coverLetterInstructionTemplate,
+          );
         }
       } catch (caughtError) {
         if (!ignore) {
@@ -58,7 +67,7 @@ export function ProfilePage() {
   }, [toast]);
 
   async function saveResume() {
-    setIsSaving(true);
+    setIsSavingResume(true);
 
     try {
       const nextProfile = await apiRequest<UserProfileResponse>(
@@ -77,7 +86,33 @@ export function ProfilePage() {
         `${getErrorMessage(caughtError)} The previous profile is unchanged.`,
       );
     } finally {
-      setIsSaving(false);
+      setIsSavingResume(false);
+    }
+  }
+
+  async function saveCoverLetterInstructionTemplate() {
+    setIsSavingInstructionTemplate(true);
+
+    try {
+      const nextProfile = await apiRequest<UserProfileResponse>(
+        '/users/profile/cover-letter-instruction-template',
+        {
+          body: JSON.stringify({ coverLetterInstructionTemplate }),
+          method: 'POST',
+        },
+      );
+
+      setProfile(nextProfile);
+      setCoverLetterInstructionTemplate(
+        nextProfile.coverLetterInstructionTemplate,
+      );
+      toast.success('Instruction template saved');
+    } catch (caughtError) {
+      toast.error(
+        `Could not save instruction template: ${getErrorMessage(caughtError)}`,
+      );
+    } finally {
+      setIsSavingInstructionTemplate(false);
     }
   }
 
@@ -86,26 +121,50 @@ export function ProfilePage() {
       <div className={pageHeadingClass}>
         <h1 className={pageTitleClass}>User Profile</h1>
         <Button
-          disabled={isLoading || isSaving}
+          disabled={isLoading || isSavingResume}
           icon={<Save size={16} />}
-          isLoading={isSaving}
+          isLoading={isSavingResume}
           onClick={saveResume}
           variant="primary"
         >
-          Save
+          Save Resume
         </Button>
       </div>
       {isLoading ? <LoadingState label="Loading profile" /> : null}
       {error ? <ErrorState message={error} /> : null}
       <div className="grid grid-cols-1 items-start gap-section md:grid-cols-[minmax(0,1fr)_320px]">
-        <div className={panelClass}>
-          <Textarea
-            label="Resume Markdown"
-            onChange={(event) => setResumeMarkdown(event.target.value)}
-            placeholder="# Resume"
-            rows={22}
-            value={resumeMarkdown}
-          />
+        <div className="grid gap-section">
+          <div className={panelClass}>
+            <Textarea
+              label="Resume Markdown"
+              onChange={(event) => setResumeMarkdown(event.target.value)}
+              placeholder="# Resume"
+              rows={22}
+              value={resumeMarkdown}
+            />
+          </div>
+          <div className={panelClass}>
+            <Textarea
+              label="Cover-letter instruction template"
+              onChange={(event) =>
+                setCoverLetterInstructionTemplate(event.target.value)
+              }
+              placeholder="Keep it concise, focus on..."
+              rows={7}
+              value={coverLetterInstructionTemplate}
+            />
+            <div className="mt-section flex justify-end">
+              <Button
+                disabled={isLoading || isSavingInstructionTemplate}
+                icon={<Save size={16} />}
+                isLoading={isSavingInstructionTemplate}
+                onClick={saveCoverLetterInstructionTemplate}
+                variant="primary"
+              >
+                Save Instructions
+              </Button>
+            </div>
+          </div>
         </div>
         <aside className={`${panelClass} grid gap-[18px]`}>
           <KeywordSection

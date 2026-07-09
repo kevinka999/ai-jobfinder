@@ -19,6 +19,7 @@ export class MongoUserRepository implements UserRepository {
         {
           $setOnInsert: {
             _id: DEFAULT_USER_ID,
+            coverLetterInstructionTemplate: '',
             jobTitleKeywords: [],
             resumeMarkdown: '',
             technicalSkillKeywords: [],
@@ -33,14 +34,7 @@ export class MongoUserRepository implements UserRepository {
       .orFail()
       .exec();
 
-    return {
-      id: user._id,
-      resumeMarkdown: user.resumeMarkdown,
-      jobTitleKeywords: user.jobTitleKeywords,
-      technicalSkillKeywords: user.technicalSkillKeywords,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
+    return toUserProfile(user);
   }
 
   async saveResumeWithKeywords(input: {
@@ -67,13 +61,42 @@ export class MongoUserRepository implements UserRepository {
       .orFail()
       .exec();
 
-    return {
-      id: user._id,
-      resumeMarkdown: user.resumeMarkdown,
-      jobTitleKeywords: user.jobTitleKeywords,
-      technicalSkillKeywords: user.technicalSkillKeywords,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
+    return toUserProfile(user);
   }
+
+  async saveCoverLetterInstructionTemplate(input: {
+    coverLetterInstructionTemplate: string;
+  }): Promise<UserProfile> {
+    const user = await this.userModel
+      .findByIdAndUpdate(
+        DEFAULT_USER_ID,
+        {
+          $set: {
+            coverLetterInstructionTemplate:
+              input.coverLetterInstructionTemplate,
+          },
+        },
+        {
+          returnDocument: 'after',
+          setDefaultsOnInsert: true,
+          upsert: true,
+        },
+      )
+      .orFail()
+      .exec();
+
+    return toUserProfile(user);
+  }
+}
+
+function toUserProfile(user: UserDocument): UserProfile {
+  return {
+    id: user._id,
+    resumeMarkdown: user.resumeMarkdown,
+    coverLetterInstructionTemplate: user.coverLetterInstructionTemplate ?? '',
+    jobTitleKeywords: user.jobTitleKeywords,
+    technicalSkillKeywords: user.technicalSkillKeywords,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
 }

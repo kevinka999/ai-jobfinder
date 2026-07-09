@@ -16,6 +16,9 @@ export class User {
   @Prop({ default: '', required: true, type: String })
   resumeMarkdown!: string;
 
+  @Prop({ default: '', required: true, type: String })
+  coverLetterInstructionTemplate!: string;
+
   @Prop({ default: [], required: true, type: [String] })
   jobTitleKeywords!: string[];
 

@@ -19,6 +19,7 @@ export type ApplicationStatus =
 export type UserProfileResponse = {
   id: string;
   resumeMarkdown: string;
+  coverLetterInstructionTemplate: string;
   jobTitleKeywords: string[];
   technicalSkillKeywords: string[];
   createdAt: string;

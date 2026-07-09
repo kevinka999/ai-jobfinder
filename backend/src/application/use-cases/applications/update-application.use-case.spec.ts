@@ -13,6 +13,7 @@ describe('UpdateApplicationUseCase', () => {
   const user: UserProfile = {
     id: 'default-user',
     resumeMarkdown: '# Resume',
+    coverLetterInstructionTemplate: '',
     jobTitleKeywords: [],
     technicalSkillKeywords: [],
     createdAt: now,
@@ -26,6 +27,7 @@ describe('UpdateApplicationUseCase', () => {
   beforeEach(() => {
     userRepository = {
       resolveDefaultUser: jest.fn().mockResolvedValue(user),
+      saveCoverLetterInstructionTemplate: jest.fn(),
       saveResumeWithKeywords: jest.fn(),
     };
     applicationRepository = {
@@ -143,11 +145,13 @@ describe('ListApplicationsUseCase', () => {
       resolveDefaultUser: jest.fn().mockResolvedValue({
         id: 'default-user',
         resumeMarkdown: '',
+        coverLetterInstructionTemplate: '',
         jobTitleKeywords: [],
         technicalSkillKeywords: [],
         createdAt: now,
         updatedAt: now,
       }),
+      saveCoverLetterInstructionTemplate: jest.fn(),
       saveResumeWithKeywords: jest.fn(),
     };
     const application = buildApplication();

@@ -15,6 +15,7 @@ describe('job workflow use cases', () => {
   const user: UserProfile = {
     id: 'default-user',
     resumeMarkdown: '# Resume',
+    coverLetterInstructionTemplate: '',
     jobTitleKeywords: [],
     technicalSkillKeywords: [],
     createdAt: now,
@@ -27,6 +28,7 @@ describe('job workflow use cases', () => {
   beforeEach(() => {
     userRepository = {
       resolveDefaultUser: jest.fn().mockResolvedValue(user),
+      saveCoverLetterInstructionTemplate: jest.fn(),
       saveResumeWithKeywords: jest.fn(),
     };
     jobRepository = {

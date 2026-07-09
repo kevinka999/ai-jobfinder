@@ -61,6 +61,7 @@ The User Profile page lets the user paste their technical resume and experience 
 
 - Paste or edit resume Markdown.
 - Save resume Markdown.
+- Save reusable cover-letter instruction text.
 - View extracted job-title keywords.
 - View extracted technical-skill keywords.
 
@@ -80,7 +81,9 @@ There is no Markdown validation for MVP beyond accepting text from the request.
 
 There is no separate keyword editing or keyword saving feature for MVP. Generated keywords are replaced every time the resume is saved successfully.
 
-The cover-letter template is not editable in the user profile. Cover-letter structure and base instructions are hardcoded in the backend prompt.
+The user profile can store a cover-letter instruction template that prefills the cover-letter drawer's step-one instructions. It can be edited per generation and is saved separately from the resume.
+
+The cover-letter structure/template is not editable in the user profile. Cover-letter structure and base instructions are hardcoded in the backend prompt.
 
 ## Page 2: Job Search
 
@@ -281,6 +284,8 @@ The cover-letter drawer is a wizard.
 Step 1: Instructions
 
 - User can optionally provide job-specific instructions, topics, or personal angles.
+- The textarea is prefilled from the saved cover-letter instruction template when present.
+- The user can freely edit the prefilled text before each generation.
 - Examples:
   - mention a specific technology;
   - emphasize local availability;
@@ -293,7 +298,7 @@ Step 2: Read-only draft and revisions
   - hardcoded cover-letter system/template prompt;
   - user's stored resume Markdown;
   - job details;
-  - optional user instructions from step 1.
+  - optional user instructions submitted from step 1.
 - The generated draft is read-only.
 - User cannot directly edit draft text.
 - User can provide revision instructions.
@@ -388,7 +393,7 @@ Status history entries do not store notes. Notes are only stored at the root of 
 - No PDF persistence.
 - No S3 or file storage.
 - No keyword editing UI.
-- No editable cover-letter template UI.
+- No editable cover-letter structure/template UI.
 - No background job queue.
 - No fuzzy duplicate matching.
 - No duplicate review modal at import time.

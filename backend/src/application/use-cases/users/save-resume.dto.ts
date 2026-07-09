@@ -4,3 +4,8 @@ export class SaveResumeRequestDto {
   @IsString()
   resumeMarkdown!: string;
 }
+
+export class SaveCoverLetterInstructionTemplateRequestDto {
+  @IsString()
+  coverLetterInstructionTemplate!: string;
+}

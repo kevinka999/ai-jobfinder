@@ -19,6 +19,7 @@ describe('SaveResumeUseCase', () => {
 
     userRepository = {
       resolveDefaultUser: jest.fn(),
+      saveCoverLetterInstructionTemplate: jest.fn(),
       saveResumeWithKeywords: jest.fn(),
     };
 
@@ -29,6 +30,7 @@ describe('SaveResumeUseCase', () => {
     const updatedProfile: UserProfile = {
       id: 'default-user',
       resumeMarkdown: '# Resume',
+      coverLetterInstructionTemplate: '',
       jobTitleKeywords: ['Frontend Developer'],
       technicalSkillKeywords: ['React', 'TypeScript'],
       createdAt: now,

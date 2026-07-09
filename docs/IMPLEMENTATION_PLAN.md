@@ -322,6 +322,7 @@ References: [User profile API](API_CONTRACT.md#user-profile-api) and [User domai
 
 - Build resume Markdown textarea.
 - Build save action.
+- Build cover-letter instruction template textarea with a separate save action.
 - Show extracted job-title keywords.
 - Show extracted technical-skill keywords.
 - Handle extraction/save loading state.
@@ -398,7 +399,7 @@ References: [Cover letter API](API_CONTRACT.md#cover-letter-api) and [cover lett
 ### Tasks
 
 - Build cover-letter wizard drawer.
-- Step 1 accepts optional instructions.
+- Step 1 accepts optional instructions prefilled from the saved instruction template.
 - Step 2 shows read-only draft.
 - Step 2 accepts revision instructions.
 - Allow repeated revisions.

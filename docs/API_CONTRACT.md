@@ -59,6 +59,7 @@ type ApplicationStatus =
 type UserProfileResponse = {
   id: string;
   resumeMarkdown: string;
+  coverLetterInstructionTemplate: string;
   jobTitleKeywords: string[];
   technicalSkillKeywords: string[];
   createdAt: string;
@@ -160,6 +161,26 @@ type Response = UserProfileResponse;
 #### Failure Behavior
 
 If AI extraction fails, the request fails and no profile data is changed. The user retries until extraction and persistence both work.
+
+### POST /users/profile/cover-letter-instruction-template
+
+Saves the user's reusable cover-letter instruction text separately from the resume.
+
+This field is a prefill for the cover-letter drawer's step-one instructions textarea. The user can freely edit the textarea for each cover-letter generation. This is not the cover-letter structure/template; the backend cover-letter structure remains hardcoded in the AI prompt.
+
+#### Request
+
+```ts
+type Request = {
+  coverLetterInstructionTemplate: string;
+};
+```
+
+#### Response
+
+```ts
+type Response = UserProfileResponse;
+```
 
 ## Job Search Prompt API
 
@@ -523,6 +544,8 @@ type Response = ApplicationResponse;
 Generated cover-letter drafts and PDFs are not stored.
 
 Cover-letter endpoints are stateless except that they read the default user's resume and the selected job.
+
+The frontend may prefill `userInstructions` from `coverLetterInstructionTemplate`, but the draft endpoint only receives the final per-generation instructions submitted by the user.
 
 Cover-letter actions are allowed only for jobs with `status = "active"`.
 

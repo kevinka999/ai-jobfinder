@@ -1,12 +1,15 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { App } from './App';
+import { ToastProvider } from './components/ToastProvider';
 
 describe('App', () => {
   it('renders the workflow navigation', () => {
     render(
-      <MemoryRouter initialEntries={['/profile']}>
-        <App />
+      <MemoryRouter initialEntries={['/job-search']}>
+        <ToastProvider>
+          <App />
+        </ToastProvider>
       </MemoryRouter>,
     );
 

@@ -9,4 +9,7 @@ export interface UserRepository {
     jobTitleKeywords: string[];
     technicalSkillKeywords: string[];
   }): Promise<UserProfile>;
+  saveCoverLetterInstructionTemplate(input: {
+    coverLetterInstructionTemplate: string;
+  }): Promise<UserProfile>;
 }
