@@ -237,6 +237,15 @@ The generated prompt should instruct the external AI agent to:
 }
 ```
 
+The prompt should include a compact JSON Schema for the external AI response instead of relying only on prose field lists. The schema should describe:
+
+- the required top-level `jobs` array;
+- required job fields;
+- optional enrichment fields;
+- selected `sourcePlatformId` values as an enum;
+- selected `workModel` values as an enum;
+- `additionalProperties: false` for the top-level object and each job item.
+
 ## Job Import API
 
 ### POST /jobs/import

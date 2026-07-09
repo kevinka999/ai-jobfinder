@@ -5,6 +5,29 @@ import {
   GenerateJobSearchPromptUseCase,
 } from './generate-job-search-prompt.use-case';
 
+type PromptSchema = {
+  type: string;
+  additionalProperties: boolean;
+  required: string[];
+  properties: {
+    jobs: {
+      items: {
+        additionalProperties: boolean;
+        required: string[];
+        properties: {
+          sourcePlatformId: { enum: string[] };
+          workModel: { enum: string[] };
+          matchingScore: {
+            type: string;
+            minimum: number;
+            maximum: number;
+          };
+        };
+      };
+    };
+  };
+};
+
 describe('GenerateJobSearchPromptUseCase', () => {
   const now = new Date('2026-07-08T12:00:00.000Z');
   let userRepository: jest.Mocked<UserRepository>;
@@ -48,9 +71,34 @@ describe('GenerateJobSearchPromptUseCase', () => {
     expect(result.prompt).toContain('Frontend Developer, Full Stack Developer');
     expect(result.prompt).toContain('React, TypeScript, NestJS');
     expect(result.prompt).toContain('Return JSON only');
-    expect(result.prompt).toContain('"jobs": []');
-    expect(result.prompt).toContain('companyName');
-    expect(result.prompt).toContain('matchingReason');
+
+    const schema = extractJsonSchema(result.prompt);
+    expect(schema).toMatchObject({
+      type: 'object',
+      additionalProperties: false,
+      required: ['jobs'],
+    });
+    expect(schema.properties.jobs.items).toMatchObject({
+      additionalProperties: false,
+      required: [
+        'companyName',
+        'title',
+        'applicationUrl',
+        'description',
+        'sourcePlatformId',
+      ],
+    });
+    expect(schema.properties.jobs.items.properties.sourcePlatformId).toEqual({
+      enum: ['linkedin', 'stepstone'],
+    });
+    expect(schema.properties.jobs.items.properties.workModel).toEqual({
+      enum: ['hybrid', 'remote'],
+    });
+    expect(schema.properties.jobs.items.properties.matchingScore).toEqual({
+      type: 'number',
+      minimum: 0,
+      maximum: 100,
+    });
   });
 });
 
@@ -67,7 +115,22 @@ describe('buildJobSearchPrompt', () => {
     expect(prompt).toContain('karriere.at (karriere)');
     expect(prompt).toContain('Job-title keywords: (none stored)');
     expect(prompt).toContain('Technical-skill keywords: (none stored)');
-    expect(prompt).toContain('sourcePlatformId must be one of: karriere');
-    expect(prompt).toContain('workModel, when present, must be one of');
+
+    const schema = extractJsonSchema(prompt);
+    expect(schema.properties.jobs.items.properties.sourcePlatformId).toEqual({
+      enum: ['karriere'],
+    });
+    expect(schema.properties.jobs.items.properties.workModel).toEqual({
+      enum: ['onsite'],
+    });
   });
 });
+
+function extractJsonSchema(prompt: string): PromptSchema {
+  const [, schemaAndRest] = prompt.split(
+    'The response must match this JSON Schema:\n',
+  );
+  const [schemaText] = schemaAndRest.split('\n\nField rules:');
+
+  return JSON.parse(schemaText) as PromptSchema;
+}

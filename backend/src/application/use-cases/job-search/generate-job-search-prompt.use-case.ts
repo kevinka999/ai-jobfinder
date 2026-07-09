@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { WORK_MODELS, WorkModel } from '../../../domain/jobs/work-model';
+import type { WorkModel } from '../../../domain/jobs/work-model';
 import {
   SOURCE_PLATFORMS,
-  SourcePlatformId,
 } from '../../../domain/source-platforms/source-platform';
+import type { SourcePlatformId } from '../../../domain/source-platforms/source-platform';
 import { USER_REPOSITORY } from '../../ports/user-repository.port';
 import type { UserRepository } from '../../ports/user-repository.port';
 
@@ -25,18 +25,12 @@ const REQUIRED_JOB_FIELDS = [
   'sourcePlatformId',
 ] as const;
 
-const OPTIONAL_JOB_FIELDS = [
-  'location',
-  'workModel',
-  'salaryText',
-  'techStack',
-  'matchingScore',
-  'matchingReason',
-  'postedAt',
-  'applyDeadline',
-  'contactInfo',
-  'rawText',
-] as const;
+type JsonSchemaObject = {
+  type: 'object';
+  additionalProperties: false;
+  required: string[];
+  properties: Record<string, unknown>;
+};
 
 @Injectable()
 export class GenerateJobSearchPromptUseCase {
@@ -70,6 +64,10 @@ export function buildJobSearchPrompt(input: {
   const platforms = input.sourcePlatformIds.map(
     (id) => `${SOURCE_PLATFORMS[id].label} (${id})`,
   );
+  const outputSchema = buildJobSearchOutputSchema({
+    sourcePlatformIds: input.sourcePlatformIds,
+    workModels: input.workModels,
+  });
 
   return [
     'Search for job opportunities for me and return only valid JSON.',
@@ -87,25 +85,59 @@ export function buildJobSearchPrompt(input: {
     'When possible, include a numeric matchingScore from 0 to 100 and a short matchingReason grounded in the job description and candidate keywords.',
     '',
     'Return JSON only. Do not include Markdown fences, prose, comments, or explanations.',
-    'The top-level object must use this wrapper shape:',
-    '{',
-    '  "jobs": []',
-    '}',
-    '',
-    'Each item in jobs must include these required fields:',
-    formatList(REQUIRED_JOB_FIELDS),
-    '',
-    'Each item in jobs may include these optional fields when available:',
-    formatList(OPTIONAL_JOB_FIELDS),
+    'The response must match this JSON Schema:',
+    JSON.stringify(outputSchema, null, 2),
     '',
     'Field rules:',
-    `- sourcePlatformId must be one of: ${formatList(input.sourcePlatformIds)}`,
-    `- workModel, when present, must be one of the selected values: ${formatList(input.workModels)}`,
-    `- Supported workModel values are: ${formatList(WORK_MODELS)}`,
-    '- techStack must be an array of strings when present.',
-    '- postedAt and applyDeadline must be ISO date strings when available.',
     '- Do not invent missing details. Omit optional fields when the source does not provide them.',
+    '- Use the selected sourcePlatformId values only.',
+    '- Use the selected workModel values only when the posting clearly supports them.',
   ].join('\n');
+}
+
+function buildJobSearchOutputSchema(input: {
+  sourcePlatformIds: SourcePlatformId[];
+  workModels: WorkModel[];
+}): JsonSchemaObject {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required: ['jobs'],
+    properties: {
+      jobs: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: [...REQUIRED_JOB_FIELDS],
+          properties: {
+            companyName: { type: 'string' },
+            title: { type: 'string' },
+            applicationUrl: { type: 'string', format: 'uri' },
+            description: { type: 'string' },
+            sourcePlatformId: { enum: input.sourcePlatformIds },
+            location: { type: 'string' },
+            workModel: { enum: input.workModels },
+            salaryText: { type: 'string' },
+            techStack: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+            matchingScore: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            matchingReason: { type: 'string' },
+            postedAt: { type: 'string', format: 'date' },
+            applyDeadline: { type: 'string', format: 'date' },
+            contactInfo: { type: 'string' },
+            rawText: { type: 'string' },
+          },
+        },
+      },
+    },
+  };
 }
 
 function formatList(values: readonly string[]): string {
