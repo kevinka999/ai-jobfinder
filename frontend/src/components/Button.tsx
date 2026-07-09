@@ -4,7 +4,7 @@ import { cx } from '../lib/classNames';
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: ReactNode;
   isLoading?: boolean;
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
 };
 
 export function Button({
@@ -29,6 +29,8 @@ export function Button({
           'border-brand-600 bg-brand-600 text-white hover:bg-brand-700',
         variant === 'secondary' &&
           'border-app-border-strong bg-app-surface text-app-text hover:bg-app-surface-muted',
+        variant === 'success' &&
+          'border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100',
         variant === 'danger' &&
           'border-danger-300 bg-danger-50 text-danger-700 hover:bg-danger-100',
         variant === 'ghost' &&

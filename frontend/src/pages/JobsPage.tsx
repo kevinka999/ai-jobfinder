@@ -1,10 +1,10 @@
 import {
   AlertTriangle,
-  CheckCircle,
+  Check,
   Download,
-  Edit3,
   LoaderCircle,
   Mail,
+  PanelRightOpen,
   RefreshCw,
   ShieldCheck,
   Trash2,
@@ -264,8 +264,8 @@ export function JobsPage() {
       render: (job) => (
         <div className={tableActionsClass}>
           <Button
-            aria-label="Edit job"
-            icon={<Edit3 size={15} />}
+            aria-label="Open job"
+            icon={<PanelRightOpen size={15} />}
             onClick={() => setEditingJob(job)}
           />
           <Button
@@ -273,14 +273,11 @@ export function JobsPage() {
             icon={<Mail size={15} />}
             onClick={() => setCoverLetterJob(job)}
           />
-          <Button
-            aria-label="Mark as applied"
-            icon={<CheckCircle size={15} />}
+          <ConfirmApplyButton
             isLoading={
               mutatingJob?.id === job.id && mutatingJob.action === 'apply'
             }
-            onClick={() => markApplied(job)}
-            variant="primary"
+            onApply={() => markApplied(job)}
           />
           <Button
             aria-label="Delete active job"
@@ -352,6 +349,61 @@ export function JobsPage() {
         onConfirm={confirmDelete}
       />
     </section>
+  );
+}
+
+function ConfirmApplyButton({
+  isLoading,
+  onApply,
+}: {
+  isLoading: boolean;
+  onApply: () => Promise<void>;
+}) {
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  useEffect(() => {
+    if (isLoading) {
+      setIsConfirming(false);
+    }
+  }, [isLoading]);
+
+  function handleClick() {
+    if (isLoading) {
+      return;
+    }
+
+    if (!isConfirming) {
+      setIsConfirming(true);
+      return;
+    }
+
+    setIsConfirming(false);
+    void onApply();
+  }
+
+  return (
+    <Button
+      aria-label={
+        isConfirming
+          ? 'Confirm mark as applied'
+          : 'Mark as applied, click again to confirm'
+      }
+      icon={<Check size={15} />}
+      isLoading={isLoading}
+      onBlur={() => setIsConfirming(false)}
+      onClick={handleClick}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          setIsConfirming(false);
+        }
+      }}
+      title={
+        isConfirming
+          ? 'Click again to mark as applied'
+          : 'Mark as applied'
+      }
+      variant={isConfirming ? 'primary' : 'success'}
+    />
   );
 }
 

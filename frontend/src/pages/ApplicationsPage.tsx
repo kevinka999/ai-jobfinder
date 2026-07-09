@@ -1,4 +1,4 @@
-import { Edit3, RefreshCw, Save, Search } from 'lucide-react';
+import { PanelRightOpen, RefreshCw, Save, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/Button';
 import { DataTable } from '../components/DataTable';
@@ -109,7 +109,7 @@ export function ApplicationsPage() {
         <div className={tableActionsClass}>
           <Button
             aria-label="Open application"
-            icon={<Edit3 size={15} />}
+            icon={<PanelRightOpen size={15} />}
             onClick={() => setSelectedApplication(application)}
           />
         </div>

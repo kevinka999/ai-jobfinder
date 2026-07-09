@@ -33,6 +33,11 @@ export function Drawer({ children, onClose, open, title }: DrawerProps) {
   return (
     <div
       className="fixed inset-0 z-20 flex justify-end bg-app-text/25"
+      onPointerDown={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
       role="presentation"
     >
       <aside
