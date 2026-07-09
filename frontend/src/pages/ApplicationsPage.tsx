@@ -98,11 +98,6 @@ export function ApplicationsPage() {
       sortValue: (application) => new Date(application.createdAt),
     },
     {
-      header: 'Updated',
-      render: (application) => formatDate(application.updatedAt),
-      sortValue: (application) => new Date(application.updatedAt),
-    },
-    {
       header: 'Actions',
       render: (application) => (
         <div className={tableActionsClass}>
