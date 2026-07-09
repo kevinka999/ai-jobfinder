@@ -407,16 +407,17 @@ function TokenInput({
         </Button>
       </div>
       {values.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex min-w-0 max-w-full flex-wrap gap-1.5">
           {values.map((value) => (
             <button
               aria-label={`Remove ${value}`}
-              className="inline-flex min-h-7 max-w-full items-center gap-1 rounded-control border border-brand-200 bg-brand-50 px-2 text-xs font-semibold leading-none text-brand-700 transition-colors hover:bg-brand-100"
+              className="flex min-h-7 min-w-0 max-w-full items-center gap-1 rounded-control border border-brand-200 bg-brand-50 px-2 text-xs font-semibold leading-none text-brand-700 transition-colors hover:bg-brand-100"
               key={value}
               onClick={() => onRemove(value)}
+              title={value}
               type="button"
             >
-              <span className="min-w-0 truncate">{value}</span>
+              <span className="block min-w-0 flex-1 truncate text-left">{value}</span>
               <X className="shrink-0" size={14} />
             </button>
           ))}

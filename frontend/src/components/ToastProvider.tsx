@@ -111,7 +111,7 @@ function ToastViewport({
       {toasts.map((toast) => (
         <div
           className={cx(
-            'flex items-start gap-inline rounded-panel border bg-app-surface-raised px-3.5 py-3 text-sm font-semibold shadow-lg',
+            'flex items-center gap-inline rounded-panel border bg-app-surface-raised px-3.5 py-2.5 text-sm font-semibold shadow-lg',
             toast.type === 'success' && 'border-brand-200 text-brand-700',
             toast.type === 'error' && 'border-danger-300 text-danger-700',
             toast.type === 'info' && 'border-app-border-strong text-app-text',
@@ -122,7 +122,7 @@ function ToastViewport({
           <span className="min-w-0 flex-1 leading-5">{toast.message}</span>
           <Button
             aria-label="Dismiss notification"
-            className="-mr-1 -mt-1 min-h-7 w-7"
+            className="-mr-1 min-h-7 w-7 shrink-0"
             icon={<X size={14} />}
             onClick={() => dismiss(toast.id)}
             variant="ghost"
