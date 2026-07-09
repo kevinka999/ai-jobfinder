@@ -2,7 +2,8 @@ export type SourcePlatformId =
   | 'linkedin'
   | 'stepstone'
   | 'karriere'
-  | 'willhaben';
+  | 'willhaben'
+  | 'manual';
 
 export type WorkModel = 'onsite' | 'hybrid' | 'remote';
 
@@ -109,7 +110,12 @@ export const SOURCE_PLATFORMS: Array<{
   { id: 'stepstone', label: 'StepStone' },
   { id: 'karriere', label: 'Karriere' },
   { id: 'willhaben', label: 'Willhaben Jobs' },
+  { id: 'manual', label: 'Manual link' },
 ];
+
+export const SEARCH_SOURCE_PLATFORMS = SOURCE_PLATFORMS.filter(
+  (platform) => platform.id !== 'manual',
+);
 
 export const WORK_MODEL_OPTIONS: Array<{ id: WorkModel; label: string }> = [
   { id: 'onsite', label: 'On-site' },

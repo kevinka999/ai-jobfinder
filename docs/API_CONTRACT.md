@@ -24,10 +24,13 @@ type SourcePlatformId =
   | "linkedin"
   | "stepstone"
   | "karriere"
-  | "willhaben";
+  | "willhaben"
+  | "manual";
 ```
 
 The IDs are hardcoded in frontend and backend for MVP.
+
+`manual` is used for self-found posting URLs that do not belong to one of the searchable job platforms.
 
 ### WorkModel
 
@@ -245,6 +248,58 @@ The prompt should include a compact JSON Schema for the external AI response ins
 - selected `sourcePlatformId` values as an enum;
 - selected `workModel` values as an enum;
 - `additionalProperties: false` for the top-level object and each job item.
+
+### POST /job-search/links/prompt
+
+Returns a deterministic prompt string to paste into an external AI agent with browsing/scraping tools for specific job posting URLs.
+
+This endpoint does not call AI.
+
+The backend must:
+
+1. load the default user's stored job-title and technical-skill keywords;
+2. validate one or more posting URLs;
+3. fill a hardcoded prompt template;
+4. include the required JSON result shape;
+5. return the prompt string.
+
+#### Request
+
+```ts
+type Request = {
+  jobLinks: string[];
+};
+```
+
+#### Response
+
+```ts
+type Response = {
+  prompt: string;
+};
+```
+
+#### Prompt Requirements
+
+The generated prompt should instruct the external AI agent to:
+
+- scrape only the provided job links;
+- not search for additional jobs;
+- use the user's generated job-title keywords;
+- use the user's generated technical-skill keywords;
+- include application links;
+- include job descriptions;
+- use `manual` as `sourcePlatformId` for direct employer links or non-platform posting URLs;
+- include matching score and matching reason when possible;
+- return only valid JSON using the object wrapper shape:
+
+```json
+{
+  "jobs": []
+}
+```
+
+The prompt should include the same compact JSON Schema used by the search prompt, except `sourcePlatformId` may use any hardcoded source platform ID, including `manual`, and `workModel` may use any supported work model.
 
 ## Job Import API
 

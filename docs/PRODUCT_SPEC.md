@@ -33,7 +33,7 @@ The MVP is single-user and has no login. The backend still stores `userId` on al
   - generating cover-letter drafts;
   - revising cover-letter drafts.
 - AI is not used to generate the scraping prompt.
-- The scraping prompt is deterministic backend text filled with stored user keywords and search filters.
+- Scraping prompts are deterministic backend text filled with stored user keywords and either search filters or specific job links.
 - The app does not directly scrape LinkedIn, StepStone, Karriere, or Willhaben Jobs.
 - Generated cover-letter drafts and PDFs are helper outputs only and are not stored.
 - Job data is stored so the user can still inspect job descriptions after original postings disappear.
@@ -47,11 +47,14 @@ The MVP supports hardcoded source platform IDs in both frontend and backend:
   { id: "linkedin", label: "LinkedIn" },
   { id: "stepstone", label: "StepStone" },
   { id: "karriere", label: "Karriere" },
-  { id: "willhaben", label: "Willhaben Jobs" }
+  { id: "willhaben", label: "Willhaben Jobs" },
+  { id: "manual", label: "Manual link" }
 ]
 ```
 
 `sourcePlatformId` is stored on imported jobs. It is a string ID, not a display label.
+
+`manual` is used for self-found direct employer links or other job posting URLs that do not belong to one of the searchable job platforms.
 
 ## Page 1: User Profile
 
@@ -101,18 +104,21 @@ The Job Search page helps the user prepare and import external AI search results
   - onsite;
   - hybrid;
   - remote.
+- Job links: free-text textarea for one or more pasted posting URLs. This input is used only for the specific job links prompt.
 
 ### Generate Prompt Action
 
-The user clicks a button to generate a search prompt.
+The user can generate either a broad search prompt or a prompt for specific job links.
 
-Backend receives:
+For a broad search prompt, backend receives:
 
 - selected `sourcePlatformIds`;
 - selected cities;
 - selected work models.
 
 Backend loads the default user's stored keywords and fills a deterministic prompt template. The prompt instructs the external AI agent to search the selected platforms, locations, work models, job-title keywords, and technical-skill keywords, then return a JSON object with a `jobs` array.
+
+For a specific job links prompt, backend receives one or more posting URLs. Backend loads the default user's stored keywords and fills a deterministic prompt template that instructs the external AI agent to scrape only those links, extract job details, use `manual` for direct employer links, and return the same `jobs` array shape.
 
 The prompt must request the required import fields and may request optional enrichment fields.
 

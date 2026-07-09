@@ -142,9 +142,11 @@ References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placem
 ### Tasks
 
 - Implement `POST /job-search/prompt`.
+- Implement `POST /job-search/links/prompt`.
 - Validate selected source platform IDs.
 - Validate selected work models.
 - Accept free-text cities.
+- Accept one or more specific job posting URLs.
 - Load stored user keywords.
 - Fill deterministic prompt template.
 - Include expected JSON object wrapper with `jobs` array.
@@ -154,6 +156,7 @@ References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placem
 
 - Endpoint does not call AI.
 - Prompt includes selected platforms, cities, work models, job-title keywords, technical-skill keywords, and import schema.
+- Link prompt includes provided URLs, job-title keywords, technical-skill keywords, and import schema.
 - Prompt instructs external AI to return JSON only.
 
 ## Phase 6: Job Import API
@@ -345,7 +348,9 @@ References: [Job search prompt API](API_CONTRACT.md#job-search-prompt-api), [job
 - Build source platform multi-select.
 - Build city free-text multi-input.
 - Build work model multi-select.
+- Build specific job links textarea.
 - Call prompt generation endpoint.
+- Call specific job links prompt generation endpoint.
 - Show generated prompt with copy affordance.
 - Build pasted JSON textarea.
 - Parse JSON client-side.

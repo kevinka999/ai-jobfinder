@@ -137,10 +137,13 @@ type SourcePlatformId =
   | "linkedin"
   | "stepstone"
   | "karriere"
-  | "willhaben";
+  | "willhaben"
+  | "manual";
 ```
 
 The value is a hardcoded ID. It is not a source platform display label and is not stored in a separate collection for MVP.
+
+`manual` is used when the user imports a self-found posting URL that does not belong to one of the searchable job platforms.
 
 ### WorkModel
 
@@ -190,7 +193,7 @@ Stored job description. This is important because external job posts may disappe
 
 `sourcePlatformId`
 
-Hardcoded platform ID where the job was found.
+Hardcoded platform ID where the job was found. Use `manual` for direct employer links or other self-found posting URLs outside the searchable platforms.
 
 `status`
 

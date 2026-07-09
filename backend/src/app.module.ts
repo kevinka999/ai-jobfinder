@@ -10,7 +10,10 @@ import { CoverLettersController } from './application/use-cases/cover-letters/co
 import { GenerateCoverLetterDraftUseCase } from './application/use-cases/cover-letters/generate-cover-letter-draft.use-case';
 import { GenerateCoverLetterPdfUseCase } from './application/use-cases/cover-letters/generate-cover-letter-pdf.use-case';
 import { ReviseCoverLetterDraftUseCase } from './application/use-cases/cover-letters/revise-cover-letter-draft.use-case';
-import { GenerateJobSearchPromptUseCase } from './application/use-cases/job-search/generate-job-search-prompt.use-case';
+import {
+  GenerateJobLinksPromptUseCase,
+  GenerateJobSearchPromptUseCase,
+} from './application/use-cases/job-search/generate-job-search-prompt.use-case';
 import { JobSearchController } from './application/use-cases/job-search/job-search.controller';
 import { ApplyJobUseCase } from './application/use-cases/jobs/apply-job.use-case';
 import { CreateJobUseCase } from './application/use-cases/jobs/create-job.use-case';
@@ -54,6 +57,7 @@ import { PdfModule } from './infrastructure/pdf/pdf.module';
     SaveResumeUseCase,
     SaveCoverLetterInstructionTemplateUseCase,
     GenerateJobSearchPromptUseCase,
+    GenerateJobLinksPromptUseCase,
     ImportJobsUseCase,
     ListJobsUseCase,
     GetJobUseCase,

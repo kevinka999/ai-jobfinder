@@ -6,9 +6,10 @@ import {
   IsIn,
   IsNotEmpty,
   IsString,
+  IsUrl,
 } from 'class-validator';
 import {
-  SOURCE_PLATFORM_IDS,
+  SEARCHABLE_SOURCE_PLATFORM_IDS,
   SourcePlatformId,
 } from '../../../domain/source-platforms/source-platform';
 import { WORK_MODELS, WorkModel } from '../../../domain/jobs/work-model';
@@ -27,7 +28,7 @@ export class JobSearchPromptRequestDto {
   @Transform(({ value }: TransformFnParams) => trimStringArray(value))
   @IsArray()
   @ArrayNotEmpty()
-  @IsIn(SOURCE_PLATFORM_IDS, { each: true })
+  @IsIn(SEARCHABLE_SOURCE_PLATFORM_IDS, { each: true })
   sourcePlatformIds!: SourcePlatformId[];
 
   @Transform(({ value }: TransformFnParams) => trimStringArray(value))
@@ -46,4 +47,14 @@ export class JobSearchPromptRequestDto {
 
 export class JobSearchPromptResponseDto {
   prompt!: string;
+}
+
+export class JobLinksPromptRequestDto {
+  @Transform(({ value }: TransformFnParams) => trimStringArray(value))
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsString({ each: true })
+  @IsNotEmpty({ each: true })
+  @IsUrl({ require_protocol: true }, { each: true })
+  jobLinks!: string[];
 }

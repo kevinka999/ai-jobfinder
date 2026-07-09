@@ -1,6 +1,10 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { GenerateJobSearchPromptUseCase } from './generate-job-search-prompt.use-case';
 import {
+  GenerateJobLinksPromptUseCase,
+  GenerateJobSearchPromptUseCase,
+} from './generate-job-search-prompt.use-case';
+import {
+  JobLinksPromptRequestDto,
   JobSearchPromptRequestDto,
   JobSearchPromptResponseDto,
 } from './job-search-prompt.dto';
@@ -9,6 +13,7 @@ import {
 export class JobSearchController {
   constructor(
     private readonly generateJobSearchPromptUseCase: GenerateJobSearchPromptUseCase,
+    private readonly generateJobLinksPromptUseCase: GenerateJobLinksPromptUseCase,
   ) {}
 
   @Post('prompt')
@@ -19,6 +24,15 @@ export class JobSearchController {
       sourcePlatformIds: request.sourcePlatformIds,
       cities: request.cities,
       workModels: request.workModels,
+    });
+  }
+
+  @Post('links/prompt')
+  generateFromLinks(
+    @Body() request: JobLinksPromptRequestDto,
+  ): Promise<JobSearchPromptResponseDto> {
+    return this.generateJobLinksPromptUseCase.execute({
+      jobLinks: request.jobLinks,
     });
   }
 }

@@ -107,7 +107,7 @@ Do not create ports for deterministic logic that is internal to the app. For exa
 ## Workflow Placement
 
 - Save resume: use case calls `AiProvider.extractResumeKeywords`; persist nothing if extraction fails.
-- Generate job-search prompt: use case loads stored keywords and fills a deterministic template; no AI call.
+- Generate job-search prompts: use case loads stored keywords and fills deterministic templates for platform search or specific posting links; no AI call.
 - Import jobs: use case validates rows, applies duplicate rules, creates `active` or `draft` jobs, and returns row-level errors.
 - Keep draft: use case allows only `draft -> active`.
 - Delete draft: use case allows hard delete only for `draft`.
