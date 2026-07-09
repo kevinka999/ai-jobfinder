@@ -78,24 +78,29 @@ export function ApplicationsPage() {
   const columns: Array<DataTableColumn<ApplicationResponse>> = [
     {
       header: 'Job',
+      id: 'job',
       render: (application) =>
         application.job ? (
           <JobTitleCell job={application.job} />
         ) : (
           application.jobId
         ),
+      sortValue: getApplicationJobSortLabel,
     },
     {
       header: 'Status',
       render: (application) => <StatusBadge status={application.status} />,
+      sortValue: (application) => application.status,
     },
     {
       header: 'Applied',
       render: (application) => formatDate(application.createdAt),
+      sortValue: (application) => new Date(application.createdAt),
     },
     {
       header: 'Updated',
       render: (application) => formatDate(application.updatedAt),
+      sortValue: (application) => new Date(application.updatedAt),
     },
     {
       header: 'Actions',
@@ -440,6 +445,14 @@ function formatDate(value: string): string {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value));
+}
+
+function getApplicationJobSortLabel(application: ApplicationResponse): string {
+  if (!application.job) {
+    return application.jobId;
+  }
+
+  return `${application.job.companyName} ${application.job.title}`;
 }
 
 function getErrorMessage(error: unknown): string {

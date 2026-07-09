@@ -163,11 +163,15 @@ export function JobsPage() {
   const draftColumns: Array<DataTableColumn<JobResponse>> = [
     {
       header: 'Job',
+      id: 'draft-job',
       render: (job) => <JobTitleCell job={job} />,
+      sortValue: getJobSortLabel,
     },
     {
       header: 'Possible Duplicate',
+      id: 'possible-duplicate',
       render: (job) => job.metadata?.possibleDuplicatedJobId ?? '—',
+      sortValue: (job) => job.metadata?.possibleDuplicatedJobId,
     },
     {
       header: 'Actions',
@@ -198,23 +202,30 @@ export function JobsPage() {
   const activeColumns: Array<DataTableColumn<JobResponse>> = [
     {
       header: 'Job',
+      id: 'job',
       render: (job) => <JobTitleCell job={job} />,
+      sortValue: getJobSortLabel,
     },
     {
       header: 'Source',
       render: (job) => getSourceLabel(job.sourcePlatformId),
+      sortValue: (job) => getSourceLabel(job.sourcePlatformId),
     },
     {
       header: 'Location',
       render: (job) => job.location ?? '—',
+      sortValue: (job) => job.location,
     },
     {
       header: 'Work',
       render: (job) => job.workModel ?? '—',
+      sortValue: (job) => job.workModel,
     },
     {
       header: 'Match',
+      id: 'match',
       render: (job) => job.matchingScore ?? '—',
+      sortValue: (job) => job.matchingScore,
     },
     {
       header: 'Actions',
@@ -273,6 +284,7 @@ export function JobsPage() {
           columns={activeColumns}
           emptyLabel="No active jobs."
           getRowKey={(job) => job.id}
+          initialSort={{ columnId: 'match', direction: 'desc' }}
           rows={activeJobs}
         />
       </section>
@@ -794,6 +806,10 @@ function getSourceLabel(sourcePlatformId: SourcePlatformId): string {
     SOURCE_PLATFORMS.find((platform) => platform.id === sourcePlatformId)
       ?.label ?? sourcePlatformId
   );
+}
+
+function getJobSortLabel(job: JobResponse): string {
+  return `${job.companyName} ${job.title}`;
 }
 
 function getErrorMessage(error: unknown): string {
