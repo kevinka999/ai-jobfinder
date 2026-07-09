@@ -23,6 +23,7 @@ import {
   Textarea,
   TextInput,
 } from '../components/Field';
+import { JobOpenLink } from '../components/JobOpenLink';
 import { JobTitleCell } from '../components/JobTitleCell';
 import { LoadingState } from '../components/LoadingState';
 import { Stepper } from '../components/Stepper';
@@ -194,6 +195,11 @@ export function JobsPage() {
 
   const draftColumns: Array<DataTableColumn<JobResponse>> = [
     {
+      header: 'Open',
+      id: 'draft-open',
+      render: (job) => <JobOpenLink job={job} />,
+    },
+    {
       header: 'Job',
       id: 'draft-job',
       render: (job) => <JobTitleCell job={job} />,
@@ -233,6 +239,11 @@ export function JobsPage() {
 
   const activeColumns: Array<DataTableColumn<JobResponse>> = [
     {
+      header: 'Open',
+      id: 'open',
+      render: (job) => <JobOpenLink job={job} />,
+    },
+    {
       header: 'Job',
       id: 'job',
       render: (job) => <JobTitleCell job={job} />,
@@ -245,7 +256,7 @@ export function JobsPage() {
     },
     {
       header: 'Location',
-      render: (job) => job.location ?? '—',
+      render: (job) => <LocationCell location={job.location} />,
       sortValue: (job) => job.location,
     },
     {
@@ -349,6 +360,18 @@ export function JobsPage() {
         onConfirm={confirmDelete}
       />
     </section>
+  );
+}
+
+function LocationCell({ location }: { location: string | null | undefined }) {
+  if (!location) {
+    return '—';
+  }
+
+  return (
+    <span className="block max-w-32 whitespace-normal break-words">
+      {location}
+    </span>
   );
 }
 

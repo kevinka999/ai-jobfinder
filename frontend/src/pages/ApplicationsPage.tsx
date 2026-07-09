@@ -13,6 +13,7 @@ import {
   Textarea,
   TextInput,
 } from '../components/Field';
+import { JobOpenLink } from '../components/JobOpenLink';
 import { JobTitleCell } from '../components/JobTitleCell';
 import { LoadingState } from '../components/LoadingState';
 import { StatusBadge } from '../components/StatusBadge';
@@ -82,6 +83,12 @@ export function ApplicationsPage() {
   );
 
   const columns: Array<DataTableColumn<ApplicationResponse>> = [
+    {
+      header: 'Open',
+      id: 'open',
+      render: (application) =>
+        application.job ? <JobOpenLink job={application.job} /> : '—',
+    },
     {
       header: 'Job',
       id: 'job',

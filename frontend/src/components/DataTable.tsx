@@ -89,7 +89,7 @@ export function DataTable<T>({
             <tr key={getRowKey(row)}>
               {columns.map((column) => (
                 <td
-                  className="border-b border-app-border px-2.5 py-2 align-top"
+                  className="border-b border-app-border px-2.5 py-2 align-middle"
                   key={getColumnId(column)}
                 >
                   {column.render(row)}
