@@ -25,12 +25,15 @@ type SourcePlatformId =
   | "stepstone"
   | "karriere"
   | "willhaben"
+  | "others"
   | "manual";
 ```
 
 The IDs are hardcoded in frontend and backend for MVP.
 
-`manual` is used for self-found posting URLs that do not belong to one of the searchable job platforms.
+`others` is used when an imported job source does not match any hardcoded source platform.
+
+`manual` is reserved for jobs the user creates manually inside the app.
 
 ### WorkModel
 
@@ -246,7 +249,7 @@ The prompt should include a compact JSON Schema for the external AI response ins
 - the required top-level `jobs` array;
 - required job fields;
 - optional enrichment fields;
-- selected `sourcePlatformId` values as an enum;
+- selected `sourcePlatformId` values plus `others` as an enum;
 - selected `workModel` values as an enum;
 - `additionalProperties: false` for the top-level object and each job item.
 
@@ -290,7 +293,7 @@ The generated prompt should instruct the external AI agent to:
 - use the user's generated technical-skill keywords;
 - include application links;
 - include job descriptions;
-- use `manual` as `sourcePlatformId` for direct employer links or non-platform posting URLs;
+- use `others` as `sourcePlatformId` for direct employer links, non-platform posting URLs, or any source that is not one of the hardcoded platform IDs;
 - include matching score and matching reason when possible;
 - return only valid JSON using the object wrapper shape:
 
@@ -300,7 +303,7 @@ The generated prompt should instruct the external AI agent to:
 }
 ```
 
-The prompt should include the same compact JSON Schema used by the search prompt, except `sourcePlatformId` may use any hardcoded source platform ID, including `manual`, and `workModel` may use any supported work model.
+The prompt should include the same compact JSON Schema used by the search prompt, except `sourcePlatformId` may use any hardcoded source platform ID, including `others`, and `workModel` may use any supported work model.
 
 ## Job Import API
 

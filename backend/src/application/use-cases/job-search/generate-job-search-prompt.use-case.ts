@@ -93,7 +93,7 @@ export function buildJobSearchPrompt(input: {
     (id) => `${SOURCE_PLATFORMS[id].label} (${id})`,
   );
   const outputSchema = buildJobSearchOutputSchema({
-    sourcePlatformIds: input.sourcePlatformIds,
+    sourcePlatformIds: includeOthersSourcePlatform(input.sourcePlatformIds),
     workModels: input.workModels,
   });
 
@@ -118,7 +118,8 @@ export function buildJobSearchPrompt(input: {
     '',
     'Field rules:',
     '- Do not invent missing details. Omit optional fields when the source does not provide them.',
-    '- Use the selected sourcePlatformId values only.',
+    '- Use the selected sourcePlatformId values for jobs from those selected platforms.',
+    '- Use sourcePlatformId "others" when the job source is not one of the selected or known platform IDs.',
     '- Use the selected workModel values only when the posting clearly supports them.',
   ].join('\n');
 }
@@ -144,7 +145,8 @@ export function buildJobLinksPrompt(input: {
     `- Technical-skill keywords: ${formatList(input.technicalSkillKeywords)}`,
     '',
     'For each link, extract the job details from that exact posting. Do not search for additional jobs.',
-    'Use sourcePlatformId "manual" for direct employer career pages or any link that is not one of the known job platforms.',
+    'Use sourcePlatformId "others" for direct employer career pages or any link that is not one of the known job platforms.',
+    'Use sourcePlatformId "manual" only for jobs that were manually created inside the app, not for AI-extracted link results.',
     'When possible, include a numeric matchingScore from 0 to 100 and a short matchingReason grounded in the job description and candidate keywords.',
     '',
     'Return JSON only. Do not include Markdown fences, prose, comments, or explanations.',
@@ -202,6 +204,12 @@ function buildJobSearchOutputSchema(input: {
       },
     },
   };
+}
+
+function includeOthersSourcePlatform(
+  sourcePlatformIds: readonly SourcePlatformId[],
+): SourcePlatformId[] {
+  return Array.from(new Set([...sourcePlatformIds, 'others' as const]));
 }
 
 function formatList(values: readonly string[]): string {

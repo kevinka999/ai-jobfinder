@@ -3,6 +3,7 @@ export const SOURCE_PLATFORM_IDS = [
   'stepstone',
   'karriere',
   'willhaben',
+  'others',
   'manual',
 ] as const;
 
@@ -23,5 +24,6 @@ export const SOURCE_PLATFORMS: Record<
   stepstone: { id: 'stepstone', label: 'StepStone' },
   karriere: { id: 'karriere', label: 'karriere.at' },
   willhaben: { id: 'willhaben', label: 'willhaben' },
+  others: { id: 'others', label: 'Others' },
   manual: { id: 'manual', label: 'Manual link' },
 };

@@ -48,13 +48,16 @@ The MVP supports hardcoded source platform IDs in both frontend and backend:
   { id: "stepstone", label: "StepStone" },
   { id: "karriere", label: "Karriere" },
   { id: "willhaben", label: "Willhaben Jobs" },
+  { id: "others", label: "Others" },
   { id: "manual", label: "Manual link" }
 ]
 ```
 
 `sourcePlatformId` is stored on imported jobs. It is a string ID, not a display label.
 
-`manual` is used for self-found direct employer links or other job posting URLs that do not belong to one of the searchable job platforms.
+`others` is used for imported jobs whose source does not match one of the hardcoded platform IDs.
+
+`manual` is reserved for jobs the user creates manually inside the app.
 
 ## Page 1: User Profile
 
@@ -118,7 +121,7 @@ For a broad search prompt, backend receives:
 
 Backend loads the default user's stored keywords and fills a deterministic prompt template. The prompt instructs the external AI agent to search the selected platforms, locations, work models, job-title keywords, and technical-skill keywords, then return a JSON object with a `jobs` array.
 
-For a specific job links prompt, backend receives one or more posting URLs. Backend loads the default user's stored keywords and fills a deterministic prompt template that instructs the external AI agent to scrape only those links, extract job details, use `manual` for direct employer links, and return the same `jobs` array shape.
+For a specific job links prompt, backend receives one or more posting URLs. Backend loads the default user's stored keywords and fills a deterministic prompt template that instructs the external AI agent to scrape only those links, extract job details, use `others` for direct employer links or unknown sources, and return the same `jobs` array shape.
 
 The prompt must request the required import fields and may request optional enrichment fields.
 

@@ -58,7 +58,7 @@ describe('ImportJobsUseCase', () => {
           title: 'Frontend Developer',
           applicationUrl: 'https://example.com/jobs/1',
           description: 'React and TypeScript role.',
-          sourcePlatformId: 'linkedin',
+          sourcePlatformId: 'others',
           matchingScore: 86,
         },
         {
@@ -72,6 +72,9 @@ describe('ImportJobsUseCase', () => {
     });
 
     expect(jobRepository.create).toHaveBeenCalledTimes(1);
+    expect(jobRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({ sourcePlatformId: 'others' }),
+    );
     expect(result.createdActiveJobs).toHaveLength(1);
     expect(result.invalidRows).toHaveLength(1);
     expect(result.invalidRows[0]).toMatchObject({ index: 1 });

@@ -93,7 +93,7 @@ describe('GenerateJobSearchPromptUseCase', () => {
       ],
     });
     expect(schema.properties.jobs.items.properties.sourcePlatformId).toEqual({
-      enum: ['linkedin', 'stepstone'],
+      enum: ['linkedin', 'stepstone', 'others'],
     });
     expect(schema.properties.jobs.items.properties.workModel).toEqual({
       enum: ['hybrid', 'remote'],
@@ -136,7 +136,14 @@ describe('GenerateJobSearchPromptUseCase', () => {
 
     const schema = extractJsonSchema(result.prompt);
     expect(schema.properties.jobs.items.properties.sourcePlatformId).toEqual({
-      enum: ['linkedin', 'stepstone', 'karriere', 'willhaben', 'manual'],
+      enum: [
+        'linkedin',
+        'stepstone',
+        'karriere',
+        'willhaben',
+        'others',
+        'manual',
+      ],
     });
     expect(schema.properties.jobs.items.properties.workModel).toEqual({
       enum: ['onsite', 'hybrid', 'remote'],
@@ -160,14 +167,14 @@ describe('buildJobSearchPrompt', () => {
 
     const schema = extractJsonSchema(prompt);
     expect(schema.properties.jobs.items.properties.sourcePlatformId).toEqual({
-      enum: ['karriere'],
+      enum: ['karriere', 'others'],
     });
     expect(schema.properties.jobs.items.properties.workModel).toEqual({
       enum: ['onsite'],
     });
   });
 
-  it('builds link prompts with manual source guidance for direct posting URLs', () => {
+  it('builds link prompts with others source guidance for direct posting URLs', () => {
     const prompt = buildJobLinksPrompt({
       jobLinks: ['https://company.example/careers/42'],
       jobTitleKeywords: [],
@@ -175,12 +182,19 @@ describe('buildJobSearchPrompt', () => {
     });
 
     expect(prompt).toContain('- https://company.example/careers/42');
-    expect(prompt).toContain('sourcePlatformId "manual"');
+    expect(prompt).toContain('sourcePlatformId "others"');
     expect(prompt).toContain('Job-title keywords: (none stored)');
 
     const schema = extractJsonSchema(prompt);
     expect(schema.properties.jobs.items.properties.sourcePlatformId).toEqual({
-      enum: ['linkedin', 'stepstone', 'karriere', 'willhaben', 'manual'],
+      enum: [
+        'linkedin',
+        'stepstone',
+        'karriere',
+        'willhaben',
+        'others',
+        'manual',
+      ],
     });
   });
 });

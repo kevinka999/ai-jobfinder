@@ -33,9 +33,9 @@ describe('JobSearchPromptRequestDto', () => {
     ]);
   });
 
-  it('rejects manual source IDs for platform search prompts', async () => {
+  it('rejects non-searchable source IDs for platform search prompts', async () => {
     const dto = plainToInstance(JobSearchPromptRequestDto, {
-      sourcePlatformIds: ['manual'],
+      sourcePlatformIds: ['manual', 'others'],
       cities: ['Vienna'],
       workModels: ['hybrid'],
     });
