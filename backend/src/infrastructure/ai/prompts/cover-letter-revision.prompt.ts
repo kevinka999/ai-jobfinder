@@ -11,6 +11,10 @@ export const COVER_LETTER_REVISION_PROMPT = {
   }): string {
     return [
       'Preserve truthful, resume-supported claims. Do not add unsupported skills, employers, or responsibilities.',
+      'Keep the evidence weighting from the resume: recent, sustained, repeated, or deeply described experience may be emphasized.',
+      'Do not intensify old, brief, or one-off experience into a core strength, even if the job mentions it.',
+      'If an older or shallower skill remains relevant, mention it lightly as prior exposure or supporting context.',
+      'When the resume does not make recency, duration, or depth clear, use cautious wording instead of strong claims.',
       'Return the complete revised Markdown letter in the draftMarkdown field.',
       '',
       'Revision instructions:',
