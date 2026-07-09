@@ -16,6 +16,7 @@ export const COVER_LETTER_DRAFT_PROMPT = {
       'If an older or shallower skill is relevant to the job, mention it lightly as prior exposure or supporting context.',
       'When the resume does not make recency, duration, or depth clear, use cautious wording instead of strong claims.',
       'Keep the letter easy to scan, specific to the company and role, and suitable for converting to PDF.',
+      'Always write the draftMarkdown output in English. Translate job details from the posting to English when referring to the role, responsibilities, requirements, or benefits.',
       'Return Markdown only in the draftMarkdown field.',
       '',
       `User instructions: ${input.userInstructions?.trim() || 'None'}`,

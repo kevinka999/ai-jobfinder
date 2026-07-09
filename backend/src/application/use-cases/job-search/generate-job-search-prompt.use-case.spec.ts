@@ -75,6 +75,12 @@ describe('GenerateJobSearchPromptUseCase', () => {
     expect(result.prompt).toContain('Frontend Developer, Full Stack Developer');
     expect(result.prompt).toContain('React, TypeScript, NestJS');
     expect(result.prompt).toContain('Return JSON only');
+    expect(result.prompt).toContain(
+      'Translate every human-readable output field to English',
+    );
+    expect(result.prompt).toContain(
+      'Keep company names, URLs, enum values, dates, and technical product names unchanged',
+    );
 
     const schema = extractJsonSchema(result.prompt);
     expect(schema).toMatchObject({
@@ -133,6 +139,9 @@ describe('GenerateJobSearchPromptUseCase', () => {
     expect(result.prompt).toContain('Do not search for additional jobs.');
     expect(result.prompt).toContain('Frontend Developer');
     expect(result.prompt).toContain('React, TypeScript');
+    expect(result.prompt).toContain(
+      'Translate every human-readable output field to English',
+    );
 
     const schema = extractJsonSchema(result.prompt);
     expect(schema.properties.jobs.items.properties.sourcePlatformId).toEqual({

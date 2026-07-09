@@ -235,6 +235,7 @@ The generated prompt should instruct the external AI agent to:
 - find jobs that match the user's qualifications;
 - include application links;
 - include job descriptions;
+- translate human-readable output fields to English, including role descriptions and matching reasons;
 - include matching score and matching reason when possible;
 - return only valid JSON using the object wrapper shape:
 
@@ -294,6 +295,7 @@ The generated prompt should instruct the external AI agent to:
 - include application links;
 - include job descriptions;
 - use `others` as `sourcePlatformId` for direct employer links, non-platform posting URLs, or any source that is not one of the hardcoded platform IDs;
+- translate human-readable output fields to English, including role descriptions and matching reasons;
 - include matching score and matching reason when possible;
 - return only valid JSON using the object wrapper shape:
 
@@ -635,7 +637,8 @@ The backend must:
 3. call the injected AI provider;
 4. use the hardcoded backend cover-letter structure/template prompt;
 5. include optional user instructions;
-6. return read-only draft Markdown.
+6. instruct the AI provider to write English draft Markdown, translating referenced job-posting details to English;
+7. return read-only draft Markdown.
 
 #### Request
 
@@ -659,6 +662,7 @@ type Response = {
 Revises the current cover-letter draft using user instructions.
 
 The draft remains read-only in the frontend. The user modifies it only by sending revision instructions.
+The AI provider is instructed to keep the revised Markdown in English, translating referenced job-posting details to English.
 
 #### Request
 

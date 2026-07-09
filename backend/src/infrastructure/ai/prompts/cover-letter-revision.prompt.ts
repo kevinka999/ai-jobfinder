@@ -15,6 +15,7 @@ export const COVER_LETTER_REVISION_PROMPT = {
       'Do not intensify old, brief, or one-off experience into a core strength, even if the job mentions it.',
       'If an older or shallower skill remains relevant, mention it lightly as prior exposure or supporting context.',
       'When the resume does not make recency, duration, or depth clear, use cautious wording instead of strong claims.',
+      'Always write the draftMarkdown output in English. Translate job details from the posting to English when referring to the role, responsibilities, requirements, or benefits.',
       'Return the complete revised Markdown letter in the draftMarkdown field.',
       '',
       'Revision instructions:',

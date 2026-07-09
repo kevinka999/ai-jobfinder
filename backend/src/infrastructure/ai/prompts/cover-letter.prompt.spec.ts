@@ -23,6 +23,12 @@ describe('cover-letter prompts', () => {
       'For old, brief, or one-off experience, do not lead with it',
     );
     expect(prompt).toContain('mention it lightly as prior exposure');
+    expect(prompt).toContain(
+      'Always write the draftMarkdown output in English',
+    );
+    expect(prompt).toContain(
+      'Translate job details from the posting to English',
+    );
   });
 
   it('tells revisions not to intensify old or shallow experience', () => {
@@ -48,5 +54,11 @@ describe('cover-letter prompts', () => {
     );
     expect(prompt).toContain('mention it lightly as prior exposure');
     expect(prompt).toContain('use cautious wording instead of strong claims');
+    expect(prompt).toContain(
+      'Always write the draftMarkdown output in English',
+    );
+    expect(prompt).toContain(
+      'Translate job details from the posting to English',
+    );
   });
 });

@@ -31,6 +31,9 @@ const REQUIRED_JOB_FIELDS = [
   'sourcePlatformId',
 ] as const;
 
+const ENGLISH_OUTPUT_RULE =
+  'Translate every human-readable output field to English, including title, description, location, salaryText, techStack entries, matchingReason, contactInfo, and rawText. Keep company names, URLs, enum values, dates, and technical product names unchanged.';
+
 type JsonSchemaObject = {
   type: 'object';
   additionalProperties: false;
@@ -121,6 +124,7 @@ export function buildJobSearchPrompt(input: {
     '- Use the selected sourcePlatformId values for jobs from those selected platforms.',
     '- Use sourcePlatformId "others" when the job source is not one of the selected or known platform IDs.',
     '- Use the selected workModel values only when the posting clearly supports them.',
+    `- ${ENGLISH_OUTPUT_RULE}`,
   ].join('\n');
 }
 
@@ -158,6 +162,7 @@ export function buildJobLinksPrompt(input: {
     '- Preserve the original posting URL in applicationUrl.',
     `- Use sourcePlatformId values only from: ${formatList([...SOURCE_PLATFORM_IDS])}.`,
     `- Use workModel values only from: ${formatList([...WORK_MODELS])}.`,
+    `- ${ENGLISH_OUTPUT_RULE}`,
   ].join('\n');
 }
 
