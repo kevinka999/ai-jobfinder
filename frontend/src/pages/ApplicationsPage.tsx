@@ -1,13 +1,32 @@
-import { Edit3, ExternalLink, RefreshCw, Save } from 'lucide-react';
+import { Edit3, RefreshCw, Save } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '../components/Button';
 import { DataTable } from '../components/DataTable';
 import type { DataTableColumn } from '../components/DataTable';
 import { Drawer } from '../components/Drawer';
 import { ErrorState } from '../components/ErrorState';
-import { Textarea, TextInput } from '../components/Field';
+import {
+  fieldClassName,
+  fieldLabelClassName,
+  inputClassName,
+  Textarea,
+  TextInput,
+} from '../components/Field';
+import { JobTitleCell } from '../components/JobTitleCell';
 import { LoadingState } from '../components/LoadingState';
 import { StatusBadge } from '../components/StatusBadge';
+import {
+  dividedDrawerSectionClass,
+  drawerActionsClass,
+  drawerSectionClass,
+  editFormGridClass,
+  pageHeadingClass,
+  pageStackClass,
+  pageTitleClass,
+  panelSectionClass,
+  successLineClass,
+  tableActionsClass,
+} from '../design/classes';
 import { apiRequest } from '../lib/api';
 import {
   APPLICATION_STATUS_OPTIONS,
@@ -55,18 +74,7 @@ export function ApplicationsPage() {
       header: 'Job',
       render: (application) =>
         application.job ? (
-          <div className="job-title-cell">
-            <strong>{application.job.title}</strong>
-            <span>{application.job.companyName}</span>
-            <a
-              href={application.job.applicationUrl}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <ExternalLink size={13} />
-              Open
-            </a>
-          </div>
+          <JobTitleCell job={application.job} />
         ) : (
           application.jobId
         ),
@@ -86,27 +94,28 @@ export function ApplicationsPage() {
     {
       header: 'Actions',
       render: (application) => (
-        <Button
-          icon={<Edit3 size={15} />}
-          onClick={() => setSelectedApplication(application)}
-        >
-          Open
-        </Button>
+        <div className={tableActionsClass}>
+          <Button
+            aria-label="Open application"
+            icon={<Edit3 size={15} />}
+            onClick={() => setSelectedApplication(application)}
+          />
+        </div>
       ),
     },
   ];
 
   return (
-    <section className="page-stack">
-      <div className="page-heading">
-        <h1>Applications</h1>
+    <section className={pageStackClass}>
+      <div className={pageHeadingClass}>
+        <h1 className={pageTitleClass}>Applications</h1>
         <Button icon={<RefreshCw size={16} />} onClick={loadApplications}>
           Refresh
         </Button>
       </div>
       {error ? <ErrorState message={error} /> : null}
       {isLoading ? <LoadingState label="Loading applications" /> : null}
-      <section className="panel section-stack">
+      <section className={panelSectionClass}>
         <DataTable
           columns={columns}
           emptyLabel="No applications."
@@ -214,11 +223,13 @@ function ApplicationDrawer({
       title={application?.job?.companyName ?? 'Application'}
     >
       {error ? <ErrorState message={error} /> : null}
-      {message ? <div className="success-line">{message}</div> : null}
-      <div className="edit-form-grid">
-        <label className="field">
-          <span>Application status</span>
+      {message ? <div className={successLineClass}>{message}</div> : null}
+      <div className={drawerSectionClass}>
+        <h3 className="m-0 text-[15px] font-bold text-app-text">Application</h3>
+        <label className={fieldClassName}>
+          <span className={fieldLabelClassName}>Application status</span>
           <select
+            className={inputClassName}
             onChange={(event) =>
               setStatus(event.target.value as ApplicationStatus)
             }
@@ -237,43 +248,52 @@ function ApplicationDrawer({
           rows={5}
           value={notes}
         />
-      </div>
-      <div className="drawer-actions">
-        <Button
-          disabled={isSavingApplication}
-          icon={<Save size={16} />}
-          onClick={saveApplication}
-          variant="primary"
-        >
-          {isSavingApplication ? 'Saving' : 'Save Application'}
-        </Button>
-      </div>
-      <div className="drawer-section">
-        <h3>Status History</h3>
-        <div className="history-list">
-          {application?.statusHistory.map((entry) => (
-            <div className="history-row" key={`${entry.status}-${entry.changedAt}`}>
-              <StatusBadge status={entry.status} />
-              <span>{formatDate(entry.changedAt)}</span>
-            </div>
-          ))}
+        <div className={drawerActionsClass}>
+          <Button
+            disabled={isSavingApplication}
+            icon={<Save size={16} />}
+            onClick={saveApplication}
+            variant="primary"
+          >
+            {isSavingApplication ? 'Saving' : 'Save Application'}
+          </Button>
         </div>
       </div>
       {application?.job ? (
         <>
-          <div className="drawer-section">
-            <h3>Job Details</h3>
+          <div className={dividedDrawerSectionClass}>
+            <h3 className="m-0 text-[15px] font-bold text-app-text">
+              Job Details
+            </h3>
             <JobDetailsForm form={jobForm} setForm={setJobForm} />
+            <div className={drawerActionsClass}>
+              <Button
+                disabled={isSavingJob}
+                icon={<Save size={16} />}
+                onClick={saveJob}
+                variant="primary"
+              >
+                {isSavingJob ? 'Saving' : 'Save Job'}
+              </Button>
+            </div>
           </div>
-          <div className="drawer-actions">
-            <Button
-              disabled={isSavingJob}
-              icon={<Save size={16} />}
-              onClick={saveJob}
-              variant="primary"
-            >
-              {isSavingJob ? 'Saving' : 'Save Job'}
-            </Button>
+          <div className={dividedDrawerSectionClass}>
+            <h3 className="m-0 text-[15px] font-bold text-app-text">
+              Status History
+            </h3>
+            <div className="grid gap-inline">
+              {application.statusHistory.map((entry) => (
+                <div
+                  className="flex items-center justify-between gap-cluster rounded-panel border border-app-border px-2.5 py-2"
+                  key={`${entry.status}-${entry.changedAt}`}
+                >
+                  <StatusBadge status={entry.status} />
+                  <span className="text-xs font-bold text-app-text-muted">
+                    {formatDate(entry.changedAt)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </>
       ) : null}
@@ -290,7 +310,7 @@ function JobDetailsForm({
 }) {
   return (
     <>
-      <div className="edit-form-grid">
+      <div className={editFormGridClass}>
         <TextInput
           label="Company"
           onChange={(event) =>
@@ -310,9 +330,10 @@ function JobDetailsForm({
           }
           value={form.applicationUrl}
         />
-        <label className="field">
-          <span>Source platform</span>
+        <label className={fieldClassName}>
+          <span className={fieldLabelClassName}>Source platform</span>
           <select
+            className={inputClassName}
             onChange={(event) =>
               setForm({
                 ...form,
@@ -333,9 +354,10 @@ function JobDetailsForm({
           onChange={(event) => setForm({ ...form, location: event.target.value })}
           value={form.location ?? ''}
         />
-        <label className="field">
-          <span>Work model</span>
+        <label className={fieldClassName}>
+          <span className={fieldLabelClassName}>Work model</span>
           <select
+            className={inputClassName}
             onChange={(event) =>
               setForm({ ...form, workModel: event.target.value as WorkModel })
             }
@@ -349,7 +371,7 @@ function JobDetailsForm({
           </select>
         </label>
       </div>
-      <div className="drawer-section">
+      <div className={drawerSectionClass}>
         <Textarea
           label="Description"
           onChange={(event) =>

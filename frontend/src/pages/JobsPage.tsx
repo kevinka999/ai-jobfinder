@@ -2,7 +2,6 @@ import {
   CheckCircle,
   Download,
   Edit3,
-  ExternalLink,
   Mail,
   RefreshCw,
   ShieldCheck,
@@ -15,9 +14,27 @@ import { DataTable } from '../components/DataTable';
 import type { DataTableColumn } from '../components/DataTable';
 import { Drawer } from '../components/Drawer';
 import { ErrorState } from '../components/ErrorState';
-import { Textarea, TextInput } from '../components/Field';
+import {
+  fieldClassName,
+  fieldLabelClassName,
+  inputClassName,
+  Textarea,
+  TextInput,
+} from '../components/Field';
+import { JobTitleCell } from '../components/JobTitleCell';
 import { LoadingState } from '../components/LoadingState';
-import { StatusBadge } from '../components/StatusBadge';
+import {
+  drawerActionsClass,
+  drawerSectionClass,
+  editFormGridClass,
+  pageHeadingClass,
+  pageStackClass,
+  pageTitleClass,
+  panelSectionClass,
+  panelTitleClass,
+  successLineClass,
+  tableActionsClass,
+} from '../design/classes';
 import { apiBlob, apiRequest } from '../lib/api';
 import {
   ApplicationResponse,
@@ -51,10 +68,6 @@ export function JobsPage() {
   );
   const activeJobs = useMemo(
     () => jobs.filter((job) => job.status === 'active'),
-    [jobs],
-  );
-  const appliedJobs = useMemo(
-    () => jobs.filter((job) => job.status === 'applied'),
     [jobs],
   );
 
@@ -118,16 +131,14 @@ export function JobsPage() {
     {
       header: 'Actions',
       render: (job) => (
-        <div className="table-actions">
+        <div className={tableActionsClass}>
           <Button
             aria-label="Keep draft"
-            className="icon-button"
             icon={<ShieldCheck size={15} />}
             onClick={() => keepDraft(job)}
           />
           <Button
             aria-label="Delete draft"
-            className="icon-button"
             icon={<Trash2 size={15} />}
             onClick={() => deleteDraft(job)}
             variant="danger"
@@ -161,22 +172,19 @@ export function JobsPage() {
     {
       header: 'Actions',
       render: (job) => (
-        <div className="table-actions">
+        <div className={tableActionsClass}>
           <Button
             aria-label="Edit job"
-            className="icon-button"
             icon={<Edit3 size={15} />}
             onClick={() => setEditingJob(job)}
           />
           <Button
             aria-label="Create cover letter"
-            className="icon-button"
             icon={<Mail size={15} />}
             onClick={() => setCoverLetterJob(job)}
           />
           <Button
             aria-label="Mark as applied"
-            className="icon-button"
             icon={<CheckCircle size={15} />}
             onClick={() => markApplied(job)}
             variant="primary"
@@ -186,42 +194,18 @@ export function JobsPage() {
     },
   ];
 
-  const appliedColumns: Array<DataTableColumn<JobResponse>> = [
-    {
-      header: 'Job',
-      render: (job) => <JobTitleCell job={job} />,
-    },
-    {
-      header: 'Status',
-      render: (job) => <StatusBadge status={job.status} />,
-    },
-    {
-      header: 'Actions',
-      render: (job) => (
-        <div className="table-actions">
-          <Button
-            aria-label="Edit job"
-            className="icon-button"
-            icon={<Edit3 size={15} />}
-            onClick={() => setEditingJob(job)}
-          />
-        </div>
-      ),
-    },
-  ];
-
   return (
-    <section className="page-stack">
-      <div className="page-heading">
-        <h1>Jobs</h1>
+    <section className={pageStackClass}>
+      <div className={pageHeadingClass}>
+        <h1 className={pageTitleClass}>Jobs</h1>
         <Button icon={<RefreshCw size={16} />} onClick={loadJobs}>
           Refresh
         </Button>
       </div>
       {error ? <ErrorState message={error} /> : null}
       {isLoading ? <LoadingState label="Loading jobs" /> : null}
-      <section className="panel section-stack">
-        <h2>Draft Jobs</h2>
+      <section className={panelSectionClass}>
+        <h2 className={panelTitleClass}>Draft Jobs</h2>
         <DataTable
           columns={draftColumns}
           emptyLabel="No draft jobs."
@@ -229,22 +213,13 @@ export function JobsPage() {
           rows={draftJobs}
         />
       </section>
-      <section className="panel section-stack">
-        <h2>Active Jobs</h2>
+      <section className={panelSectionClass}>
+        <h2 className={panelTitleClass}>Active Jobs</h2>
         <DataTable
           columns={activeColumns}
           emptyLabel="No active jobs."
           getRowKey={(job) => job.id}
           rows={activeJobs}
-        />
-      </section>
-      <section className="panel section-stack">
-        <h2>Applied Jobs</h2>
-        <DataTable
-          columns={appliedColumns}
-          emptyLabel="No applied jobs."
-          getRowKey={(job) => job.id}
-          rows={appliedJobs}
         />
       </section>
       <JobEditDrawer
@@ -260,19 +235,6 @@ export function JobsPage() {
         onClose={() => setCoverLetterJob(null)}
       />
     </section>
-  );
-}
-
-function JobTitleCell({ job }: { job: JobResponse }) {
-  return (
-    <div className="job-title-cell">
-      <strong>{job.title}</strong>
-      <span>{job.companyName}</span>
-      <a href={job.applicationUrl} rel="noreferrer" target="_blank">
-        <ExternalLink size={13} />
-        Open
-      </a>
-    </div>
   );
 }
 
@@ -318,7 +280,7 @@ function JobEditDrawer({
   return (
     <Drawer onClose={onClose} open={!!job} title="Job Details">
       {error ? <ErrorState message={error} /> : null}
-      <div className="edit-form-grid">
+      <div className={editFormGridClass}>
         <TextInput
           label="Company"
           onChange={(event) =>
@@ -338,9 +300,10 @@ function JobEditDrawer({
           }
           value={form.applicationUrl}
         />
-        <label className="field">
-          <span>Source platform</span>
+        <label className={fieldClassName}>
+          <span className={fieldLabelClassName}>Source platform</span>
           <select
+            className={inputClassName}
             onChange={(event) =>
               setForm({
                 ...form,
@@ -361,9 +324,10 @@ function JobEditDrawer({
           onChange={(event) => setForm({ ...form, location: event.target.value })}
           value={form.location ?? ''}
         />
-        <label className="field">
-          <span>Work model</span>
+        <label className={fieldClassName}>
+          <span className={fieldLabelClassName}>Work model</span>
           <select
+            className={inputClassName}
             onChange={(event) =>
               setForm({
                 ...form,
@@ -419,7 +383,7 @@ function JobEditDrawer({
           value={form.contactInfo ?? ''}
         />
       </div>
-      <div className="drawer-section">
+      <div className={drawerSectionClass}>
         <Textarea
           label="Description"
           onChange={(event) =>
@@ -443,7 +407,7 @@ function JobEditDrawer({
           value={form.rawText ?? ''}
         />
       </div>
-      <div className="drawer-actions">
+      <div className={drawerActionsClass}>
         <Button disabled={isSaving} onClick={onClose}>
           Cancel
         </Button>
@@ -568,8 +532,8 @@ function CoverLetterDrawer({
       title={job ? `Cover Letter - ${job.companyName}` : 'Cover Letter'}
     >
       {error ? <ErrorState message={error} /> : null}
-      {message ? <div className="success-line">{message}</div> : null}
-      <div className="drawer-section">
+      {message ? <div className={successLineClass}>{message}</div> : null}
+      <div className={drawerSectionClass}>
         <Textarea
           label="Instructions"
           onChange={(event) => setInstructions(event.target.value)}
@@ -596,7 +560,7 @@ function CoverLetterDrawer({
           rows={4}
           value={revisionInstructions}
         />
-        <div className="drawer-actions">
+        <div className={drawerActionsClass}>
           <Button
             disabled={
               isRevising ||

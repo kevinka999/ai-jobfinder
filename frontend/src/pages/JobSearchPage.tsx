@@ -3,7 +3,22 @@ import { useState } from 'react';
 import { Button } from '../components/Button';
 import { ErrorState } from '../components/ErrorState';
 import { MultiSelect } from '../components/MultiSelect';
-import { Textarea, TextInput } from '../components/Field';
+import {
+  fieldClassName,
+  fieldLabelClassName,
+  inputClassName,
+  Textarea,
+} from '../components/Field';
+import {
+  pageHeadingClass,
+  pageStackClass,
+  pageTitleClass,
+  panelClass,
+  panelSectionClass,
+  panelTitleClass,
+  panelTitleRowClass,
+  successLineClass,
+} from '../design/classes';
 import { apiRequest } from '../lib/api';
 import {
   ImportJobsResponse,
@@ -107,9 +122,9 @@ export function JobSearchPage() {
   }
 
   return (
-    <section className="page-stack">
-      <div className="page-heading">
-        <h1>Job Search</h1>
+    <section className={pageStackClass}>
+      <div className={pageHeadingClass}>
+        <h1 className={pageTitleClass}>Job Search</h1>
         <Button
           disabled={
             isGenerating ||
@@ -125,37 +140,40 @@ export function JobSearchPage() {
         </Button>
       </div>
       {error ? <ErrorState message={error} /> : null}
-      {copyMessage ? <div className="success-line">{copyMessage}</div> : null}
-      <div className="panel form-grid">
+      {copyMessage ? <div className={successLineClass}>{copyMessage}</div> : null}
+      <div className={`${panelClass} grid gap-section`}>
         <MultiSelect
           label="Source platforms"
           onChange={setSourcePlatformIds}
           options={SOURCE_PLATFORMS}
           selected={sourcePlatformIds}
         />
-        <div className="field">
-          <span>Cities</span>
-          <div className="inline-input-row">
-            <TextInput
-              label="City"
-              onChange={(event) => setCityInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault();
-                  addCity();
-                }
-              }}
-              placeholder="Vienna"
-              value={cityInput}
-            />
+        <div className={fieldClassName}>
+          <span className={fieldLabelClassName}>Cities</span>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-inline">
+            <label className={fieldClassName}>
+              <span className="sr-only">City</span>
+              <input
+                className={inputClassName}
+                onChange={(event) => setCityInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    addCity();
+                  }
+                }}
+                placeholder="Vienna"
+                value={cityInput}
+              />
+            </label>
             <Button icon={<Plus size={16} />} onClick={addCity}>
               Add
             </Button>
           </div>
-          <div className="chip-list">
+          <div className="flex flex-wrap gap-1.5">
             {cities.map((city) => (
               <button
-                className="removable-chip"
+                className="inline-flex min-h-7 cursor-pointer items-center gap-1.5 rounded-control border border-brand-200 bg-brand-50 px-2 text-xs font-bold text-brand-700 hover:bg-brand-100"
                 key={city}
                 onClick={() =>
                   setCities(cities.filter((currentCity) => currentCity !== city))
@@ -175,10 +193,10 @@ export function JobSearchPage() {
           selected={workModels}
         />
       </div>
-      <div className="split-grid">
-        <div className="panel section-stack">
-          <div className="panel-title-row">
-            <h2>Generated Prompt</h2>
+      <div className="grid items-stretch gap-section md:grid-cols-2">
+        <div className={`${panelSectionClass} grid-rows-[auto_minmax(0,1fr)]`}>
+          <div className={panelTitleRowClass}>
+            <h2 className={panelTitleClass}>Generated Prompt</h2>
             <Button
               disabled={!prompt}
               icon={<Clipboard size={16} />}
@@ -188,15 +206,15 @@ export function JobSearchPage() {
             </Button>
           </div>
           <textarea
-            className="prompt-box"
+            className="h-full min-h-80 resize-none rounded-control border border-app-border-strong bg-app-surface-muted px-2.5 py-2.5 font-mono text-sm text-app-text outline-none focus:border-brand-600 focus:shadow-focus"
             readOnly
             value={prompt}
             aria-label="Generated prompt"
           />
         </div>
-        <div className="panel section-stack">
-          <div className="panel-title-row">
-            <h2>Import JSON</h2>
+        <div className={`${panelSectionClass} grid-rows-[auto_minmax(0,1fr)]`}>
+          <div className={panelTitleRowClass}>
+            <h2 className={panelTitleClass}>Import JSON</h2>
             <Button
               disabled={isImporting || jsonText.trim().length === 0}
               icon={<Upload size={16} />}
@@ -207,6 +225,7 @@ export function JobSearchPage() {
             </Button>
           </div>
           <Textarea
+            className="h-full min-h-0 resize-none"
             label="External AI JSON"
             onChange={(event) => setJsonText(event.target.value)}
             placeholder={'{"jobs":[]}'}
@@ -222,20 +241,23 @@ export function JobSearchPage() {
 
 function ImportResult({ result }: { result: ImportJobsResponse }) {
   return (
-    <div className="panel section-stack">
-      <h2>Import Summary</h2>
-      <div className="summary-grid">
+    <div className={panelSectionClass}>
+      <h2 className={panelTitleClass}>Import Summary</h2>
+      <div className="grid grid-cols-1 gap-inline sm:grid-cols-2 lg:grid-cols-4">
         <SummaryValue label="Received" value={result.summary.received} />
         <SummaryValue label="Active" value={result.summary.createdActive} />
         <SummaryValue label="Draft" value={result.summary.createdDraft} />
         <SummaryValue label="Invalid" value={result.summary.invalid} />
       </div>
       {result.invalidRows.length > 0 ? (
-        <div className="invalid-list">
+        <div className="grid gap-inline">
           {result.invalidRows.map((row) => (
-            <div className="invalid-row" key={row.index}>
+            <div
+              className="rounded-panel border border-danger-300 bg-danger-50 p-2.5"
+              key={row.index}
+            >
               <strong>Row {row.index + 1}</strong>
-              <ul>
+              <ul className="mb-0 mt-1.5 pl-[18px]">
                 {row.errors.map((message) => (
                   <li key={message}>{message}</li>
                 ))}
@@ -250,9 +272,11 @@ function ImportResult({ result }: { result: ImportJobsResponse }) {
 
 function SummaryValue({ label, value }: { label: string; value: number }) {
   return (
-    <div className="summary-value">
-      <strong>{value}</strong>
-      <span>{label}</span>
+    <div className="rounded-panel border border-app-border p-2.5">
+      <strong className="block text-[22px] text-app-text">{value}</strong>
+      <span className="block text-xs font-bold text-app-text-muted">
+        {label}
+      </span>
     </div>
   );
 }

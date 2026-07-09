@@ -1,3 +1,5 @@
+import { fieldClassName, fieldLabelClassName } from './Field';
+
 type MultiSelectProps<T extends string> = {
   label: string;
   options: Array<{ id: T; label: string }>;
@@ -20,13 +22,13 @@ export function MultiSelect<T extends string>({
   }
 
   return (
-    <div className="field">
-      <span>{label}</span>
-      <div className="segmented-control">
+    <div className={fieldClassName}>
+      <span className={fieldLabelClassName}>{label}</span>
+      <div className="flex flex-wrap gap-1.5">
         {options.map((option) => (
           <button
             aria-pressed={selected.includes(option.id)}
-            className="segment"
+            className="min-h-8 cursor-pointer rounded-control border border-app-border-strong bg-app-surface px-2.5 text-app-text-soft aria-pressed:border-brand-600 aria-pressed:bg-brand-100 aria-pressed:text-brand-700"
             key={option.id}
             onClick={() => toggle(option.id)}
             type="button"

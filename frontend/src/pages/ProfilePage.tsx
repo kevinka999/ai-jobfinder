@@ -4,6 +4,13 @@ import { Button } from '../components/Button';
 import { ErrorState } from '../components/ErrorState';
 import { LoadingState } from '../components/LoadingState';
 import { Textarea } from '../components/Field';
+import {
+  pageHeadingClass,
+  pageStackClass,
+  pageTitleClass,
+  panelClass,
+  successLineClass,
+} from '../design/classes';
 import { apiRequest } from '../lib/api';
 import type { UserProfileResponse } from '../lib/types';
 
@@ -73,9 +80,9 @@ export function ProfilePage() {
   }
 
   return (
-    <section className="page-stack">
-      <div className="page-heading">
-        <h1>User Profile</h1>
+    <section className={pageStackClass}>
+      <div className={pageHeadingClass}>
+        <h1 className={pageTitleClass}>User Profile</h1>
         <Button
           disabled={isLoading || isSaving}
           icon={<Save size={16} />}
@@ -87,9 +94,9 @@ export function ProfilePage() {
       </div>
       {isLoading ? <LoadingState label="Loading profile" /> : null}
       {error ? <ErrorState message={error} /> : null}
-      {saveMessage ? <div className="success-line">{saveMessage}</div> : null}
-      <div className="profile-grid">
-        <div className="panel">
+      {saveMessage ? <div className={successLineClass}>{saveMessage}</div> : null}
+      <div className="grid grid-cols-1 items-start gap-section md:grid-cols-[minmax(0,1fr)_320px]">
+        <div className={panelClass}>
           <Textarea
             label="Resume Markdown"
             onChange={(event) => setResumeMarkdown(event.target.value)}
@@ -98,7 +105,7 @@ export function ProfilePage() {
             value={resumeMarkdown}
           />
         </div>
-        <aside className="panel side-panel">
+        <aside className={`${panelClass} grid gap-[18px]`}>
           <KeywordSection
             label="Job-title keywords"
             values={profile?.jobTitleKeywords ?? []}
@@ -115,14 +122,19 @@ export function ProfilePage() {
 
 function KeywordSection({ label, values }: { label: string; values: string[] }) {
   return (
-    <section className="keyword-section">
-      <h2>{label}</h2>
+    <section>
+      <h2 className="mb-2.5 mt-0 text-[15px] font-bold text-app-text">
+        {label}
+      </h2>
       {values.length === 0 ? (
-        <p className="muted">No keywords saved.</p>
+        <p className="text-app-text-muted">No keywords saved.</p>
       ) : (
-        <div className="keyword-list">
+        <div className="flex flex-wrap gap-1.5">
           {values.map((value) => (
-            <span className="keyword-chip" key={value}>
+            <span
+              className="inline-flex min-h-[26px] items-center rounded-control border border-brand-200 bg-brand-50 px-2 text-xs font-bold text-brand-700"
+              key={value}
+            >
               {value}
             </span>
           ))}

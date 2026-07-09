@@ -19,16 +19,25 @@ export function DataTable<T>({
   rows,
 }: DataTableProps<T>) {
   if (rows.length === 0) {
-    return <div className="empty-table">{emptyLabel}</div>;
+    return (
+      <div className="rounded-panel border border-dashed border-app-border px-panel py-panel text-app-text-muted">
+        {emptyLabel}
+      </div>
+    );
   }
 
   return (
-    <div className="table-wrap">
-      <table>
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-sm">
         <thead>
           <tr>
             {columns.map((column) => (
-              <th key={column.header}>{column.header}</th>
+              <th
+                className="border-b border-app-border px-2.5 py-2 text-left align-top text-xs font-bold text-app-text-muted"
+                key={column.header}
+              >
+                {column.header}
+              </th>
             ))}
           </tr>
         </thead>
@@ -36,7 +45,12 @@ export function DataTable<T>({
           {rows.map((row) => (
             <tr key={getRowKey(row)}>
               {columns.map((column) => (
-                <td key={column.header}>{column.render(row)}</td>
+                <td
+                  className="border-b border-app-border px-2.5 py-2 align-top"
+                  key={column.header}
+                >
+                  {column.render(row)}
+                </td>
               ))}
             </tr>
           ))}

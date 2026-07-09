@@ -3,5 +3,9 @@ type LoadingStateProps = {
 };
 
 export function LoadingState({ label = 'Loading' }: LoadingStateProps) {
-  return <div className="state-line">{label}</div>;
+  return (
+    <div className="rounded-panel border border-dashed border-app-border px-panel py-panel text-app-text-muted">
+      {label}
+    </div>
+  );
 }
