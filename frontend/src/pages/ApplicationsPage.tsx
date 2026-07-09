@@ -1,5 +1,5 @@
-import { Edit3, RefreshCw, Save } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { Edit3, RefreshCw, Save, Search } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/Button';
 import { DataTable } from '../components/DataTable';
 import type { DataTableColumn } from '../components/DataTable';
@@ -49,6 +49,7 @@ export function ApplicationsPage() {
   const [applications, setApplications] = useState<ApplicationResponse[]>([]);
   const [selectedApplication, setSelectedApplication] =
     useState<ApplicationResponse | null>(null);
+  const [jobFilter, setJobFilter] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const toast = useToast();
@@ -74,6 +75,11 @@ export function ApplicationsPage() {
   useEffect(() => {
     void loadApplications();
   }, [loadApplications]);
+
+  const filteredApplications = useMemo(
+    () => filterApplicationsByJob(applications, jobFilter),
+    [applications, jobFilter],
+  );
 
   const columns: Array<DataTableColumn<ApplicationResponse>> = [
     {
@@ -126,11 +132,30 @@ export function ApplicationsPage() {
       {error ? <ErrorState message={error} /> : null}
       {isLoading ? <LoadingState label="Loading applications" /> : null}
       <section className={panelSectionClass}>
+        <label className="grid max-w-md gap-1.5">
+          <span className={fieldLabelClassName}>Filter by job</span>
+          <span className="relative">
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-app-text-muted"
+              size={15}
+            />
+            <input
+              className={`${inputClassName} pl-8`}
+              onChange={(event) => setJobFilter(event.target.value)}
+              placeholder="Job title or company"
+              type="search"
+              value={jobFilter}
+            />
+          </span>
+        </label>
         <DataTable
           columns={columns}
-          emptyLabel="No applications."
+          emptyLabel={
+            jobFilter.trim() ? 'No applications match this job filter.' : 'No applications.'
+          }
           getRowKey={(application) => application.id}
-          rows={applications}
+          rows={filteredApplications}
         />
       </section>
       <ApplicationDrawer
@@ -448,6 +473,27 @@ function getApplicationJobSortLabel(application: ApplicationResponse): string {
   }
 
   return `${application.job.companyName} ${application.job.title}`;
+}
+
+function filterApplicationsByJob(
+  applications: ApplicationResponse[],
+  jobFilter: string,
+) {
+  const normalizedFilter = normalizeFilterText(jobFilter);
+
+  if (!normalizedFilter) {
+    return applications;
+  }
+
+  return applications.filter((application) =>
+    normalizeFilterText(getApplicationJobSortLabel(application)).includes(
+      normalizedFilter,
+    ),
+  );
+}
+
+function normalizeFilterText(value: string): string {
+  return value.trim().toLocaleLowerCase();
 }
 
 function getErrorMessage(error: unknown): string {
