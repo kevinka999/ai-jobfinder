@@ -49,9 +49,6 @@ export function JobSearchPage() {
   const [jobLinks, setJobLinks] = useState<string[]>([]);
   const [jobLinkInput, setJobLinkInput] = useState('');
   const [jsonText, setJsonText] = useState('');
-  const [importResult, setImportResult] = useState<ImportJobsResponse | null>(
-    null,
-  );
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingLinkPrompt, setIsGeneratingLinkPrompt] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -137,7 +134,6 @@ export function JobSearchPage() {
 
   async function importJobs() {
     setIsImporting(true);
-    setImportResult(null);
 
     let parsedJson: unknown;
 
@@ -154,9 +150,16 @@ export function JobSearchPage() {
         body: JSON.stringify(parsedJson),
         method: 'POST',
       });
+      const added = result.summary.createdActive + result.summary.createdDraft;
+      const message = formatImportToastMessage(result);
 
-      setImportResult(result);
-      toast.success('Jobs imported');
+      if (result.summary.invalid === 0) {
+        toast.success(message, { durationMs: 7000 });
+      } else if (added > 0) {
+        toast.warning(message, { durationMs: 9000 });
+      } else {
+        toast.error(message, { durationMs: 9000 });
+      }
     } catch (caughtError) {
       toast.error(`Could not import jobs: ${getErrorMessage(caughtError)}`);
     } finally {
@@ -319,7 +322,6 @@ export function JobSearchPage() {
           value={jsonText}
         />
       </div>
-      {importResult ? <ImportResult result={importResult} /> : null}
     </section>
   );
 }
@@ -424,50 +426,21 @@ function TokenInput({
   );
 }
 
-function ImportResult({ result }: { result: ImportJobsResponse }) {
-  return (
-    <div className={panelSectionClass}>
-      <h2 className={panelTitleClass}>Import Summary</h2>
-      <div className="grid grid-cols-1 gap-inline sm:grid-cols-2 lg:grid-cols-4">
-        <SummaryValue label="Received" value={result.summary.received} />
-        <SummaryValue label="Active" value={result.summary.createdActive} />
-        <SummaryValue label="Draft" value={result.summary.createdDraft} />
-        <SummaryValue label="Invalid" value={result.summary.invalid} />
-      </div>
-      {result.invalidRows.length > 0 ? (
-        <div className="grid gap-inline">
-          {result.invalidRows.map((row) => (
-            <div
-              className="rounded-panel border border-danger-300 bg-danger-50 p-2.5"
-              key={row.index}
-            >
-              <strong>Row {row.index + 1}</strong>
-              <ul className="mb-0 mt-1.5 pl-[18px]">
-                {row.errors.map((message) => (
-                  <li key={message}>{message}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function SummaryValue({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-panel border border-app-border p-2.5">
-      <strong className="block text-[22px] text-app-text">{value}</strong>
-      <span className="block text-xs font-bold text-app-text-muted">
-        {label}
-      </span>
-    </div>
-  );
-}
-
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unexpected error';
+}
+
+function formatImportToastMessage(result: ImportJobsResponse): string {
+  const { createdActive, createdDraft, invalid, received } = result.summary;
+  const added = createdActive + createdDraft;
+  const summary = `Import finished: ${added} added (${createdActive} active, ${createdDraft} draft), ${invalid} invalid out of ${received}.`;
+  const firstInvalidRow = result.invalidRows[0];
+
+  if (!firstInvalidRow) {
+    return summary;
+  }
+
+  return `${summary} First error: row ${firstInvalidRow.index + 1}: ${firstInvalidRow.errors.join(', ')}.`;
 }
 
 function parseInputItems(value: string): string[] {
