@@ -117,6 +117,7 @@ export function ApplicationsPage() {
         <h1 className={pageTitleClass}>Applications</h1>
         <Button
           icon={<RefreshCw size={16} />}
+          isLoading={isLoading}
           onClick={() => loadApplications(true)}
         >
           Refresh
@@ -252,10 +253,11 @@ function ApplicationDrawer({
           <Button
             disabled={isSavingApplication}
             icon={<Save size={16} />}
+            isLoading={isSavingApplication}
             onClick={saveApplication}
             variant="primary"
           >
-            {isSavingApplication ? 'Saving' : 'Save Application'}
+            Save Application
           </Button>
         </div>
       </div>
@@ -270,10 +272,11 @@ function ApplicationDrawer({
               <Button
                 disabled={isSavingJob}
                 icon={<Save size={16} />}
+                isLoading={isSavingJob}
                 onClick={saveJob}
                 variant="primary"
               >
-                {isSavingJob ? 'Saving' : 'Save Job'}
+                Save Job
               </Button>
             </div>
           </div>

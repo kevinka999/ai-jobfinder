@@ -33,3 +33,27 @@
     text-decoration: none;
   }
 }
+
+@layer components {
+  @keyframes button-loading-dash {
+    from {
+      background-position: 0 100%;
+    }
+
+    to {
+      background-position: 18px 100%;
+    }
+  }
+
+  .button-loading-dash {
+    background-image: repeating-linear-gradient(
+      90deg,
+      currentColor 0 8px,
+      transparent 8px 14px
+    );
+    background-position: 0 100%;
+    background-repeat: repeat-x;
+    background-size: 18px 2px;
+    animation: button-loading-dash 700ms linear infinite;
+  }
+}

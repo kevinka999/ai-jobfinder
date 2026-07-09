@@ -1,3 +1,4 @@
+import { Button } from './Button';
 import { fieldClassName, fieldLabelClassName } from './Field';
 
 type MultiSelectProps<T extends string> = {
@@ -26,15 +27,14 @@ export function MultiSelect<T extends string>({
       <span className={fieldLabelClassName}>{label}</span>
       <div className="flex flex-wrap gap-1.5">
         {options.map((option) => (
-          <button
+          <Button
             aria-pressed={selected.includes(option.id)}
-            className="min-h-8 cursor-pointer rounded-control border border-app-border-strong bg-app-surface px-2.5 text-app-text-soft aria-pressed:border-brand-600 aria-pressed:bg-brand-100 aria-pressed:text-brand-700"
+            className="min-h-8 px-2.5 aria-pressed:border-brand-600 aria-pressed:bg-brand-100 aria-pressed:text-brand-700"
             key={option.id}
             onClick={() => toggle(option.id)}
-            type="button"
           >
             {option.label}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

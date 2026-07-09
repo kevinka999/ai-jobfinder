@@ -88,10 +88,11 @@ export function ProfilePage() {
         <Button
           disabled={isLoading || isSaving}
           icon={<Save size={16} />}
+          isLoading={isSaving}
           onClick={saveResume}
           variant="primary"
         >
-          {isSaving ? 'Saving' : 'Save'}
+          Save
         </Button>
       </div>
       {isLoading ? <LoadingState label="Loading profile" /> : null}

@@ -64,6 +64,7 @@ const COVER_LETTER_STEPS = [
 ];
 
 type CoverLetterStep = 0 | 1 | 2;
+type JobMutationAction = 'apply' | 'delete' | 'keep';
 
 export function JobsPage() {
   const [jobs, setJobs] = useState<JobResponse[]>([]);
@@ -71,6 +72,10 @@ export function JobsPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingJob, setEditingJob] = useState<JobResponse | null>(null);
   const [coverLetterJob, setCoverLetterJob] = useState<JobResponse | null>(null);
+  const [mutatingJob, setMutatingJob] = useState<{
+    action: JobMutationAction;
+    id: string;
+  } | null>(null);
   const toast = useToast();
 
   const draftJobs = useMemo(
@@ -108,6 +113,8 @@ export function JobsPage() {
     await mutateJob(
       () => apiRequest<JobResponse>(`/jobs/${job.id}/keep`, { method: 'POST' }),
       'Draft kept',
+      job.id,
+      'keep',
     );
   }
 
@@ -116,6 +123,8 @@ export function JobsPage() {
       () =>
         apiRequest<{ deleted: true }>(`/jobs/${job.id}`, { method: 'DELETE' }),
       'Draft deleted',
+      job.id,
+      'delete',
     );
   }
 
@@ -126,16 +135,27 @@ export function JobsPage() {
           method: 'POST',
         }),
       'Application created',
+      job.id,
+      'apply',
     );
   }
 
-  async function mutateJob(action: () => Promise<unknown>, successMessage: string) {
+  async function mutateJob(
+    action: () => Promise<unknown>,
+    successMessage: string,
+    jobId: string,
+    mutationAction: JobMutationAction,
+  ) {
+    setMutatingJob({ action: mutationAction, id: jobId });
+
     try {
       await action();
       toast.success(successMessage);
       await loadJobs();
     } catch (caughtError) {
       toast.error(`Could not update job: ${getErrorMessage(caughtError)}`);
+    } finally {
+      setMutatingJob(null);
     }
   }
 
@@ -155,11 +175,17 @@ export function JobsPage() {
           <Button
             aria-label="Keep draft"
             icon={<ShieldCheck size={15} />}
+            isLoading={
+              mutatingJob?.id === job.id && mutatingJob.action === 'keep'
+            }
             onClick={() => keepDraft(job)}
           />
           <Button
             aria-label="Delete draft"
             icon={<Trash2 size={15} />}
+            isLoading={
+              mutatingJob?.id === job.id && mutatingJob.action === 'delete'
+            }
             onClick={() => deleteDraft(job)}
             variant="danger"
           />
@@ -206,6 +232,9 @@ export function JobsPage() {
           <Button
             aria-label="Mark as applied"
             icon={<CheckCircle size={15} />}
+            isLoading={
+              mutatingJob?.id === job.id && mutatingJob.action === 'apply'
+            }
             onClick={() => markApplied(job)}
             variant="primary"
           />
@@ -218,7 +247,11 @@ export function JobsPage() {
     <section className={pageStackClass}>
       <div className={pageHeadingClass}>
         <h1 className={pageTitleClass}>Jobs</h1>
-        <Button icon={<RefreshCw size={16} />} onClick={() => loadJobs(true)}>
+        <Button
+          icon={<RefreshCw size={16} />}
+          isLoading={isLoading}
+          onClick={() => loadJobs(true)}
+        >
           Refresh
         </Button>
       </div>
@@ -429,8 +462,8 @@ function JobEditDrawer({
         <Button disabled={isSaving} onClick={onClose}>
           Cancel
         </Button>
-        <Button disabled={isSaving} onClick={saveJob} variant="primary">
-          {isSaving ? 'Saving' : 'Save'}
+        <Button isLoading={isSaving} onClick={saveJob} variant="primary">
+          Save
         </Button>
       </div>
     </Drawer>
@@ -571,10 +604,11 @@ function CoverLetterDrawer({
             <Button
               disabled={isGenerating}
               icon={<Mail size={16} />}
+              isLoading={isGenerating}
               onClick={generateDraft}
               variant="primary"
             >
-              {isGenerating ? 'Generating' : 'Generate Draft'}
+              Generate Draft
             </Button>
           </div>
         </div>
@@ -608,9 +642,10 @@ function CoverLetterDrawer({
                 revisionInstructions.trim().length === 0
               }
               icon={<Wand2 size={16} />}
+              isLoading={isRevising}
               onClick={reviseDraft}
             >
-              {isRevising ? 'Revising' : 'Revise'}
+              Revise
             </Button>
             <Button
               disabled={isRevising || !draftMarkdown}
@@ -641,10 +676,11 @@ function CoverLetterDrawer({
             <Button
               disabled={isDownloading || !draftMarkdown}
               icon={<Download size={16} />}
+              isLoading={isDownloading}
               onClick={downloadPdf}
               variant="primary"
             >
-              {isDownloading ? 'Preparing' : 'Generate PDF'}
+              Generate PDF
             </Button>
           </div>
         </div>

@@ -134,10 +134,11 @@ export function JobSearchPage() {
             workModels.length === 0
           }
           icon={<Search size={16} />}
+          isLoading={isGenerating}
           onClick={generatePrompt}
           variant="primary"
         >
-          {isGenerating ? 'Generating' : 'Generate Prompt'}
+          Generate Prompt
         </Button>
       </div>
       <div className={`${panelClass} grid gap-section`}>
@@ -171,17 +172,17 @@ export function JobSearchPage() {
           </div>
           <div className="flex flex-wrap gap-1.5">
             {cities.map((city) => (
-              <button
-                className="inline-flex min-h-7 cursor-pointer items-center gap-1.5 rounded-control border border-brand-200 bg-brand-50 px-2 text-xs font-bold text-brand-700 hover:bg-brand-100"
+              <Button
+                aria-label={`Remove ${city}`}
+                className="min-h-7 border-brand-200 bg-brand-50 px-2 text-xs text-brand-700 hover:bg-brand-100"
                 key={city}
                 onClick={() =>
                   setCities(cities.filter((currentCity) => currentCity !== city))
                 }
-                type="button"
               >
                 <span>{city}</span>
                 <X size={14} />
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -217,10 +218,11 @@ export function JobSearchPage() {
             <Button
               disabled={isImporting || jsonText.trim().length === 0}
               icon={<Upload size={16} />}
+              isLoading={isImporting}
               onClick={importJobs}
               variant="primary"
             >
-              {isImporting ? 'Importing' : 'Import'}
+              Import
             </Button>
           </div>
           <Textarea
