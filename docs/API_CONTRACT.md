@@ -95,6 +95,7 @@ type JobResponse = {
   metadata?: {
     possibleDuplicatedJobId?: string;
   };
+  deletedAt?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -358,7 +359,7 @@ type JobImportItem = JobImportItemRequired & JobImportItemOptional;
 
 For each valid job row:
 
-1. Compare against current user's existing jobs with `status = "active"` or `status = "applied"`.
+1. Compare against current user's existing jobs with `status = "active"` or `status = "applied"`, including soft-deleted active jobs.
 2. If normalized `applicationUrl` matches, import as `draft`.
 3. If normalized `companyName + title` matches, import as `draft`.
 4. If no duplicate match exists, import as `active`.
@@ -404,7 +405,7 @@ type Query = {
 };
 ```
 
-If `status` is provided, only jobs with that status are returned. If omitted, all jobs for the default user are returned.
+If `status` is provided, only non-deleted jobs with that status are returned. If omitted, all non-deleted jobs for the default user are returned.
 
 #### Response
 
@@ -414,7 +415,7 @@ type Response = JobResponse[];
 
 ### GET /jobs/:jobId
 
-Returns one job for the default user.
+Returns one non-deleted job for the default user.
 
 #### Response
 
@@ -509,9 +510,16 @@ type Response = JobResponse;
 
 ### DELETE /jobs/:jobId
 
-Hard-deletes a draft job.
+Deletes a job for the default user.
 
-For MVP, this endpoint is intended for deleting draft duplicate imports. It should be allowed only when `job.status = "draft"` unless the product later adds general job deletion.
+Allowed when:
+
+- `job.status = "draft"`: hard-deletes the draft import.
+- `job.status = "active"`: soft-deletes the active job by setting `deletedAt`.
+
+Soft-deleted active jobs are hidden from normal job list and direct read endpoints, but they remain available to duplicate detection. If a later import duplicates a soft-deleted active job, the imported row is still created as `draft` with `metadata.possibleDuplicatedJobId`.
+
+Applied jobs cannot be deleted by this endpoint.
 
 #### Response
 
@@ -785,6 +793,7 @@ Invalid import rows are skipped and returned as row-level errors.
 - Draft jobs can only be kept or deleted.
 - Keep changes a draft job to active.
 - Delete hard-deletes a draft job.
+- Delete soft-deletes an active job.
 - Cover letters can be generated only for active jobs.
 - Mark as applied is allowed only for active jobs.
 - Applying creates an application record and sets job status to applied.

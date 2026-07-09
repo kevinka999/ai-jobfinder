@@ -32,6 +32,7 @@ describe('ImportJobsUseCase', () => {
     jobRepository = {
       create: jest.fn(),
       delete: jest.fn(),
+      softDeleteActive: jest.fn(),
       findDuplicateCandidate: jest.fn(),
       findById: jest.fn(),
       list: jest.fn(),
@@ -113,6 +114,41 @@ describe('ImportJobsUseCase', () => {
     expect(result.createdActiveJobs).toHaveLength(0);
     expect(result.createdDraftJobs).toHaveLength(1);
     expect(result.summary.createdDraft).toBe(1);
+  });
+
+  it('creates imports that duplicate soft-deleted active jobs as drafts', async () => {
+    const duplicateJob = buildJob({
+      id: '64a000000000000000000001',
+      status: 'active',
+      deletedAt: new Date('2026-07-08T12:30:00.000Z'),
+    });
+    jobRepository.findDuplicateCandidate.mockResolvedValue(duplicateJob);
+    jobRepository.create.mockImplementation(async (input) => ({
+      ...input,
+      id: '64a000000000000000000002',
+      createdAt: now,
+      updatedAt: now,
+    }));
+
+    const result = await useCase.execute({
+      jobs: [
+        {
+          companyName: 'Example GmbH',
+          title: 'Frontend Developer',
+          applicationUrl: 'https://example.com/jobs/1',
+          description: 'React and TypeScript role.',
+          sourcePlatformId: 'linkedin',
+        },
+      ],
+    });
+
+    expect(jobRepository.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'draft',
+        metadata: { possibleDuplicatedJobId: duplicateJob.id },
+      }),
+    );
+    expect(result.createdDraftJobs).toHaveLength(1);
   });
 });
 

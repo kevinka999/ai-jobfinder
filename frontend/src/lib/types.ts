@@ -49,6 +49,7 @@ export type JobResponse = {
   metadata?: {
     possibleDuplicatedJobId?: string;
   };
+  deletedAt?: string;
   createdAt: string;
   updatedAt: string;
 };

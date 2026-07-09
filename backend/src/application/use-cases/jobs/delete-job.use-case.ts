@@ -10,7 +10,7 @@ import { USER_REPOSITORY } from '../../ports/user-repository.port';
 import type { UserRepository } from '../../ports/user-repository.port';
 
 @Injectable()
-export class DeleteDraftJobUseCase {
+export class DeleteJobUseCase {
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: UserRepository,
@@ -29,19 +29,32 @@ export class DeleteDraftJobUseCase {
       throw new NotFoundException('Job was not found.');
     }
 
-    if (job.status !== 'draft') {
-      throw new BadRequestException('Only draft jobs can be deleted.');
+    if (job.status === 'draft') {
+      const deleted = await this.jobRepository.delete({
+        userId: user.id,
+        jobId: input.jobId,
+      });
+
+      if (!deleted) {
+        throw new NotFoundException('Job was not found.');
+      }
+
+      return { deleted: true };
     }
 
-    const deleted = await this.jobRepository.delete({
-      userId: user.id,
-      jobId: input.jobId,
-    });
+    if (job.status === 'active') {
+      const deletedJob = await this.jobRepository.softDeleteActive({
+        userId: user.id,
+        jobId: input.jobId,
+      });
 
-    if (!deleted) {
-      throw new NotFoundException('Job was not found.');
+      if (!deletedJob) {
+        throw new NotFoundException('Job was not found.');
+      }
+
+      return { deleted: true };
     }
 
-    return { deleted: true };
+    throw new BadRequestException('Only draft or active jobs can be deleted.');
   }
 }

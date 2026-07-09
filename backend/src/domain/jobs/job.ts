@@ -26,6 +26,7 @@ export type Job = {
   contactInfo?: string;
   rawText?: string;
   metadata?: JobMetadata;
+  deletedAt?: Date | string;
   createdAt: Date;
   updatedAt: Date;
 };

@@ -107,6 +107,7 @@ type Job = {
   contactInfo?: string;
   rawText?: string;
   metadata?: JobMetadata;
+  deletedAt?: Date | string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -120,11 +121,12 @@ type JobStatus = "draft" | "active" | "applied";
 
 `draft`
 
-The imported job may duplicate an existing active or applied job. Draft jobs appear in the Drafts table. The only draft actions are keep and delete.
+The imported job may duplicate an existing active, soft-deleted active, or applied job. Draft jobs appear in the Drafts table. The only draft actions are keep and delete.
 
 `active`
 
 The job is part of the user's real job pool. Active jobs can be edited, used for cover-letter generation, and marked as applied.
+When an active job is deleted, it is soft-deleted with `deletedAt` and hidden from normal job lists while remaining available for future duplicate detection.
 
 `applied`
 
@@ -161,7 +163,7 @@ type JobMetadata = {
 
 `possibleDuplicatedJobId`
 
-Stores the existing active or applied job ID that caused an imported job to become a draft. It exists so the user can compare the draft with the possible duplicate.
+Stores the existing active, soft-deleted active, or applied job ID that caused an imported job to become a draft. It exists so the user can compare the draft with the possible duplicate.
 
 No duplicate reason, confidence, or duplicate candidate array is stored for MVP.
 
@@ -243,6 +245,10 @@ Optional raw scraped/extracted text from the external AI result.
 
 Typed optional metadata. For MVP it only contains `possibleDuplicatedJobId`.
 
+`deletedAt`
+
+Soft-delete timestamp. This is set only when the user deletes an active job. Soft-deleted active jobs are hidden from normal job lists and direct job reads, but they still participate in duplicate detection so re-imported duplicates become drafts.
+
 `createdAt`, `updatedAt`
 
 Standard timestamps.
@@ -256,7 +262,7 @@ It compares the imported job only against the current user's existing jobs with:
 - `status = "active"`;
 - `status = "applied"`.
 
-It does not compare against existing `draft` jobs.
+Soft-deleted active jobs are still included in this comparison. Existing `draft` jobs are ignored.
 
 An imported job becomes a draft if either rule matches:
 
@@ -291,6 +297,7 @@ The app may compute normalization during import or store internal normalized hel
 - Imported duplicates are created as `draft`.
 - Draft keep changes `status` to `active`.
 - Draft delete hard-deletes the document.
+- Active delete sets `deletedAt` and hides the job from normal job lists.
 - Active jobs can generate cover letters.
 - Active jobs can be marked as applied.
 - Draft jobs cannot generate cover letters.

@@ -40,6 +40,7 @@ describe('UpdateApplicationUseCase', () => {
     jobRepository = {
       create: jest.fn(),
       delete: jest.fn(),
+      softDeleteActive: jest.fn(),
       findDuplicateCandidate: jest.fn(),
       findById: jest.fn(),
       list: jest.fn(),
@@ -166,6 +167,7 @@ describe('ListApplicationsUseCase', () => {
     const jobRepository: jest.Mocked<JobRepository> = {
       create: jest.fn(),
       delete: jest.fn(),
+      softDeleteActive: jest.fn(),
       findDuplicateCandidate: jest.fn(),
       findById: jest.fn().mockResolvedValue(job),
       list: jest.fn(),

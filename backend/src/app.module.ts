@@ -17,7 +17,7 @@ import {
 import { JobSearchController } from './application/use-cases/job-search/job-search.controller';
 import { ApplyJobUseCase } from './application/use-cases/jobs/apply-job.use-case';
 import { CreateJobUseCase } from './application/use-cases/jobs/create-job.use-case';
-import { DeleteDraftJobUseCase } from './application/use-cases/jobs/delete-draft-job.use-case';
+import { DeleteJobUseCase } from './application/use-cases/jobs/delete-job.use-case';
 import { GetJobUseCase } from './application/use-cases/jobs/get-job.use-case';
 import { ImportJobsUseCase } from './application/use-cases/jobs/import-jobs.use-case';
 import { JobsController } from './application/use-cases/jobs/jobs.controller';
@@ -64,7 +64,7 @@ import { PdfModule } from './infrastructure/pdf/pdf.module';
     CreateJobUseCase,
     UpdateJobUseCase,
     KeepDraftJobUseCase,
-    DeleteDraftJobUseCase,
+    DeleteJobUseCase,
     ApplyJobUseCase,
     ListApplicationsUseCase,
     GetApplicationUseCase,

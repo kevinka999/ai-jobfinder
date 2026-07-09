@@ -11,7 +11,7 @@ import {
 import { ApplicationResponseDto } from '../applications/application-response.dto';
 import { ApplyJobUseCase } from './apply-job.use-case';
 import { CreateJobUseCase } from './create-job.use-case';
-import { DeleteDraftJobUseCase } from './delete-draft-job.use-case';
+import { DeleteJobUseCase } from './delete-job.use-case';
 import { GetJobUseCase } from './get-job.use-case';
 import { ImportJobsUseCase } from './import-jobs.use-case';
 import { ImportJobsResponseDto } from './import-jobs.dto';
@@ -34,7 +34,7 @@ export class JobsController {
     private readonly createJobUseCase: CreateJobUseCase,
     private readonly updateJobUseCase: UpdateJobUseCase,
     private readonly keepDraftJobUseCase: KeepDraftJobUseCase,
-    private readonly deleteDraftJobUseCase: DeleteDraftJobUseCase,
+    private readonly deleteJobUseCase: DeleteJobUseCase,
     private readonly applyJobUseCase: ApplyJobUseCase,
   ) {}
 
@@ -98,8 +98,8 @@ export class JobsController {
   }
 
   @Delete(':jobId')
-  deleteDraftJob(@Param('jobId') jobId: string): Promise<{ deleted: true }> {
-    return this.deleteDraftJobUseCase.execute({ jobId });
+  deleteJob(@Param('jobId') jobId: string): Promise<{ deleted: true }> {
+    return this.deleteJobUseCase.execute({ jobId });
   }
 
   @Post(':jobId/apply')

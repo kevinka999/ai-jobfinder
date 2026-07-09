@@ -23,6 +23,7 @@ export class JobResponseDto {
   contactInfo?: string;
   rawText?: string;
   metadata?: JobMetadata;
+  deletedAt?: string;
   createdAt!: string;
   updatedAt!: string;
 
@@ -47,6 +48,7 @@ export class JobResponseDto {
       contactInfo: job.contactInfo,
       rawText: job.rawText,
       metadata: job.metadata,
+      deletedAt: formatOptionalDate(job.deletedAt),
       createdAt: job.createdAt.toISOString(),
       updatedAt: job.updatedAt.toISOString(),
     };

@@ -97,7 +97,7 @@ Bind tokens to concrete providers inside infrastructure modules. Use cases injec
 Start with only the contracts the use cases need:
 
 - `UserRepository`: get/create default user, save resume and generated keywords.
-- `JobRepository`: create, list, update editable fields, find duplicate candidates, change status, delete draft.
+- `JobRepository`: create, list, update editable fields, find duplicate candidates, change status, hard-delete drafts, and soft-delete active jobs.
 - `ApplicationRepository`: create/list/update applications and status history.
 - `AiProvider`: extract resume keywords, generate cover-letter drafts, revise cover-letter drafts.
 - `PdfRenderer`: render final cover-letter text to PDF bytes.
@@ -110,7 +110,7 @@ Do not create ports for deterministic logic that is internal to the app. For exa
 - Generate job-search prompts: use case loads stored keywords and fills deterministic templates for platform search or specific posting links; no AI call.
 - Import jobs: use case validates rows, applies duplicate rules, creates `active` or `draft` jobs, and returns row-level errors.
 - Keep draft: use case allows only `draft -> active`.
-- Delete draft: use case allows hard delete only for `draft`.
+- Delete job: use case hard-deletes `draft` jobs and soft-deletes `active` jobs with `deletedAt`.
 - Apply to job: use case allows only active jobs, sets job to `applied`, and creates or returns the application.
 - Cover-letter draft/revision: use case calls `AiProvider`; result is returned only.
 - Cover-letter PDF: use case calls `PdfRenderer`; result is returned only.

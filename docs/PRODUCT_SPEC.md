@@ -193,6 +193,7 @@ Duplicate detection compares new imported jobs only against the current user's e
 - `status = "applied"`.
 
 Existing draft jobs are ignored during duplicate detection.
+Soft-deleted active jobs are still included during duplicate detection so re-imported deleted opportunities return as drafts.
 
 An imported job becomes `draft` if either of these deterministic rules matches:
 
@@ -252,7 +253,14 @@ Active job actions:
 
 - open details/edit drawer;
 - generate cover letter;
-- mark as applied.
+- mark as applied;
+- delete.
+
+Active delete behavior:
+
+- sets `deletedAt` instead of removing the job document;
+- hides the job from normal Jobs page lists;
+- keeps the job available for duplicate detection, so a future duplicate import is still created as a draft.
 
 ### Job Details/Edit Drawer
 

@@ -37,6 +37,7 @@ describe('cover letter use cases', () => {
     jobRepository = {
       create: jest.fn(),
       delete: jest.fn(),
+      softDeleteActive: jest.fn(),
       findDuplicateCandidate: jest.fn(),
       findById: jest.fn().mockResolvedValue(buildJob()),
       list: jest.fn(),

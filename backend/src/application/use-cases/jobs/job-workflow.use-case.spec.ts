@@ -6,7 +6,7 @@ import type { JobRepository } from '../../ports/job-repository.port';
 import type { UserRepository } from '../../ports/user-repository.port';
 import type { UserProfile } from '../../../domain/users/user-profile';
 import { ApplyJobUseCase } from './apply-job.use-case';
-import { DeleteDraftJobUseCase } from './delete-draft-job.use-case';
+import { DeleteJobUseCase } from './delete-job.use-case';
 import { KeepDraftJobUseCase } from './keep-draft-job.use-case';
 import { UpdateJobUseCase } from './update-job.use-case';
 
@@ -34,6 +34,7 @@ describe('job workflow use cases', () => {
     jobRepository = {
       create: jest.fn(),
       delete: jest.fn(),
+      softDeleteActive: jest.fn(),
       findDuplicateCandidate: jest.fn(),
       findById: jest.fn(),
       list: jest.fn(),
@@ -86,7 +87,7 @@ describe('job workflow use cases', () => {
     jobRepository.delete.mockResolvedValue(true);
 
     await expect(
-      new DeleteDraftJobUseCase(userRepository, jobRepository).execute({
+      new DeleteJobUseCase(userRepository, jobRepository).execute({
         jobId: draftJob.id,
       }),
     ).resolves.toEqual({ deleted: true });
@@ -95,6 +96,41 @@ describe('job workflow use cases', () => {
       userId: user.id,
       jobId: draftJob.id,
     });
+    expect(jobRepository.softDeleteActive).not.toHaveBeenCalled();
+  });
+
+  it('soft-deletes active jobs', async () => {
+    const activeJob = buildJob({ status: 'active' });
+    const deletedAt = new Date('2026-07-08T12:30:00.000Z');
+    jobRepository.findById.mockResolvedValue(activeJob);
+    jobRepository.softDeleteActive.mockResolvedValue(
+      buildJob({ status: 'active', deletedAt }),
+    );
+
+    await expect(
+      new DeleteJobUseCase(userRepository, jobRepository).execute({
+        jobId: activeJob.id,
+      }),
+    ).resolves.toEqual({ deleted: true });
+
+    expect(jobRepository.softDeleteActive).toHaveBeenCalledWith({
+      userId: user.id,
+      jobId: activeJob.id,
+    });
+    expect(jobRepository.delete).not.toHaveBeenCalled();
+  });
+
+  it('does not delete applied jobs', async () => {
+    jobRepository.findById.mockResolvedValue(buildJob({ status: 'applied' }));
+
+    await expect(
+      new DeleteJobUseCase(userRepository, jobRepository).execute({
+        jobId: 'job-1',
+      }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    expect(jobRepository.delete).not.toHaveBeenCalled();
+    expect(jobRepository.softDeleteActive).not.toHaveBeenCalled();
   });
 
   it('marks active jobs as applied and creates an application', async () => {

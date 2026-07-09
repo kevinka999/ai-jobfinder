@@ -32,6 +32,10 @@ export type CreateJobInput = JobEditableFields & {
 export interface JobRepository {
   create(input: CreateJobInput): Promise<Job>;
   delete(input: { userId: string; jobId: string }): Promise<boolean>;
+  softDeleteActive(input: {
+    userId: string;
+    jobId: string;
+  }): Promise<Job | null>;
   findDuplicateCandidate(input: {
     userId: string;
     applicationUrl: string;

@@ -51,6 +51,30 @@ export class MongoJobRepository implements JobRepository {
     return result.deletedCount === 1;
   }
 
+  async softDeleteActive(input: {
+    userId: string;
+    jobId: string;
+  }): Promise<DomainJob | null> {
+    if (!Types.ObjectId.isValid(input.jobId)) {
+      return null;
+    }
+
+    const job = await this.jobModel
+      .findOneAndUpdate(
+        {
+          _id: new Types.ObjectId(input.jobId),
+          userId: input.userId,
+          status: 'active',
+          deletedAt: null,
+        },
+        { $set: { deletedAt: new Date() } },
+        { returnDocument: 'after', runValidators: true },
+      )
+      .exec();
+
+    return job ? mapJobDocument(job) : null;
+  }
+
   async findDuplicateCandidate(input: {
     userId: string;
     applicationUrl: string;
@@ -89,6 +113,7 @@ export class MongoJobRepository implements JobRepository {
       .findOne({
         _id: new Types.ObjectId(input.jobId),
         userId: input.userId,
+        deletedAt: null,
       })
       .exec();
 
@@ -103,6 +128,7 @@ export class MongoJobRepository implements JobRepository {
       .find({
         userId: input.userId,
         ...(input.status ? { status: input.status } : {}),
+        deletedAt: null,
       })
       .sort({ createdAt: -1 })
       .exec();
@@ -124,6 +150,7 @@ export class MongoJobRepository implements JobRepository {
         {
           _id: new Types.ObjectId(input.jobId),
           userId: input.userId,
+          deletedAt: null,
         },
         {
           $set: {
@@ -152,6 +179,7 @@ export class MongoJobRepository implements JobRepository {
         {
           _id: new Types.ObjectId(input.jobId),
           userId: input.userId,
+          deletedAt: null,
         },
         { $set: { status: input.status } },
         { returnDocument: 'after', runValidators: true },
@@ -210,6 +238,7 @@ function mapJobDocument(job: JobDocument): DomainJob {
             job.metadata.possibleDuplicatedJobId.toString(),
         }
       : undefined,
+    deletedAt: job.deletedAt,
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
   };

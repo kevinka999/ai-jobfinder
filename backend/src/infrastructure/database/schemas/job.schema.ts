@@ -82,6 +82,9 @@ export class Job {
   @Prop({ type: JobMetadataSchema })
   metadata?: JobMetadata;
 
+  @Prop({ type: Date })
+  deletedAt?: Date;
+
   @Prop({ required: true, select: false, type: String })
   normalizedApplicationUrl!: string;
 
@@ -104,7 +107,7 @@ JobSchema.pre('validate', function () {
   this.normalizedTitle = normalizeComparableText(this.title);
 });
 
-JobSchema.index({ userId: 1, status: 1 });
+JobSchema.index({ userId: 1, status: 1, deletedAt: 1 });
 JobSchema.index({ userId: 1, applicationUrl: 1 });
 JobSchema.index({ userId: 1, normalizedApplicationUrl: 1, status: 1 });
 JobSchema.index({

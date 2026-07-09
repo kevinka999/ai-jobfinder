@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   CheckCircle,
   Download,
   Edit3,
@@ -73,6 +74,8 @@ export function JobsPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingJob, setEditingJob] = useState<JobResponse | null>(null);
   const [coverLetterJob, setCoverLetterJob] = useState<JobResponse | null>(null);
+  const [deleteConfirmationJob, setDeleteConfirmationJob] =
+    useState<JobResponse | null>(null);
   const [mutatingJob, setMutatingJob] = useState<{
     action: JobMutationAction;
     id: string;
@@ -120,13 +123,40 @@ export function JobsPage() {
   }
 
   async function deleteDraft(job: JobResponse) {
-    await mutateJob(
+    const deleted = await mutateJob(
       () =>
         apiRequest<{ deleted: true }>(`/jobs/${job.id}`, { method: 'DELETE' }),
       'Draft deleted',
       job.id,
       'delete',
     );
+
+    if (deleted) {
+      setDeleteConfirmationJob(null);
+    }
+  }
+
+  async function deleteActive(job: JobResponse) {
+    const deleted = await mutateJob(
+      () =>
+        apiRequest<{ deleted: true }>(`/jobs/${job.id}`, { method: 'DELETE' }),
+      'Job deleted',
+      job.id,
+      'delete',
+    );
+
+    if (deleted) {
+      setDeleteConfirmationJob(null);
+    }
+  }
+
+  async function confirmDelete(job: JobResponse) {
+    if (job.status === 'draft') {
+      await deleteDraft(job);
+      return;
+    }
+
+    await deleteActive(job);
   }
 
   async function markApplied(job: JobResponse) {
@@ -146,15 +176,17 @@ export function JobsPage() {
     successMessage: string,
     jobId: string,
     mutationAction: JobMutationAction,
-  ) {
+  ): Promise<boolean> {
     setMutatingJob({ action: mutationAction, id: jobId });
 
     try {
       await action();
       toast.success(successMessage);
       await loadJobs();
+      return true;
     } catch (caughtError) {
       toast.error(`Could not update job: ${getErrorMessage(caughtError)}`);
+      return false;
     } finally {
       setMutatingJob(null);
     }
@@ -191,7 +223,7 @@ export function JobsPage() {
             isLoading={
               mutatingJob?.id === job.id && mutatingJob.action === 'delete'
             }
-            onClick={() => deleteDraft(job)}
+            onClick={() => setDeleteConfirmationJob(job)}
             variant="danger"
           />
         </div>
@@ -250,6 +282,15 @@ export function JobsPage() {
             onClick={() => markApplied(job)}
             variant="primary"
           />
+          <Button
+            aria-label="Delete active job"
+            icon={<Trash2 size={15} />}
+            isLoading={
+              mutatingJob?.id === job.id && mutatingJob.action === 'delete'
+            }
+            onClick={() => setDeleteConfirmationJob(job)}
+            variant="danger"
+          />
         </div>
       ),
     },
@@ -300,7 +341,101 @@ export function JobsPage() {
         job={coverLetterJob}
         onClose={() => setCoverLetterJob(null)}
       />
+      <DeleteJobConfirmationModal
+        isDeleting={
+          !!deleteConfirmationJob &&
+          mutatingJob?.id === deleteConfirmationJob.id &&
+          mutatingJob.action === 'delete'
+        }
+        job={deleteConfirmationJob}
+        onCancel={() => setDeleteConfirmationJob(null)}
+        onConfirm={confirmDelete}
+      />
     </section>
+  );
+}
+
+function DeleteJobConfirmationModal({
+  isDeleting,
+  job,
+  onCancel,
+  onConfirm,
+}: {
+  isDeleting: boolean;
+  job: JobResponse | null;
+  onCancel: () => void;
+  onConfirm: (job: JobResponse) => Promise<void>;
+}) {
+  useEffect(() => {
+    if (!job) {
+      return undefined;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        onCancel();
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [job, onCancel]);
+
+  if (!job) {
+    return null;
+  }
+
+  const isDraft = job.status === 'draft';
+
+  return (
+    <div
+      className="fixed inset-0 z-30 grid place-items-center bg-app-text/30 px-page-mobile"
+      role="presentation"
+    >
+      <section
+        aria-describedby="delete-job-confirmation-description"
+        aria-labelledby="delete-job-confirmation-title"
+        aria-modal="true"
+        className="grid w-full max-w-[420px] gap-cluster rounded-panel border border-app-border bg-app-surface p-panel shadow-drawer"
+        role="dialog"
+      >
+        <div className="flex items-start gap-cluster">
+          <span className="grid size-9 shrink-0 place-items-center rounded-control border border-danger-300 bg-danger-50 text-danger-700">
+            <AlertTriangle aria-hidden="true" size={18} />
+          </span>
+          <div className="grid gap-1">
+            <h2
+              className="m-0 text-base font-bold text-app-text"
+              id="delete-job-confirmation-title"
+            >
+              Delete job?
+            </h2>
+            <p
+              className="m-0 text-sm leading-6 text-app-text-muted"
+              id="delete-job-confirmation-description"
+            >
+              {isDraft
+                ? 'This draft job will be permanently removed.'
+                : 'This active job will leave the active list, but future duplicates will still appear as drafts.'}
+            </p>
+          </div>
+        </div>
+        <div className={drawerActionsClass}>
+          <Button disabled={isDeleting} onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button
+            icon={<Trash2 size={15} />}
+            isLoading={isDeleting}
+            onClick={() => onConfirm(job)}
+            variant="danger"
+          >
+            Delete
+          </Button>
+        </div>
+      </section>
+    </div>
   );
 }
 

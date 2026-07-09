@@ -216,7 +216,7 @@ References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placem
 - Implement `POST /jobs` for manual job creation.
 - Implement `PATCH /jobs/:jobId` for editable job fields.
 - Implement `POST /jobs/:jobId/keep` for draft keep.
-- Implement `DELETE /jobs/:jobId` for draft hard delete.
+- Implement `DELETE /jobs/:jobId` for draft hard delete and active soft delete.
 - Implement `POST /jobs/:jobId/apply`.
 
 ### Acceptance Criteria
@@ -224,6 +224,7 @@ References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placem
 - Jobs are always filtered by default user.
 - Draft keep changes status to active.
 - Draft delete hard-deletes the job.
+- Active delete soft-deletes the job.
 - Mark as applied is allowed only for active jobs.
 - Mark as applied sets job status to applied.
 - Mark as applied creates one application record.
@@ -381,6 +382,7 @@ References: [Jobs API](API_CONTRACT.md#jobs-api), [cover letter API](API_CONTRAC
 - Show possible duplicate reference for draft jobs.
 - Implement draft keep.
 - Implement draft delete.
+- Implement active soft delete.
 - Build job details/edit drawer for active/applied jobs.
 - Implement generate cover letter drawer wizard.
 - Implement mark as applied.
@@ -390,6 +392,7 @@ References: [Jobs API](API_CONTRACT.md#jobs-api), [cover letter API](API_CONTRAC
 - Draft jobs have only keep and delete mutating actions.
 - Keeping a draft moves it to active.
 - Deleting a draft removes it.
+- Deleting an active job hides it without removing it from duplicate detection.
 - Active jobs can be edited.
 - Active jobs can generate cover letters.
 - Active jobs can be marked as applied.
@@ -456,6 +459,7 @@ References: [backend architecture](../backend/docs/ARCHITECTURE.md), [API contra
 - Non-duplicates produce active jobs.
 - Draft keep changes status to active.
 - Draft delete hard-deletes.
+- Active delete soft-deletes.
 - Apply creates application and changes job status.
 - Application status change appends history.
 - Cover-letter endpoints reject non-active jobs.
