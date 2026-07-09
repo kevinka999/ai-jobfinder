@@ -862,7 +862,6 @@ function CoverLetterDrawer({
           {isLoadingInstructionTemplate ? (
             <InlineLoading label="Loading saved instructions" />
           ) : null}
-          {isGenerating ? <InlineLoading label="Generating first draft" /> : null}
           <div className={drawerActionsClass}>
             <Button
               disabled={isGenerating || isLoadingInstructionTemplate}

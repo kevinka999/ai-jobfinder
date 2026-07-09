@@ -1,6 +1,7 @@
-import { PanelRightOpen, RefreshCw, Save, Search } from 'lucide-react';
+import { PanelRightOpen, RefreshCw, Save } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/Button';
+import { CheckboxMenu } from '../components/CheckboxMenu';
 import { DataTable } from '../components/DataTable';
 import type { DataTableColumn } from '../components/DataTable';
 import { Drawer } from '../components/Drawer';
@@ -51,6 +52,8 @@ export function ApplicationsPage() {
   const [selectedApplication, setSelectedApplication] =
     useState<ApplicationResponse | null>(null);
   const [jobFilter, setJobFilter] = useState('');
+  const [appliedDateFilter, setAppliedDateFilter] = useState('');
+  const [statusFilters, setStatusFilters] = useState<ApplicationStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const toast = useToast();
@@ -78,9 +81,16 @@ export function ApplicationsPage() {
   }, [loadApplications]);
 
   const filteredApplications = useMemo(
-    () => filterApplicationsByJob(applications, jobFilter),
-    [applications, jobFilter],
+    () =>
+      filterApplications(applications, {
+        appliedDateFilter,
+        jobFilter,
+        statusFilters,
+      }),
+    [applications, appliedDateFilter, jobFilter, statusFilters],
   );
+  const hasActiveFilters =
+    !!jobFilter.trim() || !!appliedDateFilter || statusFilters.length > 0;
 
   const columns: Array<DataTableColumn<ApplicationResponse>> = [
     {
@@ -139,27 +149,55 @@ export function ApplicationsPage() {
       {error ? <ErrorState message={error} /> : null}
       {isLoading ? <LoadingState label="Loading applications" /> : null}
       <section className={panelSectionClass}>
-        <label className="grid max-w-md gap-1.5">
-          <span className={fieldLabelClassName}>Filter by job</span>
-          <span className="relative">
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-app-text-muted"
-              size={15}
-            />
+        <div className="grid gap-cluster lg:grid-cols-[minmax(220px,1fr)_minmax(180px,220px)_minmax(260px,1.2fr)]">
+          <label className="grid gap-1.5">
+            <span className={fieldLabelClassName}>Filter by job</span>
             <input
-              className={`${inputClassName} pl-8`}
+              className={inputClassName}
               onChange={(event) => setJobFilter(event.target.value)}
               placeholder="Job title or company"
               type="search"
               value={jobFilter}
             />
-          </span>
-        </label>
+          </label>
+          <div className={fieldClassName}>
+            <span className={fieldLabelClassName}>Applied date</span>
+            <input
+              className={inputClassName}
+              onChange={(event) => setAppliedDateFilter(event.target.value)}
+              type="date"
+              value={appliedDateFilter}
+            />
+          </div>
+          <CheckboxMenu
+            emptyLabel="All statuses"
+            label="Status"
+            menuLabel="Application status filters"
+            onChange={setStatusFilters}
+            options={APPLICATION_STATUS_OPTIONS}
+            selected={statusFilters}
+            selectedLabel={getStatusFilterLabel}
+          />
+        </div>
+        {hasActiveFilters ? (
+          <div className="flex justify-end">
+            <Button
+              onClick={() => {
+                setJobFilter('');
+                setAppliedDateFilter('');
+                setStatusFilters([]);
+              }}
+            >
+              Clear filters
+            </Button>
+          </div>
+        ) : null}
         <DataTable
           columns={columns}
           emptyLabel={
-            jobFilter.trim() ? 'No applications match this job filter.' : 'No applications.'
+            hasActiveFilters
+              ? 'No applications match these filters.'
+              : 'No applications.'
           }
           getRowKey={(application) => application.id}
           rows={filteredApplications}
@@ -482,20 +520,92 @@ function getApplicationJobSortLabel(application: ApplicationResponse): string {
   return `${application.job.companyName} ${application.job.title}`;
 }
 
-function filterApplicationsByJob(
+function filterApplications(
   applications: ApplicationResponse[],
-  jobFilter: string,
+  {
+    appliedDateFilter,
+    jobFilter,
+    statusFilters,
+  }: {
+    appliedDateFilter: string;
+    jobFilter: string;
+    statusFilters: ApplicationStatus[];
+  },
 ) {
   const normalizedFilter = normalizeFilterText(jobFilter);
 
+  return applications.filter((application) =>
+    matchesJobFilter(application, normalizedFilter) &&
+    matchesAppliedDateFilter(application, appliedDateFilter) &&
+    matchesStatusFilters(application, statusFilters),
+  );
+}
+
+function matchesJobFilter(
+  application: ApplicationResponse,
+  normalizedFilter: string,
+): boolean {
   if (!normalizedFilter) {
-    return applications;
+    return true;
   }
 
-  return applications.filter((application) =>
-    normalizeFilterText(getApplicationJobSortLabel(application)).includes(
-      normalizedFilter,
-    ),
+  return normalizeFilterText(getApplicationJobSortLabel(application)).includes(
+    normalizedFilter,
+  );
+}
+
+function matchesAppliedDateFilter(
+  application: ApplicationResponse,
+  appliedDateFilter: string,
+): boolean {
+  if (!appliedDateFilter) {
+    return true;
+  }
+
+  return toLocalDateInputValue(application.createdAt) === appliedDateFilter;
+}
+
+function matchesStatusFilters(
+  application: ApplicationResponse,
+  statusFilters: ApplicationStatus[],
+): boolean {
+  if (statusFilters.length === 0) {
+    return true;
+  }
+
+  return statusFilters.includes(application.status);
+}
+
+function toLocalDateInputValue(value: Date | string): string {
+  const date = value instanceof Date ? value : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function getStatusFilterLabel(selected: ApplicationStatus[]): string {
+  if (selected.length === 0) {
+    return 'All statuses';
+  }
+
+  if (selected.length === 1) {
+    return getApplicationStatusLabel(selected[0]);
+  }
+
+  return `${selected.length} statuses`;
+}
+
+function getApplicationStatusLabel(status: ApplicationStatus): string {
+  return (
+    APPLICATION_STATUS_OPTIONS.find((option) => option.id === status)?.label ??
+    status
   );
 }
 

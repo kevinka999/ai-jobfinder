@@ -48,58 +48,72 @@ export function DataTable<T>({
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-panel border border-dashed border-app-border px-panel py-panel text-app-text-muted">
-        {emptyLabel}
+      <div className="grid gap-1.5">
+        <TableItemCount count={rows.length} />
+        <div className="rounded-panel border border-dashed border-app-border px-panel py-panel text-app-text-muted">
+          {emptyLabel}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr>
-            {columns.map((column) => (
-              <th
-                className="border-b border-app-border px-2.5 py-2 text-left align-top text-xs font-bold text-app-text-muted"
-                aria-sort={getAriaSort(column, sortState)}
-                key={getColumnId(column)}
-              >
-                {column.sortValue ? (
-                  <button
-                    aria-label={getSortButtonLabel(column, sortState)}
-                    className="inline-flex items-center gap-1 rounded-control text-left font-bold text-app-text-muted transition-colors hover:text-app-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
-                    onClick={() =>
-                      setSortState(getNextSortState(column, sortState))
-                    }
-                    type="button"
-                  >
-                    <span>{column.header}</span>
-                    {getSortIcon(column, sortState)}
-                  </button>
-                ) : (
-                  column.header
-                )}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {sortedRows.map((row) => (
-            <tr key={getRowKey(row)}>
+    <div className="grid gap-1.5">
+      <TableItemCount count={rows.length} />
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr>
               {columns.map((column) => (
-                <td
-                  className="border-b border-app-border px-2.5 py-2 align-middle"
+                <th
+                  className="border-b border-app-border px-2.5 py-2 text-left align-top text-xs font-bold text-app-text-muted"
+                  aria-sort={getAriaSort(column, sortState)}
                   key={getColumnId(column)}
                 >
-                  {column.render(row)}
-                </td>
+                  {column.sortValue ? (
+                    <button
+                      aria-label={getSortButtonLabel(column, sortState)}
+                      className="inline-flex items-center gap-1 rounded-control text-left font-bold text-app-text-muted transition-colors hover:text-app-text focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                      onClick={() =>
+                        setSortState(getNextSortState(column, sortState))
+                      }
+                      type="button"
+                    >
+                      <span>{column.header}</span>
+                      {getSortIcon(column, sortState)}
+                    </button>
+                  ) : (
+                    column.header
+                  )}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {sortedRows.map((row) => (
+              <tr key={getRowKey(row)}>
+                {columns.map((column) => (
+                  <td
+                    className="border-b border-app-border px-2.5 py-2 align-middle"
+                    key={getColumnId(column)}
+                  >
+                    {column.render(row)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
+  );
+}
+
+function TableItemCount({ count }: { count: number }) {
+  return (
+    <p className="m-0 text-right text-sm font-bold text-app-text-muted">
+      {count} {count === 1 ? 'item' : 'items'}
+    </p>
   );
 }
 
