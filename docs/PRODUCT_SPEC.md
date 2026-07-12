@@ -70,6 +70,8 @@ The User Profile page lets the user paste their technical resume and experience 
 - Save reusable cover-letter instruction text.
 - View extracted job-title keywords.
 - View extracted technical-skill keywords.
+- Add, delete, and save job-title keywords.
+- Add, delete, weight, and save technical-skill keywords from `1` to `10`.
 
 ### Save Resume Behavior
 
@@ -85,7 +87,9 @@ When the user saves the resume:
 
 There is no Markdown validation for MVP beyond accepting text from the request.
 
-There is no separate keyword editing or keyword saving feature for MVP. Generated keywords are replaced every time the resume is saved successfully.
+Job-title keywords and technical-skill keywords can be saved separately from the resume. This does not call the AI provider and does not modify the resume Markdown.
+
+Generated keyword text is still replaced every time the resume is saved successfully. After extraction, the user can manually add or delete keywords without re-saving the resume. Existing technical-skill weights are preserved for keywords that remain present after extraction; new technical-skill keywords start with weight `5`.
 
 The user profile can store a cover-letter instruction template that prefills the cover-letter drawer's step-one instructions. It can be edited per generation and is saved separately from the resume.
 
@@ -119,9 +123,11 @@ For a broad search prompt, backend receives:
 - selected cities;
 - selected work models.
 
-Backend loads the default user's stored keywords and fills a deterministic prompt template. The prompt instructs the external AI agent to search the selected platforms, locations, work models, job-title keywords, and technical-skill keywords, then return a JSON object with a `jobs` array.
+Backend loads the default user's stored keywords and fills a deterministic prompt template. The prompt instructs the external AI agent to search the selected platforms, locations, and work models, then scrape job details and return a JSON object with a `jobs` array.
 
-For a specific job links prompt, backend receives one or more posting URLs. Backend loads the default user's stored keywords and fills a deterministic prompt template that instructs the external AI agent to scrape only those links, extract job details, use `others` for direct employer links or unknown sources, and return the same `jobs` array shape.
+Candidate matching is secondary metadata in the prompt. The prompt includes stored job-title keywords and technical-skill keywords grouped by saved weight into strong, moderate, and weak or historical bands. It instructs the external AI agent to score job fit from `0` to `100` based on evidence strength in the posting, not isolated keyword overlap.
+
+For a specific job links prompt, backend receives one or more posting URLs. Backend loads the default user's stored keywords and fills a deterministic prompt template that instructs the external AI agent to scrape only those links, extract job details, use weighted profile signals for secondary matching fields, use `others` for direct employer links or unknown sources, and return the same `jobs` array shape.
 
 The prompt must request the required import fields and may request optional enrichment fields.
 
@@ -365,7 +371,9 @@ The table should show:
 
 ### Application Actions
 
-The only primary action is opening the application/job details drawer.
+The primary action is opening the application/job details drawer.
+
+For applications still in `applied`, the table also provides quick actions to move the application to `interviewing` or `rejected`.
 
 Inside the drawer, the user can:
 
@@ -409,7 +417,7 @@ Status history entries do not store notes. Notes are only stored at the root of 
 - No cover-letter persistence.
 - No PDF persistence.
 - No S3 or file storage.
-- No keyword editing UI.
+- No separate keyword history or keyword extraction status UI.
 - No editable cover-letter structure/template UI.
 - No background job queue.
 - No fuzzy duplicate matching.

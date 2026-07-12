@@ -6,6 +6,7 @@ import {
   SOURCE_PLATFORMS,
 } from '../../../domain/source-platforms/source-platform';
 import type { SourcePlatformId } from '../../../domain/source-platforms/source-platform';
+import type { TechnicalSkillKeyword } from '../../../domain/users/user-profile';
 import { USER_REPOSITORY } from '../../ports/user-repository.port';
 import type { UserRepository } from '../../ports/user-repository.port';
 
@@ -90,7 +91,7 @@ export function buildJobSearchPrompt(input: {
   cities: string[];
   workModels: WorkModel[];
   jobTitleKeywords: string[];
-  technicalSkillKeywords: string[];
+  technicalSkillKeywords: TechnicalSkillKeyword[];
 }): string {
   const platforms = input.sourcePlatformIds.map(
     (id) => `${SOURCE_PLATFORMS[id].label} (${id})`,
@@ -108,12 +109,12 @@ export function buildJobSearchPrompt(input: {
     `- Cities: ${formatList(input.cities)}`,
     `- Work models: ${formatList(input.workModels)}`,
     '',
-    'Candidate profile signals:',
-    `- Job-title keywords: ${formatList(input.jobTitleKeywords)}`,
-    `- Technical-skill keywords: ${formatList(input.technicalSkillKeywords)}`,
+    ...buildCandidateMatchingProfileSection({
+      jobTitleKeywords: input.jobTitleKeywords,
+      technicalSkillKeywords: input.technicalSkillKeywords,
+    }),
     '',
-    'Find jobs that match the candidate profile. Include direct application links and full job descriptions whenever possible.',
-    'When possible, include a numeric matchingScore from 0 to 100 and a short matchingReason grounded in the job description and candidate keywords.',
+    'Scrape and extract job details first. Matching score is secondary metadata; do not omit a job only because the score is low.',
     '',
     'Return JSON only. Do not include Markdown fences, prose, comments, or explanations.',
     'The response must match this JSON Schema:',
@@ -131,7 +132,7 @@ export function buildJobSearchPrompt(input: {
 export function buildJobLinksPrompt(input: {
   jobLinks: string[];
   jobTitleKeywords: string[];
-  technicalSkillKeywords: string[];
+  technicalSkillKeywords: TechnicalSkillKeyword[];
 }): string {
   const outputSchema = buildJobSearchOutputSchema({
     sourcePlatformIds: [...SOURCE_PLATFORM_IDS],
@@ -144,14 +145,15 @@ export function buildJobLinksPrompt(input: {
     'Job posting links:',
     ...input.jobLinks.map((link) => `- ${link}`),
     '',
-    'Candidate profile signals:',
-    `- Job-title keywords: ${formatList(input.jobTitleKeywords)}`,
-    `- Technical-skill keywords: ${formatList(input.technicalSkillKeywords)}`,
+    ...buildCandidateMatchingProfileSection({
+      jobTitleKeywords: input.jobTitleKeywords,
+      technicalSkillKeywords: input.technicalSkillKeywords,
+    }),
     '',
     'For each link, extract the job details from that exact posting. Do not search for additional jobs.',
     'Use sourcePlatformId "others" for direct employer career pages or any link that is not one of the known job platforms.',
     'Use sourcePlatformId "manual" only for jobs that were manually created inside the app, not for AI-extracted link results.',
-    'When possible, include a numeric matchingScore from 0 to 100 and a short matchingReason grounded in the job description and candidate keywords.',
+    'Scrape and extract job details first. Matching score is secondary metadata; do not omit a job only because the score is low.',
     '',
     'Return JSON only. Do not include Markdown fences, prose, comments, or explanations.',
     'The response must match this JSON Schema:',
@@ -223,4 +225,60 @@ function formatList(values: readonly string[]): string {
   }
 
   return values.join(', ');
+}
+
+function buildCandidateMatchingProfileSection(input: {
+  jobTitleKeywords: string[];
+  technicalSkillKeywords: TechnicalSkillKeyword[];
+}): string[] {
+  const strongSkills = filterSkillsByWeight(
+    input.technicalSkillKeywords,
+    8,
+    10,
+  );
+  const moderateSkills = filterSkillsByWeight(
+    input.technicalSkillKeywords,
+    4,
+    7,
+  );
+  const weakSkills = filterSkillsByWeight(input.technicalSkillKeywords, 1, 3);
+
+  return [
+    'Candidate matching profile:',
+    '- Evaluate job fit against this stored profile. Score from 0 to 100 based on evidence strength in the posting, not isolated keyword presence.',
+    `- Job-title keywords: ${formatList(input.jobTitleKeywords)}`,
+    `- Strong technical skills (weight 8-10): ${formatTechnicalSkillKeywords(strongSkills)}`,
+    `- Moderate technical skills (weight 4-7): ${formatTechnicalSkillKeywords(moderateSkills)}`,
+    `- Weak or historical technical skills (weight 1-3): ${formatTechnicalSkillKeywords(weakSkills)}`,
+    '',
+    'Scoring guidance:',
+    '- 80-100: strong fit; core responsibilities center on stored job-title keywords and strong technical skills.',
+    '- 60-79: reasonable fit; role matches several stored strengths but has gaps or heavier secondary areas.',
+    '- 40-59: partial or stretch fit; some useful overlap, but core responsibilities lean away from strong stored skills.',
+    '- 0-39: weak fit; role is mostly outside the stored profile or centered on weak, historical, or absent skills.',
+    '- Do not over-score based only on isolated keyword overlap. Penalize roles where the main responsibility is outside the stored profile, even if a few familiar technologies appear.',
+    '- When possible, include matchingScore and matchingReason grounded in the job description, candidate keywords, and technical-skill weights.',
+  ];
+}
+
+function filterSkillsByWeight(
+  values: readonly TechnicalSkillKeyword[],
+  minWeight: number,
+  maxWeight: number,
+): TechnicalSkillKeyword[] {
+  return values.filter(
+    (skill) => skill.weight >= minWeight && skill.weight <= maxWeight,
+  );
+}
+
+function formatTechnicalSkillKeywords(
+  values: readonly TechnicalSkillKeyword[],
+): string {
+  if (values.length === 0) {
+    return '(none stored)';
+  }
+
+  return values
+    .map((skill) => `${skill.keyword} (${skill.weight}/10)`)
+    .join(', ');
 }

@@ -1,9 +1,9 @@
-import { Save } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Plus, Save, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '../components/Button';
 import { ErrorState } from '../components/ErrorState';
+import { inputClassName, Textarea } from '../components/Field';
 import { LoadingState } from '../components/LoadingState';
-import { Textarea } from '../components/Field';
 import { useToast } from '../components/toastContext';
 import {
   pageHeadingClass,
@@ -12,21 +12,34 @@ import {
   panelClass,
 } from '../design/classes';
 import { apiRequest } from '../lib/api';
-import type { UserProfileResponse } from '../lib/types';
+import type { TechnicalSkillKeyword, UserProfileResponse } from '../lib/types';
 
 export function ProfilePage() {
-  const [profile, setProfile] = useState<UserProfileResponse | null>(null);
   const [resumeMarkdown, setResumeMarkdown] = useState('');
-  const [
-    coverLetterInstructionTemplate,
-    setCoverLetterInstructionTemplate,
-  ] = useState('');
+  const [coverLetterInstructionTemplate, setCoverLetterInstructionTemplate] =
+    useState('');
+  const [jobTitleKeywords, setJobTitleKeywords] = useState<string[]>([]);
+  const [technicalSkillKeywords, setTechnicalSkillKeywords] = useState<
+    TechnicalSkillKeyword[]
+  >([]);
+  const [newJobTitleKeyword, setNewJobTitleKeyword] = useState('');
+  const [newTechnicalSkillKeyword, setNewTechnicalSkillKeyword] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingResume, setIsSavingResume] = useState(false);
   const [isSavingInstructionTemplate, setIsSavingInstructionTemplate] =
     useState(false);
+  const [isSavingKeywords, setIsSavingKeywords] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const toast = useToast();
+
+  const syncProfileState = useCallback((nextProfile: UserProfileResponse) => {
+    setResumeMarkdown(nextProfile.resumeMarkdown);
+    setCoverLetterInstructionTemplate(
+      nextProfile.coverLetterInstructionTemplate,
+    );
+    setJobTitleKeywords(nextProfile.jobTitleKeywords);
+    setTechnicalSkillKeywords(nextProfile.technicalSkillKeywords);
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -40,11 +53,7 @@ export function ProfilePage() {
           await apiRequest<UserProfileResponse>('/users/profile');
 
         if (!ignore) {
-          setProfile(nextProfile);
-          setResumeMarkdown(nextProfile.resumeMarkdown);
-          setCoverLetterInstructionTemplate(
-            nextProfile.coverLetterInstructionTemplate,
-          );
+          syncProfileState(nextProfile);
         }
       } catch (caughtError) {
         if (!ignore) {
@@ -64,7 +73,7 @@ export function ProfilePage() {
     return () => {
       ignore = true;
     };
-  }, [toast]);
+  }, [syncProfileState, toast]);
 
   async function saveResume() {
     setIsSavingResume(true);
@@ -78,8 +87,7 @@ export function ProfilePage() {
         },
       );
 
-      setProfile(nextProfile);
-      setResumeMarkdown(nextProfile.resumeMarkdown);
+      syncProfileState(nextProfile);
       toast.success('Resume saved');
     } catch (caughtError) {
       toast.error(
@@ -102,10 +110,7 @@ export function ProfilePage() {
         },
       );
 
-      setProfile(nextProfile);
-      setCoverLetterInstructionTemplate(
-        nextProfile.coverLetterInstructionTemplate,
-      );
+      syncProfileState(nextProfile);
       toast.success('Instruction template saved');
     } catch (caughtError) {
       toast.error(
@@ -114,6 +119,80 @@ export function ProfilePage() {
     } finally {
       setIsSavingInstructionTemplate(false);
     }
+  }
+
+  async function saveProfileKeywords() {
+    setIsSavingKeywords(true);
+
+    try {
+      const nextProfile = await apiRequest<UserProfileResponse>(
+        '/users/profile/keywords',
+        {
+          body: JSON.stringify({ jobTitleKeywords, technicalSkillKeywords }),
+          method: 'POST',
+        },
+      );
+
+      syncProfileState(nextProfile);
+      toast.success('Keywords saved');
+    } catch (caughtError) {
+      toast.error(`Could not save keywords: ${getErrorMessage(caughtError)}`);
+    } finally {
+      setIsSavingKeywords(false);
+    }
+  }
+
+  function addJobTitleKeyword() {
+    const keyword = newJobTitleKeyword.trim();
+
+    if (!keyword || includesKeyword(jobTitleKeywords, keyword)) {
+      return;
+    }
+
+    setJobTitleKeywords((currentKeywords) => [...currentKeywords, keyword]);
+    setNewJobTitleKeyword('');
+  }
+
+  function deleteJobTitleKeyword(keyword: string) {
+    setJobTitleKeywords((currentKeywords) =>
+      currentKeywords.filter((currentKeyword) => currentKeyword !== keyword),
+    );
+  }
+
+  function addTechnicalSkillKeyword() {
+    const keyword = newTechnicalSkillKeyword.trim();
+
+    if (
+      !keyword ||
+      technicalSkillKeywords.some(
+        (skill) =>
+          skill.keyword.toLocaleLowerCase() === keyword.toLocaleLowerCase(),
+      )
+    ) {
+      return;
+    }
+
+    setTechnicalSkillKeywords((currentSkills) => [
+      ...currentSkills,
+      { keyword, weight: 5 },
+    ]);
+    setNewTechnicalSkillKeyword('');
+  }
+
+  function deleteTechnicalSkillKeyword(keyword: string) {
+    setTechnicalSkillKeywords((currentSkills) =>
+      currentSkills.filter((skill) => skill.keyword !== keyword),
+    );
+  }
+
+  function updateTechnicalSkillWeight(keyword: string, weight: number) {
+    setTechnicalSkillKeywords((currentSkills) =>
+      currentSkills.map((skill) =>
+        skill.keyword === keyword
+          ? { ...skill, weight: clampTechnicalSkillWeight(weight) }
+          : skill,
+      ),
+    );
   }
 
   return (
@@ -167,13 +246,34 @@ export function ProfilePage() {
           </div>
         </div>
         <aside className={`${panelClass} grid gap-[18px]`}>
-          <KeywordSection
+          <div className="flex items-center justify-between gap-inline">
+            <h2 className="m-0 text-base font-bold text-app-text">Keywords</h2>
+            <Button
+              disabled={isLoading}
+              icon={<Save size={14} />}
+              isLoading={isSavingKeywords}
+              onClick={saveProfileKeywords}
+              variant="secondary"
+            >
+              Save Keywords
+            </Button>
+          </div>
+          <JobTitleKeywordSection
             label="Job-title keywords"
-            values={profile?.jobTitleKeywords ?? []}
+            newKeyword={newJobTitleKeyword}
+            onAdd={addJobTitleKeyword}
+            onDelete={deleteJobTitleKeyword}
+            onNewKeywordChange={setNewJobTitleKeyword}
+            values={jobTitleKeywords}
           />
-          <KeywordSection
+          <TechnicalSkillKeywordSection
             label="Technical-skill keywords"
-            values={profile?.technicalSkillKeywords ?? []}
+            newKeyword={newTechnicalSkillKeyword}
+            onAdd={addTechnicalSkillKeyword}
+            onDelete={deleteTechnicalSkillKeyword}
+            onNewKeywordChange={setNewTechnicalSkillKeyword}
+            onWeightChange={updateTechnicalSkillWeight}
+            values={technicalSkillKeywords}
           />
         </aside>
       </div>
@@ -181,28 +281,170 @@ export function ProfilePage() {
   );
 }
 
-function KeywordSection({ label, values }: { label: string; values: string[] }) {
+function JobTitleKeywordSection({
+  label,
+  newKeyword,
+  onAdd,
+  onDelete,
+  onNewKeywordChange,
+  values,
+}: {
+  label: string;
+  newKeyword: string;
+  onAdd: () => void;
+  onDelete: (keyword: string) => void;
+  onNewKeywordChange: (keyword: string) => void;
+  values: string[];
+}) {
   return (
     <section>
       <h2 className="mb-2.5 mt-0 text-[15px] font-bold text-app-text">
         {label}
       </h2>
+      <div className="mb-2 grid grid-cols-[minmax(0,1fr)_36px] gap-inline">
+        <input
+          aria-label="New job-title keyword"
+          className={`${inputClassName} h-8`}
+          onChange={(event) => onNewKeywordChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              onAdd();
+            }
+          }}
+          placeholder="Add job title"
+          value={newKeyword}
+        />
+        <Button
+          aria-label="Add job-title keyword"
+          icon={<Plus size={15} />}
+          onClick={onAdd}
+          title="Add job title"
+          variant="secondary"
+        />
+      </div>
       {values.length === 0 ? (
         <p className="text-app-text-muted">No keywords saved.</p>
       ) : (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="grid gap-1.5">
           {values.map((value) => (
-            <span
-              className="inline-flex min-h-[26px] items-center rounded-control border border-brand-200 bg-brand-50 px-2 text-xs font-bold text-brand-700"
+            <div
+              className="grid min-h-8 grid-cols-[minmax(0,1fr)_36px] items-center gap-inline rounded-control border border-brand-200 bg-brand-50 px-2 text-xs font-bold text-brand-700"
               key={value}
             >
-              {value}
-            </span>
+              <span className="min-w-0 truncate">{value}</span>
+              <Button
+                aria-label={`Delete ${value}`}
+                icon={<Trash2 size={14} />}
+                onClick={() => onDelete(value)}
+                title="Delete keyword"
+                variant="ghost"
+              />
+            </div>
           ))}
         </div>
       )}
     </section>
   );
+}
+
+function TechnicalSkillKeywordSection({
+  label,
+  newKeyword,
+  onAdd,
+  onDelete,
+  onNewKeywordChange,
+  onWeightChange,
+  values,
+}: {
+  label: string;
+  newKeyword: string;
+  onAdd: () => void;
+  onDelete: (keyword: string) => void;
+  onNewKeywordChange: (keyword: string) => void;
+  onWeightChange: (keyword: string, weight: number) => void;
+  values: TechnicalSkillKeyword[];
+}) {
+  return (
+    <section>
+      <h2 className="mb-2.5 mt-0 text-[15px] font-bold text-app-text">
+        {label}
+      </h2>
+      <div className="mb-2 grid grid-cols-[minmax(0,1fr)_36px] gap-inline">
+        <input
+          aria-label="New technical-skill keyword"
+          className={`${inputClassName} h-8`}
+          onChange={(event) => onNewKeywordChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              onAdd();
+            }
+          }}
+          placeholder="Add technical skill"
+          value={newKeyword}
+        />
+        <Button
+          aria-label="Add technical-skill keyword"
+          icon={<Plus size={15} />}
+          onClick={onAdd}
+          title="Add technical skill"
+          variant="secondary"
+        />
+      </div>
+      {values.length === 0 ? (
+        <p className="text-app-text-muted">No keywords saved.</p>
+      ) : (
+        <div className="grid gap-2">
+          {values.map((skill) => (
+            <div
+              className="grid grid-cols-[minmax(0,1fr)_64px_36px] items-center gap-inline"
+              key={skill.keyword}
+            >
+              <span className="min-w-0 truncate text-sm font-semibold text-app-text">
+                {skill.keyword}
+              </span>
+              <input
+                aria-label={`${skill.keyword} weight`}
+                className={`${inputClassName} h-8 px-2 text-center`}
+                max={10}
+                min={1}
+                onChange={(event) =>
+                  onWeightChange(skill.keyword, Number(event.target.value))
+                }
+                step={1}
+                type="number"
+                value={skill.weight}
+              />
+              <Button
+                aria-label={`Delete ${skill.keyword}`}
+                icon={<Trash2 size={14} />}
+                onClick={() => onDelete(skill.keyword)}
+                title="Delete skill"
+                variant="ghost"
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function includesKeyword(
+  keywords: readonly string[],
+  keyword: string,
+): boolean {
+  return keywords.some(
+    (currentKeyword) =>
+      currentKeyword.toLocaleLowerCase() === keyword.toLocaleLowerCase(),
+  );
+}
+
+function clampTechnicalSkillWeight(weight: number): number {
+  if (!Number.isFinite(weight)) {
+    return 1;
+  }
+
+  return Math.min(10, Math.max(1, Math.round(weight)));
 }
 
 function getErrorMessage(error: unknown): string {

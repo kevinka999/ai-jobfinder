@@ -1,9 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, SchemaTypes } from 'mongoose';
 
 export const DEFAULT_USER_ID = 'default-user';
 
 export type UserDocument = HydratedDocument<User>;
+export type StoredTechnicalSkillKeyword =
+  | string
+  | {
+      keyword: string;
+      weight: number;
+    };
 
 @Schema({
   collection: 'users',
@@ -22,8 +28,8 @@ export class User {
   @Prop({ default: [], required: true, type: [String] })
   jobTitleKeywords!: string[];
 
-  @Prop({ default: [], required: true, type: [String] })
-  technicalSkillKeywords!: string[];
+  @Prop({ default: [], required: true, type: [SchemaTypes.Mixed] })
+  technicalSkillKeywords!: StoredTechnicalSkillKeyword[];
 
   createdAt!: Date;
 

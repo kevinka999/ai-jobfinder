@@ -24,7 +24,10 @@ type User = {
   resumeMarkdown: string;
   coverLetterInstructionTemplate: string;
   jobTitleKeywords: string[];
-  technicalSkillKeywords: string[];
+  technicalSkillKeywords: Array<{
+    keyword: string;
+    weight: number;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -46,7 +49,7 @@ Reusable instruction text used to prefill step one of the cover-letter generator
 
 `jobTitleKeywords`
 
-AI-generated job-title keywords extracted from the resume. These are replaced every time the resume is saved successfully.
+AI-generated job-title keywords extracted from the resume. These are replaced every time the resume is saved successfully. After extraction, the user can manually add or delete job-title keywords without re-saving the resume.
 
 Examples:
 
@@ -57,16 +60,18 @@ Examples:
 
 `technicalSkillKeywords`
 
-AI-generated technical-skill keywords extracted from the resume. These are replaced every time the resume is saved successfully.
+AI-generated technical-skill keywords extracted from the resume, with a user-editable experience weight from `1` to `10`. After extraction, the user can manually add, delete, and weight technical-skill keywords without re-saving the resume.
+
+The keyword text is replaced every time the resume is saved successfully. Existing weights are preserved for keywords that remain present after extraction; new technical-skill keywords start with weight `5`.
+
+Manual keyword edits are stored separately from resume extraction workflow intent: the user can adjust keywords and weights without re-saving the resume or calling the AI provider.
 
 Examples:
 
-- React;
-- TypeScript;
-- Node.js;
-- NestJS;
-- Kafka;
-- Docker.
+- `{ keyword: "NestJS", weight: 10 }`;
+- `{ keyword: "Java", weight: 2 }`;
+- `{ keyword: "React", weight: 9 }`;
+- `{ keyword: "Docker", weight: 6 }`.
 
 `createdAt`, `updatedAt`
 
@@ -79,7 +84,7 @@ Standard timestamps.
 - Saving a resume must also successfully extract keywords.
 - If keyword extraction fails, the user document is not changed.
 - Saving the cover-letter instruction template does not extract keywords or modify the resume.
-- There is no manual keyword editing UI for MVP.
+- Saving profile keywords does not extract keywords or modify the resume.
 - There is no stored cover-letter structure/template on the user document.
 
 ## Job

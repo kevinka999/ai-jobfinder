@@ -2,9 +2,11 @@ import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ResolveDefaultUserUseCase } from './resolve-default-user.use-case';
 import {
   SaveCoverLetterInstructionTemplateRequestDto,
+  SaveProfileKeywordsRequestDto,
   SaveResumeRequestDto,
 } from './save-resume.dto';
 import { SaveCoverLetterInstructionTemplateUseCase } from './save-cover-letter-instruction-template.use-case';
+import { SaveProfileKeywordsUseCase } from './save-profile-keywords.use-case';
 import { SaveResumeUseCase } from './save-resume.use-case';
 import { UserProfileResponseDto } from './user-profile-response.dto';
 
@@ -14,6 +16,7 @@ export class UsersController {
     private readonly resolveDefaultUserUseCase: ResolveDefaultUserUseCase,
     private readonly saveResumeUseCase: SaveResumeUseCase,
     private readonly saveCoverLetterInstructionTemplateUseCase: SaveCoverLetterInstructionTemplateUseCase,
+    private readonly saveProfileKeywordsUseCase: SaveProfileKeywordsUseCase,
   ) {}
 
   @Get('profile')
@@ -42,6 +45,18 @@ export class UsersController {
       await this.saveCoverLetterInstructionTemplateUseCase.execute({
         coverLetterInstructionTemplate: request.coverLetterInstructionTemplate,
       });
+
+    return UserProfileResponseDto.fromDomain(profile);
+  }
+
+  @Post('profile/keywords')
+  async saveProfileKeywords(
+    @Body() request: SaveProfileKeywordsRequestDto,
+  ): Promise<UserProfileResponseDto> {
+    const profile = await this.saveProfileKeywordsUseCase.execute({
+      jobTitleKeywords: request.jobTitleKeywords,
+      technicalSkillKeywords: request.technicalSkillKeywords,
+    });
 
     return UserProfileResponseDto.fromDomain(profile);
   }

@@ -26,6 +26,7 @@ import { ListJobsUseCase } from './application/use-cases/jobs/list-jobs.use-case
 import { UpdateJobUseCase } from './application/use-cases/jobs/update-job.use-case';
 import { ResolveDefaultUserUseCase } from './application/use-cases/users/resolve-default-user.use-case';
 import { SaveCoverLetterInstructionTemplateUseCase } from './application/use-cases/users/save-cover-letter-instruction-template.use-case';
+import { SaveProfileKeywordsUseCase } from './application/use-cases/users/save-profile-keywords.use-case';
 import { SaveResumeUseCase } from './application/use-cases/users/save-resume.use-case';
 import { UsersController } from './application/use-cases/users/users.controller';
 import { AiModule } from './infrastructure/ai/ai.module';
@@ -56,6 +57,7 @@ import { PdfModule } from './infrastructure/pdf/pdf.module';
     ResolveDefaultUserUseCase,
     SaveResumeUseCase,
     SaveCoverLetterInstructionTemplateUseCase,
+    SaveProfileKeywordsUseCase,
     GenerateJobSearchPromptUseCase,
     GenerateJobLinksPromptUseCase,
     ImportJobsUseCase,

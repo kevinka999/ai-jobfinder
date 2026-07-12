@@ -28,6 +28,7 @@ describe('UpdateApplicationUseCase', () => {
     userRepository = {
       resolveDefaultUser: jest.fn().mockResolvedValue(user),
       saveCoverLetterInstructionTemplate: jest.fn(),
+      saveProfileKeywords: jest.fn(),
       saveResumeWithKeywords: jest.fn(),
     };
     applicationRepository = {
@@ -153,6 +154,7 @@ describe('ListApplicationsUseCase', () => {
         updatedAt: now,
       }),
       saveCoverLetterInstructionTemplate: jest.fn(),
+      saveProfileKeywords: jest.fn(),
       saveResumeWithKeywords: jest.fn(),
     };
     const application = buildApplication();

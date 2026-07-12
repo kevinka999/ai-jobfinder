@@ -19,7 +19,7 @@ describe('cover letter use cases', () => {
     resumeMarkdown: '# Resume',
     coverLetterInstructionTemplate: '',
     jobTitleKeywords: ['Frontend Developer'],
-    technicalSkillKeywords: ['React'],
+    technicalSkillKeywords: [{ keyword: 'React', weight: 9 }],
     createdAt: now,
     updatedAt: now,
   };
@@ -32,6 +32,7 @@ describe('cover letter use cases', () => {
     userRepository = {
       resolveDefaultUser: jest.fn().mockResolvedValue(user),
       saveCoverLetterInstructionTemplate: jest.fn(),
+      saveProfileKeywords: jest.fn(),
       saveResumeWithKeywords: jest.fn(),
     };
     jobRepository = {

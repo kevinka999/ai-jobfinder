@@ -11,6 +11,7 @@ describe('SaveCoverLetterInstructionTemplateUseCase', () => {
     userRepository = {
       resolveDefaultUser: jest.fn(),
       saveCoverLetterInstructionTemplate: jest.fn(),
+      saveProfileKeywords: jest.fn(),
       saveResumeWithKeywords: jest.fn(),
     };
 
@@ -23,7 +24,7 @@ describe('SaveCoverLetterInstructionTemplateUseCase', () => {
       resumeMarkdown: '# Resume',
       coverLetterInstructionTemplate: 'Keep it concise.',
       jobTitleKeywords: ['Frontend Developer'],
-      technicalSkillKeywords: ['React'],
+      technicalSkillKeywords: [{ keyword: 'React', weight: 9 }],
       createdAt: now,
       updatedAt: now,
     };

@@ -1,4 +1,10 @@
-import { PanelRightOpen, RefreshCw, Save } from 'lucide-react';
+import {
+  CalendarCheck,
+  PanelRightOpen,
+  RefreshCw,
+  Save,
+  XCircle,
+} from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/Button';
 import { CheckboxMenu } from '../components/CheckboxMenu';
@@ -56,6 +62,10 @@ export function ApplicationsPage() {
   const [statusFilters, setStatusFilters] = useState<ApplicationStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mutatingApplication, setMutatingApplication] = useState<{
+    id: string;
+    status: ApplicationStatus;
+  } | null>(null);
   const toast = useToast();
 
   const loadApplications = useCallback(async (showSuccessToast = false) => {
@@ -91,6 +101,45 @@ export function ApplicationsPage() {
   );
   const hasActiveFilters =
     !!jobFilter.trim() || !!appliedDateFilter || statusFilters.length > 0;
+
+  async function moveApplicationStatus(
+    application: ApplicationResponse,
+    nextStatus: ApplicationStatus,
+  ) {
+    setMutatingApplication({ id: application.id, status: nextStatus });
+
+    try {
+      const updatedApplication = await apiRequest<ApplicationResponse>(
+        `/applications/${application.id}`,
+        {
+          body: JSON.stringify({ status: nextStatus }),
+          method: 'PATCH',
+        },
+      );
+
+      setApplications((currentApplications) =>
+        currentApplications.map((currentApplication) =>
+          currentApplication.id === updatedApplication.id
+            ? updatedApplication
+            : currentApplication,
+        ),
+      );
+      setSelectedApplication((currentApplication) =>
+        currentApplication?.id === updatedApplication.id
+          ? updatedApplication
+          : currentApplication,
+      );
+      toast.success(
+        nextStatus === 'interviewing'
+          ? 'Moved to interviewing'
+          : 'Application rejected',
+      );
+    } catch (caughtError) {
+      toast.error(`Could not update application: ${getErrorMessage(caughtError)}`);
+    } finally {
+      setMutatingApplication(null);
+    }
+  }
 
   const columns: Array<DataTableColumn<ApplicationResponse>> = [
     {
@@ -129,6 +178,34 @@ export function ApplicationsPage() {
             icon={<PanelRightOpen size={15} />}
             onClick={() => setSelectedApplication(application)}
           />
+          {application.status === 'applied' ? (
+            <>
+              <Button
+                aria-label="Move application to interview"
+                disabled={mutatingApplication?.id === application.id}
+                icon={<CalendarCheck size={15} />}
+                isLoading={
+                  mutatingApplication?.id === application.id &&
+                  mutatingApplication.status === 'interviewing'
+                }
+                onClick={() => moveApplicationStatus(application, 'interviewing')}
+                title="Move to interview"
+                variant="primary"
+              />
+              <Button
+                aria-label="Move application to rejected"
+                disabled={mutatingApplication?.id === application.id}
+                icon={<XCircle size={15} />}
+                isLoading={
+                  mutatingApplication?.id === application.id &&
+                  mutatingApplication.status === 'rejected'
+                }
+                onClick={() => moveApplicationStatus(application, 'rejected')}
+                title="Move to rejected"
+                variant="danger"
+              />
+            </>
+          ) : null}
         </div>
       ),
     },
@@ -244,19 +321,30 @@ function ApplicationDrawer({
       return;
     }
 
+    await updateApplication(status, 'Application saved');
+  }
+
+  async function updateApplication(
+    nextStatus: ApplicationStatus,
+    successMessage: string,
+  ) {
+    if (!application) {
+      return;
+    }
+
     setIsSavingApplication(true);
 
     try {
       const updatedApplication = await apiRequest<ApplicationResponse>(
         `/applications/${application.id}`,
         {
-          body: JSON.stringify({ status, notes }),
+          body: JSON.stringify({ status: nextStatus, notes }),
           method: 'PATCH',
         },
       );
 
       await onSaved(updatedApplication);
-      toast.success('Application saved');
+      toast.success(successMessage);
     } catch (caughtError) {
       toast.error(`Could not save application: ${getErrorMessage(caughtError)}`);
     } finally {

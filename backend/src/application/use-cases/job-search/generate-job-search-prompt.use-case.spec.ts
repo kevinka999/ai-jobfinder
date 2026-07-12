@@ -40,6 +40,7 @@ describe('GenerateJobSearchPromptUseCase', () => {
     userRepository = {
       resolveDefaultUser: jest.fn(),
       saveCoverLetterInstructionTemplate: jest.fn(),
+      saveProfileKeywords: jest.fn(),
       saveResumeWithKeywords: jest.fn(),
     };
 
@@ -53,7 +54,13 @@ describe('GenerateJobSearchPromptUseCase', () => {
       resumeMarkdown: '# Resume',
       coverLetterInstructionTemplate: '',
       jobTitleKeywords: ['Frontend Developer', 'Full Stack Developer'],
-      technicalSkillKeywords: ['React', 'TypeScript', 'NestJS'],
+      technicalSkillKeywords: [
+        { keyword: 'React', weight: 9 },
+        { keyword: 'TypeScript', weight: 10 },
+        { keyword: 'NestJS', weight: 8 },
+        { keyword: 'Docker', weight: 6 },
+        { keyword: 'Java', weight: 2 },
+      ],
       createdAt: now,
       updatedAt: now,
     };
@@ -73,7 +80,21 @@ describe('GenerateJobSearchPromptUseCase', () => {
     expect(result.prompt).toContain('Vienna, Salzburg');
     expect(result.prompt).toContain('hybrid, remote');
     expect(result.prompt).toContain('Frontend Developer, Full Stack Developer');
-    expect(result.prompt).toContain('React, TypeScript, NestJS');
+    expect(result.prompt).toContain(
+      'Strong technical skills (weight 8-10): React (9/10), TypeScript (10/10), NestJS (8/10)',
+    );
+    expect(result.prompt).toContain(
+      'Moderate technical skills (weight 4-7): Docker (6/10)',
+    );
+    expect(result.prompt).toContain(
+      'Weak or historical technical skills (weight 1-3): Java (2/10)',
+    );
+    expect(result.prompt).toContain(
+      'Score from 0 to 100 based on evidence strength in the posting, not isolated keyword presence.',
+    );
+    expect(result.prompt).toContain(
+      'Scrape and extract job details first. Matching score is secondary metadata',
+    );
     expect(result.prompt).toContain('Return JSON only');
     expect(result.prompt).toContain(
       'Translate every human-readable output field to English',
@@ -117,7 +138,10 @@ describe('GenerateJobSearchPromptUseCase', () => {
       resumeMarkdown: '# Resume',
       coverLetterInstructionTemplate: '',
       jobTitleKeywords: ['Frontend Developer'],
-      technicalSkillKeywords: ['React', 'TypeScript'],
+      technicalSkillKeywords: [
+        { keyword: 'React', weight: 9 },
+        { keyword: 'TypeScript', weight: 10 },
+      ],
       createdAt: now,
       updatedAt: now,
     };
@@ -138,7 +162,12 @@ describe('GenerateJobSearchPromptUseCase', () => {
     expect(result.prompt).toContain('- https://www.linkedin.com/jobs/view/123');
     expect(result.prompt).toContain('Do not search for additional jobs.');
     expect(result.prompt).toContain('Frontend Developer');
-    expect(result.prompt).toContain('React, TypeScript');
+    expect(result.prompt).toContain(
+      'Strong technical skills (weight 8-10): React (9/10), TypeScript (10/10)',
+    );
+    expect(result.prompt).toContain(
+      'Do not over-score based only on isolated keyword overlap.',
+    );
     expect(result.prompt).toContain(
       'Translate every human-readable output field to English',
     );
@@ -172,7 +201,15 @@ describe('buildJobSearchPrompt', () => {
 
     expect(prompt).toContain('karriere.at (karriere)');
     expect(prompt).toContain('Job-title keywords: (none stored)');
-    expect(prompt).toContain('Technical-skill keywords: (none stored)');
+    expect(prompt).toContain(
+      'Strong technical skills (weight 8-10): (none stored)',
+    );
+    expect(prompt).toContain(
+      'Moderate technical skills (weight 4-7): (none stored)',
+    );
+    expect(prompt).toContain(
+      'Weak or historical technical skills (weight 1-3): (none stored)',
+    );
 
     const schema = extractJsonSchema(prompt);
     expect(schema.properties.jobs.items.properties.sourcePlatformId).toEqual({

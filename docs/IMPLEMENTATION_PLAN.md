@@ -327,8 +327,9 @@ References: [User profile API](API_CONTRACT.md#user-profile-api) and [User domai
 - Build resume Markdown textarea.
 - Build save action.
 - Build cover-letter instruction template textarea with a separate save action.
-- Show extracted job-title keywords.
-- Show extracted technical-skill keywords.
+- Show extracted job-title keywords with add/delete controls.
+- Show extracted technical-skill keywords with add/delete controls and editable weights.
+- Build separate keyword save action.
 - Handle extraction/save loading state.
 - Handle extraction failure as a save failure.
 
@@ -336,6 +337,7 @@ References: [User profile API](API_CONTRACT.md#user-profile-api) and [User domai
 
 - User can paste and save Markdown.
 - Keywords update after successful save.
+- User can add, delete, and save profile keywords without re-saving the resume.
 - Failed save leaves UI clear that nothing changed.
 
 ## Phase 12: Job Search Frontend
@@ -484,7 +486,7 @@ References: [backend architecture](../backend/docs/ARCHITECTURE.md), [API contra
 - Do not add `/api/v1`.
 - Do not persist cover-letter drafts or PDFs.
 - Do not add source platform persistence yet.
-- Do not add keyword editing yet.
+- Do not add keyword history or keyword extraction status yet.
 - Do not add fuzzy duplicate matching yet.
 - Keep frontend tables dense, clear, and workflow-focused.
 - Prefer predictable forms, drawers, tables, status badges, and compact controls.

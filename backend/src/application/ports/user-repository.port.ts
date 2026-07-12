@@ -1,4 +1,7 @@
-import { UserProfile } from '../../domain/users/user-profile';
+import type {
+  TechnicalSkillKeyword,
+  UserProfile,
+} from '../../domain/users/user-profile';
 
 export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
 
@@ -11,5 +14,9 @@ export interface UserRepository {
   }): Promise<UserProfile>;
   saveCoverLetterInstructionTemplate(input: {
     coverLetterInstructionTemplate: string;
+  }): Promise<UserProfile>;
+  saveProfileKeywords(input: {
+    jobTitleKeywords: string[];
+    technicalSkillKeywords: TechnicalSkillKeyword[];
   }): Promise<UserProfile>;
 }

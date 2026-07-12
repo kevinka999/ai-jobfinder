@@ -29,6 +29,7 @@ describe('job workflow use cases', () => {
     userRepository = {
       resolveDefaultUser: jest.fn().mockResolvedValue(user),
       saveCoverLetterInstructionTemplate: jest.fn(),
+      saveProfileKeywords: jest.fn(),
       saveResumeWithKeywords: jest.fn(),
     };
     jobRepository = {

@@ -1,11 +1,14 @@
-import { UserProfile } from '../../../domain/users/user-profile';
+import type {
+  TechnicalSkillKeyword,
+  UserProfile,
+} from '../../../domain/users/user-profile';
 
 export class UserProfileResponseDto {
   id!: string;
   resumeMarkdown!: string;
   coverLetterInstructionTemplate!: string;
   jobTitleKeywords!: string[];
-  technicalSkillKeywords!: string[];
+  technicalSkillKeywords!: TechnicalSkillKeyword[];
   createdAt!: string;
   updatedAt!: string;
 

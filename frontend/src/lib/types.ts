@@ -1,10 +1,5 @@
 export type SourcePlatformId =
-  | 'linkedin'
-  | 'stepstone'
-  | 'karriere'
-  | 'willhaben'
-  | 'others'
-  | 'manual';
+  'linkedin' | 'stepstone' | 'karriere' | 'willhaben' | 'others' | 'manual';
 
 export type WorkModel = 'onsite' | 'hybrid' | 'remote';
 
@@ -23,9 +18,14 @@ export type UserProfileResponse = {
   resumeMarkdown: string;
   coverLetterInstructionTemplate: string;
   jobTitleKeywords: string[];
-  technicalSkillKeywords: string[];
+  technicalSkillKeywords: TechnicalSkillKeyword[];
   createdAt: string;
   updatedAt: string;
+};
+
+export type TechnicalSkillKeyword = {
+  keyword: string;
+  weight: number;
 };
 
 export type JobResponse = {
