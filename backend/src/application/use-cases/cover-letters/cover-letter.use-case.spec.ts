@@ -124,7 +124,7 @@ describe('cover letter use cases', () => {
 
     expect(result).toEqual({
       pdf,
-      filename: 'cover-letter-example-gmbh-frontend-developer.pdf',
+      filename: 'example-gmbh-cover-letter.pdf',
     });
     expect(pdfRenderer.renderCoverLetter).toHaveBeenCalledWith({
       draftMarkdown: 'Final draft',

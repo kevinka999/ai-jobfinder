@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/Button';
+import { CheckboxMenu } from '../components/CheckboxMenu';
 import { DataTable } from '../components/DataTable';
 import type { DataTableColumn } from '../components/DataTable';
 import { Drawer } from '../components/Drawer';
@@ -50,6 +51,7 @@ import {
   WORK_MODEL_OPTIONS,
   WorkModel,
 } from '../lib/types';
+import { toCoverLetterPdfFilename } from '../lib/coverLetterFilename';
 
 type JobFormState = Omit<JobEditableFields, 'techStack' | 'matchingScore'> & {
   matchingScore: string;
@@ -77,6 +79,10 @@ export function JobsPage() {
   const [coverLetterJob, setCoverLetterJob] = useState<JobResponse | null>(null);
   const [deleteConfirmationJob, setDeleteConfirmationJob] =
     useState<JobResponse | null>(null);
+  const [activeJobNameFilter, setActiveJobNameFilter] = useState('');
+  const [activeSourceFilters, setActiveSourceFilters] = useState<
+    SourcePlatformId[]
+  >([]);
   const [mutatingJob, setMutatingJob] = useState<{
     action: JobMutationAction;
     id: string;
@@ -91,6 +97,16 @@ export function JobsPage() {
     () => jobs.filter((job) => job.status === 'active'),
     [jobs],
   );
+  const filteredActiveJobs = useMemo(
+    () =>
+      filterActiveJobs(activeJobs, {
+        nameFilter: activeJobNameFilter,
+        sourceFilters: activeSourceFilters,
+      }),
+    [activeJobs, activeJobNameFilter, activeSourceFilters],
+  );
+  const hasActiveJobFilters =
+    !!activeJobNameFilter.trim() || activeSourceFilters.length > 0;
 
   const loadJobs = useCallback(async (showSuccessToast = false) => {
     setIsLoading(true);
@@ -329,12 +345,49 @@ export function JobsPage() {
       </section>
       <section className={panelSectionClass}>
         <h2 className={panelTitleClass}>Active Jobs</h2>
+        <div className="grid gap-cluster lg:grid-cols-[minmax(220px,1fr)_minmax(260px,1.2fr)]">
+          <label className="grid gap-1.5">
+            <span className={fieldLabelClassName}>Filter by name</span>
+            <input
+              className={inputClassName}
+              onChange={(event) => setActiveJobNameFilter(event.target.value)}
+              placeholder="Job title or company"
+              type="search"
+              value={activeJobNameFilter}
+            />
+          </label>
+          <CheckboxMenu
+            emptyLabel="All sources"
+            label="Source"
+            menuLabel="Source filters"
+            onChange={setActiveSourceFilters}
+            options={SOURCE_PLATFORMS}
+            selected={activeSourceFilters}
+            selectedLabel={getSourceFilterLabel}
+          />
+        </div>
+        {hasActiveJobFilters ? (
+          <div className="flex justify-end">
+            <Button
+              onClick={() => {
+                setActiveJobNameFilter('');
+                setActiveSourceFilters([]);
+              }}
+            >
+              Clear filters
+            </Button>
+          </div>
+        ) : null}
         <DataTable
           columns={activeColumns}
-          emptyLabel="No active jobs."
+          emptyLabel={
+            hasActiveJobFilters
+              ? 'No active jobs match these filters.'
+              : 'No active jobs.'
+          }
           getRowKey={(job) => job.id}
           initialSort={{ columnId: 'match', direction: 'desc' }}
-          rows={activeJobs}
+          rows={filteredActiveJobs}
         />
       </section>
       <JobEditDrawer
@@ -1021,6 +1074,63 @@ function getJobSortLabel(job: JobResponse): string {
   return `${job.companyName} ${job.title}`;
 }
 
+function filterActiveJobs(
+  jobs: JobResponse[],
+  {
+    nameFilter,
+    sourceFilters,
+  }: {
+    nameFilter: string;
+    sourceFilters: SourcePlatformId[];
+  },
+) {
+  const normalizedFilter = normalizeFilterText(nameFilter);
+
+  return jobs.filter(
+    (job) =>
+      matchesJobNameFilter(job, normalizedFilter) &&
+      matchesSourceFilters(job, sourceFilters),
+  );
+}
+
+function matchesJobNameFilter(
+  job: JobResponse,
+  normalizedFilter: string,
+): boolean {
+  if (!normalizedFilter) {
+    return true;
+  }
+
+  return normalizeFilterText(getJobSortLabel(job)).includes(normalizedFilter);
+}
+
+function matchesSourceFilters(
+  job: JobResponse,
+  sourceFilters: SourcePlatformId[],
+): boolean {
+  if (sourceFilters.length === 0) {
+    return true;
+  }
+
+  return sourceFilters.includes(job.sourcePlatformId);
+}
+
+function getSourceFilterLabel(selected: SourcePlatformId[]): string {
+  if (selected.length === 0) {
+    return 'All sources';
+  }
+
+  if (selected.length === 1) {
+    return getSourceLabel(selected[0]);
+  }
+
+  return `${selected.length} sources`;
+}
+
+function normalizeFilterText(value: string): string {
+  return value.trim().toLocaleLowerCase();
+}
+
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unexpected error';
 }
@@ -1035,10 +1145,4 @@ function downloadBlob(blob: Blob, filename: string) {
   anchor.click();
   anchor.remove();
   URL.revokeObjectURL(url);
-}
-
-function toCoverLetterPdfFilename(companyName: string) {
-  const safeCompanyName = companyName.trim().replace(/[/:\\]/g, '-');
-
-  return `${safeCompanyName}-cover-letter.pdf`;
 }

@@ -705,10 +705,12 @@ Headers:
 
 ```http
 Content-Type: application/pdf
-Content-Disposition: attachment; filename="cover-letter-company-role.pdf"
+Content-Disposition: attachment; filename="example-company-cover-letter.pdf"
 ```
 
-Frontend should receive the response as a Blob and trigger a browser download.
+The filename uses the company name in lowercase kebab case plus
+`-cover-letter.pdf`. Frontend should receive the response as a Blob and trigger
+a browser download using the same filename format.
 
 ## AI Provider Contract
 

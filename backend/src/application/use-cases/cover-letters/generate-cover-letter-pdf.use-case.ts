@@ -45,11 +45,14 @@ export class GenerateCoverLetterPdfUseCase {
   }
 }
 
-function buildCoverLetterFilename(job: Pick<Job, 'companyName' | 'title'>) {
-  const slug = `${job.companyName}-${job.title}`
-    .toLowerCase()
+function buildCoverLetterFilename(job: Pick<Job, 'companyName'>) {
+  const slug = job.companyName
+    .trim()
+    .toLocaleLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-  return `cover-letter-${slug || 'job'}.pdf`;
+  return `${slug || 'company'}-cover-letter.pdf`;
 }
