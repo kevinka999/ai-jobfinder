@@ -43,6 +43,7 @@ describe('cover letter use cases', () => {
       findById: jest.fn().mockResolvedValue(buildJob()),
       list: jest.fn(),
       updateEditableFields: jest.fn(),
+      updateFavorite: jest.fn(),
       updateStatus: jest.fn(),
     };
     aiProvider = {
@@ -179,6 +180,7 @@ function buildJob(overrides: Partial<Job> = {}): Job {
     description: 'React and TypeScript role.',
     sourcePlatformId: 'linkedin',
     status: 'active',
+    isFavorite: false,
     location: 'Vienna',
     workModel: 'hybrid',
     techStack: ['React', 'TypeScript'],

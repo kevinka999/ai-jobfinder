@@ -304,6 +304,7 @@ References: [Job Search frontend phase](IMPLEMENTATION_PLAN.md#phase-12-job-sear
 
 - Add a new Job Search page option for Company AI Search.
 - Reuse the existing tab or segmented-control pattern for job search modes.
+- Give the Company AI Search option button a distinct AI-style treatment, such as a subtle animated dashed background or border effect, while keeping it consistent with the shared design system.
 - Add a multi-value company-name input.
 - Submit company names to `POST /job-search/company-ai`.
 - Show immediate queued feedback per company.
@@ -317,6 +318,7 @@ References: [Job Search frontend phase](IMPLEMENTATION_PLAN.md#phase-12-job-sear
 
 - User can enter multiple companies and enqueue them together.
 - Frontend does not require pasted JSON for Company AI Search.
+- Company AI Search is visually distinguishable from the normal prompt-generation options through a restrained AI-style button treatment.
 - History makes it clear which company created which imported jobs.
 - Existing broad search, link search, and manual import UI still work.
 
@@ -376,4 +378,3 @@ References: [backend architecture](../backend/docs/ARCHITECTURE.md), [API contra
 - Long-running or noisy provider calls fail predictably.
 - Logs can connect a queue job ID to a persisted process item ID.
 - Local setup instructions are enough to run the full queued workflow.
-

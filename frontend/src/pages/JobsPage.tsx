@@ -25,6 +25,7 @@ import {
   TextInput,
 } from '../components/Field';
 import { JobOpenLink } from '../components/JobOpenLink';
+import { JobFavoriteButton } from '../components/JobFavoriteButton';
 import { JobTitleCell } from '../components/JobTitleCell';
 import { LoadingState } from '../components/LoadingState';
 import { Stepper } from '../components/Stepper';
@@ -69,7 +70,7 @@ const COVER_LETTER_STEPS = [
 ];
 
 type CoverLetterStep = 0 | 1 | 2;
-type JobMutationAction = 'apply' | 'delete' | 'keep';
+type JobMutationAction = 'apply' | 'delete' | 'favorite' | 'keep';
 
 export function JobsPage() {
   const [jobs, setJobs] = useState<JobResponse[]>([]);
@@ -159,6 +160,37 @@ export function JobsPage() {
     );
   }
 
+  async function toggleFavorite(job: JobResponse) {
+    setMutatingJob({ action: 'favorite', id: job.id });
+
+    try {
+      const updatedJob = await apiRequest<JobResponse>(
+        `/jobs/${job.id}/favorite`,
+        {
+          body: JSON.stringify({ isFavorite: !job.isFavorite }),
+          method: 'PATCH',
+        },
+      );
+
+      setJobs((currentJobs) =>
+        currentJobs.map((currentJob) =>
+          currentJob.id === updatedJob.id ? updatedJob : currentJob,
+        ),
+      );
+      setEditingJob((currentJob) =>
+        currentJob?.id === updatedJob.id ? updatedJob : currentJob,
+      );
+      setCoverLetterJob((currentJob) =>
+        currentJob?.id === updatedJob.id ? updatedJob : currentJob,
+      );
+      toast.success(updatedJob.isFavorite ? 'Job favorited' : 'Job unfavorited');
+    } catch (caughtError) {
+      toast.error(`Could not update favorite: ${getErrorMessage(caughtError)}`);
+    } finally {
+      setMutatingJob(null);
+    }
+  }
+
   async function mutateJob(
     action: () => Promise<unknown>,
     successMessage: string,
@@ -185,6 +217,20 @@ export function JobsPage() {
       header: 'Open',
       id: 'draft-open',
       render: (job) => <JobOpenLink job={job} />,
+    },
+    {
+      header: 'Favorite',
+      id: 'draft-favorite',
+      render: (job) => (
+        <JobFavoriteButton
+          isLoading={
+            mutatingJob?.id === job.id && mutatingJob.action === 'favorite'
+          }
+          job={job}
+          onToggle={toggleFavorite}
+        />
+      ),
+      sortValue: getFavoriteSortValue,
     },
     {
       header: 'Job',
@@ -233,6 +279,20 @@ export function JobsPage() {
       header: 'Open',
       id: 'open',
       render: (job) => <JobOpenLink job={job} />,
+    },
+    {
+      header: 'Favorite',
+      id: 'favorite',
+      render: (job) => (
+        <JobFavoriteButton
+          isLoading={
+            mutatingJob?.id === job.id && mutatingJob.action === 'favorite'
+          }
+          job={job}
+          onToggle={toggleFavorite}
+        />
+      ),
+      sortValue: getFavoriteSortValue,
     },
     {
       header: 'Job',
@@ -908,6 +968,10 @@ function getSourceLabel(sourcePlatformId: SourcePlatformId): string {
 
 function getJobSortLabel(job: JobResponse): string {
   return `${job.companyName} ${job.title}`;
+}
+
+function getFavoriteSortValue(job: JobResponse): number {
+  return job.isFavorite ? 0 : 1;
 }
 
 function filterActiveJobs(

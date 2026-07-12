@@ -101,6 +101,7 @@ type Job = {
   description: string;
   sourcePlatformId: SourcePlatformId;
   status: JobStatus;
+  isFavorite: boolean;
   location?: string;
   workModel?: WorkModel;
   salaryText?: string;
@@ -208,6 +209,10 @@ Hardcoded platform ID where the job was found. Use `others` when the imported jo
 `status`
 
 Current job workflow status: `draft`, `active`, or `applied`.
+
+`isFavorite`
+
+Boolean marker for jobs the user wants to prioritize. Favorites are job-level state, so the same value appears anywhere the job is shown, including Jobs and Applications tables. New imported and manually created jobs default to `false`.
 
 `location`
 

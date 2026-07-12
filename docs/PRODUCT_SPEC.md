@@ -220,6 +220,8 @@ It has two main sections:
 - Draft jobs table;
 - Active jobs table.
 
+Job rows can be marked as favorites with a star control. Favorite state belongs to the job and can be sorted so starred jobs appear first.
+
 Applied jobs may remain visible as disabled/read-only rows for context, but the Applications page is the main place to manage them.
 
 ### Draft Jobs Table
@@ -297,6 +299,8 @@ Jobs can be edited from both:
 
 - the Jobs page;
 - the Applications page.
+
+The Applications table also exposes the same job favorite star and can be sorted so favorited job applications appear first.
 
 ### Generate Cover Letter Flow
 

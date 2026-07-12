@@ -2,6 +2,7 @@ import { Transform } from 'class-transformer';
 import type { TransformFnParams } from 'class-transformer';
 import {
   ArrayNotEmpty,
+  IsBoolean,
   IsArray,
   IsIn,
   IsISO8601,
@@ -213,4 +214,9 @@ export class UpdateJobRequestDto implements Partial<JobEditableFields> {
   @IsOptional()
   @IsString()
   rawText?: string;
+}
+
+export class UpdateJobFavoriteRequestDto {
+  @IsBoolean()
+  isFavorite!: boolean;
 }

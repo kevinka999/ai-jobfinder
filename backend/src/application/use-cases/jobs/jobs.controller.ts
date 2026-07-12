@@ -19,10 +19,12 @@ import { JobResponseDto } from './job-response.dto';
 import {
   CreateJobRequestDto,
   ListJobsQueryDto,
+  UpdateJobFavoriteRequestDto,
   UpdateJobRequestDto,
 } from './job-request.dto';
 import { KeepDraftJobUseCase } from './keep-draft-job.use-case';
 import { ListJobsUseCase } from './list-jobs.use-case';
+import { UpdateJobFavoriteUseCase } from './update-job-favorite.use-case';
 import { UpdateJobUseCase } from './update-job.use-case';
 
 @Controller('jobs')
@@ -33,6 +35,7 @@ export class JobsController {
     private readonly getJobUseCase: GetJobUseCase,
     private readonly createJobUseCase: CreateJobUseCase,
     private readonly updateJobUseCase: UpdateJobUseCase,
+    private readonly updateJobFavoriteUseCase: UpdateJobFavoriteUseCase,
     private readonly keepDraftJobUseCase: KeepDraftJobUseCase,
     private readonly deleteJobUseCase: DeleteJobUseCase,
     private readonly applyJobUseCase: ApplyJobUseCase,
@@ -85,6 +88,19 @@ export class JobsController {
     const job = await this.updateJobUseCase.execute({
       jobId,
       fields: request,
+    });
+
+    return JobResponseDto.fromDomain(job);
+  }
+
+  @Patch(':jobId/favorite')
+  async updateJobFavorite(
+    @Param('jobId') jobId: string,
+    @Body() request: UpdateJobFavoriteRequestDto,
+  ): Promise<JobResponseDto> {
+    const job = await this.updateJobFavoriteUseCase.execute({
+      jobId,
+      isFavorite: request.isFavorite,
     });
 
     return JobResponseDto.fromDomain(job);

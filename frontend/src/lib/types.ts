@@ -37,6 +37,7 @@ export type JobResponse = {
   description: string;
   sourcePlatformId: SourcePlatformId;
   status: JobStatus;
+  isFavorite: boolean;
   location?: string;
   workModel?: WorkModel;
   salaryText?: string;

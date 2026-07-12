@@ -21,6 +21,7 @@ import {
   TextInput,
 } from '../components/Field';
 import { JobOpenLink } from '../components/JobOpenLink';
+import { JobFavoriteButton } from '../components/JobFavoriteButton';
 import { JobTitleCell } from '../components/JobTitleCell';
 import { LoadingState } from '../components/LoadingState';
 import { StatusBadge } from '../components/StatusBadge';
@@ -66,6 +67,9 @@ export function ApplicationsPage() {
     id: string;
     status: ApplicationStatus;
   } | null>(null);
+  const [mutatingFavoriteJobId, setMutatingFavoriteJobId] = useState<
+    string | null
+  >(null);
   const toast = useToast();
 
   const loadApplications = useCallback(async (showSuccessToast = false) => {
@@ -141,12 +145,57 @@ export function ApplicationsPage() {
     }
   }
 
+  async function toggleJobFavorite(job: JobResponse) {
+    setMutatingFavoriteJobId(job.id);
+
+    try {
+      const updatedJob = await apiRequest<JobResponse>(
+        `/jobs/${job.id}/favorite`,
+        {
+          body: JSON.stringify({ isFavorite: !job.isFavorite }),
+          method: 'PATCH',
+        },
+      );
+
+      setApplications((currentApplications) =>
+        currentApplications.map((application) =>
+          updateApplicationJob(application, updatedJob),
+        ),
+      );
+      setSelectedApplication((currentApplication) =>
+        currentApplication
+          ? updateApplicationJob(currentApplication, updatedJob)
+          : currentApplication,
+      );
+      toast.success(updatedJob.isFavorite ? 'Job favorited' : 'Job unfavorited');
+    } catch (caughtError) {
+      toast.error(`Could not update favorite: ${getErrorMessage(caughtError)}`);
+    } finally {
+      setMutatingFavoriteJobId(null);
+    }
+  }
+
   const columns: Array<DataTableColumn<ApplicationResponse>> = [
     {
       header: 'Open',
       id: 'open',
       render: (application) =>
         application.job ? <JobOpenLink job={application.job} /> : '—',
+    },
+    {
+      header: 'Favorite',
+      id: 'favorite',
+      render: (application) =>
+        application.job ? (
+          <JobFavoriteButton
+            isLoading={mutatingFavoriteJobId === application.job.id}
+            job={application.job}
+            onToggle={toggleJobFavorite}
+          />
+        ) : (
+          '—'
+        ),
+      sortValue: getApplicationFavoriteSortValue,
     },
     {
       header: 'Job',
@@ -606,6 +655,27 @@ function getApplicationJobSortLabel(application: ApplicationResponse): string {
   }
 
   return `${application.job.companyName} ${application.job.title}`;
+}
+
+function getApplicationFavoriteSortValue(
+  application: ApplicationResponse,
+): number | undefined {
+  if (!application.job) {
+    return undefined;
+  }
+
+  return application.job.isFavorite ? 0 : 1;
+}
+
+function updateApplicationJob(
+  application: ApplicationResponse,
+  updatedJob: JobResponse,
+): ApplicationResponse {
+  if (application.job?.id !== updatedJob.id) {
+    return application;
+  }
+
+  return { ...application, job: updatedJob };
 }
 
 function filterApplications(

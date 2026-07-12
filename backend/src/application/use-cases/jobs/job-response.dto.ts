@@ -12,6 +12,7 @@ export class JobResponseDto {
   description!: string;
   sourcePlatformId!: SourcePlatformId;
   status!: JobStatus;
+  isFavorite!: boolean;
   location?: string;
   workModel?: WorkModel;
   salaryText?: string;
@@ -37,6 +38,7 @@ export class JobResponseDto {
       description: job.description,
       sourcePlatformId: job.sourcePlatformId,
       status: job.status,
+      isFavorite: job.isFavorite,
       location: job.location,
       workModel: job.workModel,
       salaryText: job.salaryText,

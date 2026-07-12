@@ -88,6 +88,7 @@ type JobResponse = {
   description: string;
   sourcePlatformId: SourcePlatformId;
   status: JobStatus;
+  isFavorite: boolean;
   location?: string;
   workModel?: WorkModel;
   salaryText?: string;
@@ -530,6 +531,24 @@ type Request = Partial<{
   contactInfo: string;
   rawText: string;
 }>;
+```
+
+#### Response
+
+```ts
+type Response = JobResponse;
+```
+
+### PATCH /jobs/:jobId/favorite
+
+Updates a job's favorite marker for the default user. This is used by table star actions on both Jobs and Applications views. It does not change job workflow status or application tracking status.
+
+#### Request
+
+```ts
+type Request = {
+  isFavorite: boolean;
+};
 ```
 
 #### Response

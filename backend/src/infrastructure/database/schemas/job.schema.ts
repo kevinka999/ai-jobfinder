@@ -49,6 +49,9 @@ export class Job {
   @Prop({ enum: JOB_STATUSES, required: true, type: String })
   status!: JobStatus;
 
+  @Prop({ default: false, required: true, type: Boolean })
+  isFavorite!: boolean;
+
   @Prop({ trim: true, type: String })
   location?: string;
 
@@ -108,6 +111,7 @@ JobSchema.pre('validate', function () {
 });
 
 JobSchema.index({ userId: 1, status: 1, deletedAt: 1 });
+JobSchema.index({ userId: 1, isFavorite: -1, status: 1, deletedAt: 1 });
 JobSchema.index({ userId: 1, applicationUrl: 1 });
 JobSchema.index({ userId: 1, normalizedApplicationUrl: 1, status: 1 });
 JobSchema.index({

@@ -38,6 +38,7 @@ describe('ImportJobsUseCase', () => {
       findById: jest.fn(),
       list: jest.fn(),
       updateEditableFields: jest.fn(),
+      updateFavorite: jest.fn(),
       updateStatus: jest.fn(),
     };
     useCase = new ImportJobsUseCase(userRepository, jobRepository);
@@ -198,6 +199,7 @@ function buildJob(overrides: Partial<Job> = {}): Job {
     description: 'React and TypeScript role.',
     sourcePlatformId: 'linkedin',
     status: 'active',
+    isFavorite: false,
     createdAt: new Date('2026-07-08T12:00:00.000Z'),
     updatedAt: new Date('2026-07-08T12:00:00.000Z'),
     ...overrides,

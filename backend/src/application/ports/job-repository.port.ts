@@ -49,6 +49,11 @@ export interface JobRepository {
     jobId: string;
     fields: Partial<JobEditableFields>;
   }): Promise<Job | null>;
+  updateFavorite(input: {
+    userId: string;
+    jobId: string;
+    isFavorite: boolean;
+  }): Promise<Job | null>;
   updateStatus(input: {
     userId: string;
     jobId: string;

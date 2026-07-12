@@ -8,6 +8,7 @@ import type { UserProfile } from '../../../domain/users/user-profile';
 import { ApplyJobUseCase } from './apply-job.use-case';
 import { DeleteJobUseCase } from './delete-job.use-case';
 import { KeepDraftJobUseCase } from './keep-draft-job.use-case';
+import { UpdateJobFavoriteUseCase } from './update-job-favorite.use-case';
 import { UpdateJobUseCase } from './update-job.use-case';
 
 describe('job workflow use cases', () => {
@@ -40,6 +41,7 @@ describe('job workflow use cases', () => {
       findById: jest.fn(),
       list: jest.fn(),
       updateEditableFields: jest.fn(),
+      updateFavorite: jest.fn(),
       updateStatus: jest.fn(),
     };
     applicationRepository = {
@@ -210,6 +212,36 @@ describe('job workflow use cases', () => {
       }),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
+
+  it('updates favorite state without changing status', async () => {
+    const favoriteJob = buildJob({ isFavorite: true, status: 'active' });
+    jobRepository.updateFavorite.mockResolvedValue(favoriteJob);
+
+    await expect(
+      new UpdateJobFavoriteUseCase(userRepository, jobRepository).execute({
+        jobId: favoriteJob.id,
+        isFavorite: true,
+      }),
+    ).resolves.toEqual(favoriteJob);
+
+    expect(jobRepository.updateFavorite).toHaveBeenCalledWith({
+      userId: user.id,
+      jobId: favoriteJob.id,
+      isFavorite: true,
+    });
+    expect(jobRepository.updateStatus).not.toHaveBeenCalled();
+  });
+
+  it('returns not found when updating favorite state for a missing job', async () => {
+    jobRepository.updateFavorite.mockResolvedValue(null);
+
+    await expect(
+      new UpdateJobFavoriteUseCase(userRepository, jobRepository).execute({
+        jobId: 'missing',
+        isFavorite: true,
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
 });
 
 function buildJob(overrides: Partial<Job> = {}): Job {
@@ -222,6 +254,7 @@ function buildJob(overrides: Partial<Job> = {}): Job {
     description: 'React and TypeScript role.',
     sourcePlatformId: 'linkedin',
     status: 'active',
+    isFavorite: false,
     createdAt: new Date('2026-07-08T12:00:00.000Z'),
     updatedAt: new Date('2026-07-08T12:00:00.000Z'),
     ...overrides,

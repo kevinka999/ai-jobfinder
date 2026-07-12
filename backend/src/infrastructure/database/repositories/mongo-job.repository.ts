@@ -165,6 +165,30 @@ export class MongoJobRepository implements JobRepository {
     return job ? mapJobDocument(job) : null;
   }
 
+  async updateFavorite(input: {
+    userId: string;
+    jobId: string;
+    isFavorite: boolean;
+  }): Promise<DomainJob | null> {
+    if (!Types.ObjectId.isValid(input.jobId)) {
+      return null;
+    }
+
+    const job = await this.jobModel
+      .findOneAndUpdate(
+        {
+          _id: new Types.ObjectId(input.jobId),
+          userId: input.userId,
+          deletedAt: null,
+        },
+        { $set: { isFavorite: input.isFavorite } },
+        { returnDocument: 'after', runValidators: true },
+      )
+      .exec();
+
+    return job ? mapJobDocument(job) : null;
+  }
+
   async updateStatus(input: {
     userId: string;
     jobId: string;
@@ -222,6 +246,7 @@ function mapJobDocument(job: JobDocument): DomainJob {
     description: job.description,
     sourcePlatformId: job.sourcePlatformId,
     status: job.status,
+    isFavorite: job.isFavorite ?? false,
     location: job.location,
     workModel: job.workModel,
     salaryText: job.salaryText,
