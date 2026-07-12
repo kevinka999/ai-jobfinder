@@ -1,10 +1,18 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { cx } from '../lib/classNames';
 
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'success'
+  | 'danger'
+  | 'dangerPrimary'
+  | 'ghost';
+
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: ReactNode;
   isLoading?: boolean;
-  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'ghost';
+  variant?: ButtonVariant;
 };
 
 export function Button({
@@ -33,6 +41,8 @@ export function Button({
           'border-brand-200 bg-brand-50 text-brand-700 hover:bg-brand-100',
         variant === 'danger' &&
           'border-danger-300 bg-danger-50 text-danger-700 hover:bg-danger-100',
+        variant === 'dangerPrimary' &&
+          'border-danger-700 bg-danger-700 text-white hover:bg-danger-700',
         variant === 'ghost' &&
           'border-transparent bg-transparent text-app-text-soft hover:bg-app-surface-muted',
         isLoading && 'button-loading-dash border-dashed',

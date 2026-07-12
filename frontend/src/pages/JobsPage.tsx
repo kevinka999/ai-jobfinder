@@ -1,5 +1,4 @@
 import {
-  AlertTriangle,
   Check,
   Download,
   LoaderCircle,
@@ -13,6 +12,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/Button';
 import { CheckboxMenu } from '../components/CheckboxMenu';
+import { ConfirmActionButton } from '../components/ConfirmActionButton';
 import { DataTable } from '../components/DataTable';
 import type { DataTableColumn } from '../components/DataTable';
 import { Drawer } from '../components/Drawer';
@@ -77,8 +77,6 @@ export function JobsPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingJob, setEditingJob] = useState<JobResponse | null>(null);
   const [coverLetterJob, setCoverLetterJob] = useState<JobResponse | null>(null);
-  const [deleteConfirmationJob, setDeleteConfirmationJob] =
-    useState<JobResponse | null>(null);
   const [activeJobNameFilter, setActiveJobNameFilter] = useState('');
   const [activeSourceFilters, setActiveSourceFilters] = useState<
     SourcePlatformId[]
@@ -139,41 +137,14 @@ export function JobsPage() {
     );
   }
 
-  async function deleteDraft(job: JobResponse) {
-    const deleted = await mutateJob(
+  async function deleteJob(job: JobResponse) {
+    await mutateJob(
       () =>
         apiRequest<{ deleted: true }>(`/jobs/${job.id}`, { method: 'DELETE' }),
-      'Draft deleted',
+      job.status === 'draft' ? 'Draft deleted' : 'Job deleted',
       job.id,
       'delete',
     );
-
-    if (deleted) {
-      setDeleteConfirmationJob(null);
-    }
-  }
-
-  async function deleteActive(job: JobResponse) {
-    const deleted = await mutateJob(
-      () =>
-        apiRequest<{ deleted: true }>(`/jobs/${job.id}`, { method: 'DELETE' }),
-      'Job deleted',
-      job.id,
-      'delete',
-    );
-
-    if (deleted) {
-      setDeleteConfirmationJob(null);
-    }
-  }
-
-  async function confirmDelete(job: JobResponse) {
-    if (job.status === 'draft') {
-      await deleteDraft(job);
-      return;
-    }
-
-    await deleteActive(job);
   }
 
   async function markApplied(job: JobResponse) {
@@ -239,13 +210,17 @@ export function JobsPage() {
             }
             onClick={() => keepDraft(job)}
           />
-          <Button
-            aria-label="Delete draft"
+          <ConfirmActionButton
+            ariaLabel="Delete draft"
+            confirmAriaLabel="Confirm delete draft"
+            confirmTitle="Click again to delete draft"
             icon={<Trash2 size={15} />}
             isLoading={
               mutatingJob?.id === job.id && mutatingJob.action === 'delete'
             }
-            onClick={() => setDeleteConfirmationJob(job)}
+            onConfirm={() => deleteJob(job)}
+            title="Delete draft"
+            confirmVariant="dangerPrimary"
             variant="danger"
           />
         </div>
@@ -300,19 +275,29 @@ export function JobsPage() {
             icon={<Mail size={15} />}
             onClick={() => setCoverLetterJob(job)}
           />
-          <ConfirmApplyButton
+          <ConfirmActionButton
+            ariaLabel="Mark as applied, click again to confirm"
+            confirmAriaLabel="Confirm mark as applied"
+            confirmTitle="Click again to mark as applied"
+            icon={<Check size={15} />}
             isLoading={
               mutatingJob?.id === job.id && mutatingJob.action === 'apply'
             }
-            onApply={() => markApplied(job)}
+            onConfirm={() => markApplied(job)}
+            title="Mark as applied"
+            variant="success"
           />
-          <Button
-            aria-label="Delete active job"
+          <ConfirmActionButton
+            ariaLabel="Delete active job"
+            confirmAriaLabel="Confirm delete active job"
+            confirmTitle="Click again to delete active job"
             icon={<Trash2 size={15} />}
             isLoading={
               mutatingJob?.id === job.id && mutatingJob.action === 'delete'
             }
-            onClick={() => setDeleteConfirmationJob(job)}
+            onConfirm={() => deleteJob(job)}
+            title="Delete active job"
+            confirmVariant="dangerPrimary"
             variant="danger"
           />
         </div>
@@ -402,16 +387,6 @@ export function JobsPage() {
         job={coverLetterJob}
         onClose={() => setCoverLetterJob(null)}
       />
-      <DeleteJobConfirmationModal
-        isDeleting={
-          !!deleteConfirmationJob &&
-          mutatingJob?.id === deleteConfirmationJob.id &&
-          mutatingJob.action === 'delete'
-        }
-        job={deleteConfirmationJob}
-        onCancel={() => setDeleteConfirmationJob(null)}
-        onConfirm={confirmDelete}
-      />
     </section>
   );
 }
@@ -425,145 +400,6 @@ function LocationCell({ location }: { location: string | null | undefined }) {
     <span className="block max-w-32 whitespace-normal break-words">
       {location}
     </span>
-  );
-}
-
-function ConfirmApplyButton({
-  isLoading,
-  onApply,
-}: {
-  isLoading: boolean;
-  onApply: () => Promise<void>;
-}) {
-  const [isConfirming, setIsConfirming] = useState(false);
-
-  useEffect(() => {
-    if (isLoading) {
-      setIsConfirming(false);
-    }
-  }, [isLoading]);
-
-  function handleClick() {
-    if (isLoading) {
-      return;
-    }
-
-    if (!isConfirming) {
-      setIsConfirming(true);
-      return;
-    }
-
-    setIsConfirming(false);
-    void onApply();
-  }
-
-  return (
-    <Button
-      aria-label={
-        isConfirming
-          ? 'Confirm mark as applied'
-          : 'Mark as applied, click again to confirm'
-      }
-      icon={<Check size={15} />}
-      isLoading={isLoading}
-      onBlur={() => setIsConfirming(false)}
-      onClick={handleClick}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') {
-          setIsConfirming(false);
-        }
-      }}
-      title={
-        isConfirming
-          ? 'Click again to mark as applied'
-          : 'Mark as applied'
-      }
-      variant={isConfirming ? 'primary' : 'success'}
-    />
-  );
-}
-
-function DeleteJobConfirmationModal({
-  isDeleting,
-  job,
-  onCancel,
-  onConfirm,
-}: {
-  isDeleting: boolean;
-  job: JobResponse | null;
-  onCancel: () => void;
-  onConfirm: (job: JobResponse) => Promise<void>;
-}) {
-  useEffect(() => {
-    if (!job) {
-      return undefined;
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        onCancel();
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [job, onCancel]);
-
-  if (!job) {
-    return null;
-  }
-
-  const isDraft = job.status === 'draft';
-
-  return (
-    <div
-      className="fixed inset-0 z-30 grid place-items-center bg-app-text/30 px-page-mobile"
-      role="presentation"
-    >
-      <section
-        aria-describedby="delete-job-confirmation-description"
-        aria-labelledby="delete-job-confirmation-title"
-        aria-modal="true"
-        className="grid w-full max-w-[420px] gap-cluster rounded-panel border border-app-border bg-app-surface p-panel shadow-drawer"
-        role="dialog"
-      >
-        <div className="flex items-start gap-cluster">
-          <span className="grid size-9 shrink-0 place-items-center rounded-control border border-danger-300 bg-danger-50 text-danger-700">
-            <AlertTriangle aria-hidden="true" size={18} />
-          </span>
-          <div className="grid gap-1">
-            <h2
-              className="m-0 text-base font-bold text-app-text"
-              id="delete-job-confirmation-title"
-            >
-              Delete job?
-            </h2>
-            <p
-              className="m-0 text-sm leading-6 text-app-text-muted"
-              id="delete-job-confirmation-description"
-            >
-              {isDraft
-                ? 'This draft job will be permanently removed.'
-                : 'This active job will leave the active list, but future duplicates will still appear as drafts.'}
-            </p>
-          </div>
-        </div>
-        <div className={drawerActionsClass}>
-          <Button disabled={isDeleting} onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button
-            icon={<Trash2 size={15} />}
-            isLoading={isDeleting}
-            onClick={() => onConfirm(job)}
-            variant="danger"
-          >
-            Delete
-          </Button>
-        </div>
-      </section>
-    </div>
   );
 }
 
