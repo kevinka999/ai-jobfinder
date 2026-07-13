@@ -127,6 +127,12 @@ export const WORK_MODEL_OPTIONS: Array<{ id: WorkModel; label: string }> = [
   { id: 'remote', label: 'Remote' },
 ];
 
+export const DEFAULT_SEARCH_WORK_MODELS: WorkModel[] = [
+  'onsite',
+  'hybrid',
+  'remote',
+];
+
 export const APPLICATION_STATUS_OPTIONS: Array<{
   id: ApplicationStatus;
   label: string;

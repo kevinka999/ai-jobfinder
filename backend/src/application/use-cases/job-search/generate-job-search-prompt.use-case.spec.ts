@@ -70,7 +70,7 @@ describe('GenerateJobSearchPromptUseCase', () => {
     const result = await useCase.execute({
       sourcePlatformIds: ['linkedin', 'stepstone'],
       cities: ['Vienna', 'Salzburg'],
-      workModels: ['hybrid', 'remote'],
+      workModels: ['onsite', 'hybrid', 'remote'],
     });
 
     expect(userRepository.resolveDefaultUser.mock.calls).toHaveLength(1);
@@ -78,7 +78,7 @@ describe('GenerateJobSearchPromptUseCase', () => {
       'LinkedIn (linkedin), StepStone (stepstone)',
     );
     expect(result.prompt).toContain('Vienna, Salzburg');
-    expect(result.prompt).toContain('hybrid, remote');
+    expect(result.prompt).toContain('onsite, hybrid, remote');
     expect(result.prompt).toContain('Frontend Developer, Full Stack Developer');
     expect(result.prompt).toContain(
       'Strong technical skills (weight 8-10): React (9/10), TypeScript (10/10), NestJS (8/10)',
@@ -123,7 +123,7 @@ describe('GenerateJobSearchPromptUseCase', () => {
       enum: ['linkedin', 'stepstone', 'others'],
     });
     expect(schema.properties.jobs.items.properties.workModel).toEqual({
-      enum: ['hybrid', 'remote'],
+      enum: ['onsite', 'hybrid', 'remote'],
     });
     expect(schema.properties.jobs.items.properties.matchingScore).toEqual({
       type: 'number',

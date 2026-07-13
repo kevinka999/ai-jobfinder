@@ -22,6 +22,7 @@ import { apiRequest } from '../lib/api';
 import { cx } from '../lib/classNames';
 import {
   ImportJobsResponse,
+  DEFAULT_SEARCH_WORK_MODELS,
   SEARCH_SOURCE_PLATFORMS,
   SourcePlatformId,
   WORK_MODEL_OPTIONS,
@@ -41,10 +42,9 @@ export function JobSearchPage() {
   );
   const [cities, setCities] = useState<string[]>(['Vienna']);
   const [cityInput, setCityInput] = useState('');
-  const [workModels, setWorkModels] = useState<WorkModel[]>([
-    'hybrid',
-    'remote',
-  ]);
+  const [workModels, setWorkModels] = useState<WorkModel[]>(
+    DEFAULT_SEARCH_WORK_MODELS,
+  );
   const [prompt, setPrompt] = useState('');
   const [jobLinks, setJobLinks] = useState<string[]>([]);
   const [jobLinkInput, setJobLinkInput] = useState('');
