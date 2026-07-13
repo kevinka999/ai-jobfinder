@@ -410,7 +410,7 @@ References: [Cover letter API](API_CONTRACT.md#cover-letter-api) and [cover lett
 
 - Build cover-letter wizard drawer.
 - Step 1 accepts optional instructions prefilled from the saved instruction template.
-- Step 2 shows read-only draft.
+- Step 2 shows editable draft.
 - Step 2 accepts revision instructions.
 - Allow repeated revisions.
 - Step 3 calls PDF endpoint.
@@ -418,8 +418,8 @@ References: [Cover letter API](API_CONTRACT.md#cover-letter-api) and [cover lett
 
 ### Acceptance Criteria
 
-- Draft text is read-only.
-- User can revise only through instructions.
+- Draft text can be edited manually.
+- Revision uses the current draft text, including manual edits.
 - PDF downloads successfully.
 - Generated draft and PDF are not stored in frontend beyond current session state.
 

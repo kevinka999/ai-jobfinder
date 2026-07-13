@@ -734,7 +734,7 @@ function CoverLetterDrawer({
   }
 
   async function reviseDraft() {
-    if (!job || !draftMarkdown || !revisionInstructions.trim()) {
+    if (!job || !draftMarkdown.trim() || !revisionInstructions.trim()) {
       return;
     }
 
@@ -761,7 +761,7 @@ function CoverLetterDrawer({
   }
 
   async function downloadPdf() {
-    if (!job || !draftMarkdown) {
+    if (!job || !draftMarkdown.trim()) {
       return;
     }
 
@@ -834,7 +834,7 @@ function CoverLetterDrawer({
         <div className={drawerSectionClass}>
           <Textarea
             label="Draft"
-            readOnly
+            onChange={(event) => setDraftMarkdown(event.target.value)}
             rows={16}
             value={draftMarkdown}
           />
@@ -855,7 +855,7 @@ function CoverLetterDrawer({
             <Button
               disabled={
                 isRevising ||
-                !draftMarkdown ||
+                !draftMarkdown.trim() ||
                 revisionInstructions.trim().length === 0
               }
               icon={<Wand2 size={16} />}
@@ -865,7 +865,7 @@ function CoverLetterDrawer({
               Revise
             </Button>
             <Button
-              disabled={isRevising || !draftMarkdown}
+              disabled={isRevising || !draftMarkdown.trim()}
               onClick={() => setCurrentStep(2)}
               variant="primary"
             >
@@ -891,7 +891,7 @@ function CoverLetterDrawer({
               Back
             </Button>
             <Button
-              disabled={isDownloading || !draftMarkdown}
+              disabled={isDownloading || !draftMarkdown.trim()}
               icon={<Download size={16} />}
               isLoading={isDownloading}
               onClick={downloadPdf}

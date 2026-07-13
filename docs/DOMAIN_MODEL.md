@@ -430,8 +430,8 @@ Cover letters are not stored in the database for MVP.
 The cover-letter flow is a helper workflow:
 
 1. Generate draft for an active job.
-2. Show read-only draft in frontend state.
-3. Revise by sending instructions to the AI provider.
+2. Show editable draft in frontend state.
+3. Revise by sending the current draft text and instructions to the AI provider.
 4. Generate PDF from final draft text.
 5. Return PDF directly through the API.
 

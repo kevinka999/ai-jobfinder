@@ -694,7 +694,7 @@ The backend must:
 4. use the hardcoded backend cover-letter structure/template prompt;
 5. include optional user instructions;
 6. instruct the AI provider to write English draft Markdown, translating referenced job-posting details to English;
-7. return read-only draft Markdown.
+7. return draft Markdown for the frontend to show in an editable textarea.
 
 #### Request
 
@@ -717,7 +717,7 @@ type Response = {
 
 Revises the current cover-letter draft using user instructions.
 
-The draft remains read-only in the frontend. The user modifies it only by sending revision instructions.
+The frontend sends the current draft Markdown, including any manual edits the user made before requesting revision.
 The AI provider is instructed to keep the revised Markdown in English, translating referenced job-posting details to English.
 
 #### Request

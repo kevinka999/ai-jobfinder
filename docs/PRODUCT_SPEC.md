@@ -319,17 +319,17 @@ Step 1: Instructions
   - adjust tone;
   - focus on a particular qualification.
 
-Step 2: Read-only draft and revisions
+Step 2: Editable draft and revisions
 
 - Backend generates a cover-letter draft using:
   - hardcoded cover-letter system/template prompt;
   - user's stored resume Markdown;
   - job details;
   - optional user instructions submitted from step 1.
-- The generated draft is read-only.
-- User cannot directly edit draft text.
+- The generated draft is shown in an editable textarea.
+- User can directly edit draft text before revising or generating the PDF.
 - User can provide revision instructions.
-- Backend revises the draft through the AI provider.
+- Backend revises the current draft text through the AI provider, including any manual edits.
 - The user can repeat revision instructions as many times as needed.
 - Example revision instruction:
   - `Change the word "a" to "b" in sentence X`.
