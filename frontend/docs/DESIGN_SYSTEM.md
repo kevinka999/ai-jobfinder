@@ -9,10 +9,10 @@ This app is a private, workflow-heavy job application tool. The interface should
 Design tokens live in `src/design/tokens.css` and are exposed through Tailwind utilities.
 
 - Use `app-*` tokens for neutral app structure: `bg-app-bg`, `bg-app-surface`, `border-app-border`, `text-app-text`, and `text-app-text-muted`.
-- Use `brand-*` for primary actions, active navigation, focus, and positive workflow emphasis.
+- Use `brand-*` for primary actions, active navigation, focus, and positive workflow emphasis. Use `brand-contrast` for text/icons on filled brand backgrounds.
 - Use `accent-*` only for applied/application state emphasis.
 - Use `warning-*` for draft or in-progress states.
-- Use `danger-*` for destructive actions and error states.
+- Use `danger-*` for destructive actions and error states. Use `danger-contrast` for text/icons on filled destructive backgrounds.
 - Use `p-page`, `p-page-mobile`, `p-panel`, `gap-section`, `gap-cluster`, and `gap-inline` for common layout rhythm.
 - Keep radii at `rounded-control`, `rounded-panel`, or `rounded-pill`; do not introduce larger rounded cards.
 

@@ -32,7 +32,8 @@ export function Stepper({ currentStep, steps }: StepperProps) {
               <span
                 className={cx(
                   'inline-flex size-5 shrink-0 items-center justify-center rounded-pill border text-[0.6875rem] font-bold',
-                  status === 'complete' && 'border-brand-600 bg-brand-600 text-white',
+                  status === 'complete' &&
+                    'border-brand-600 bg-brand-600 text-brand-contrast',
                   status === 'current' &&
                     'border-brand-700 bg-brand-50 text-brand-700',
                   status === 'upcoming' &&
