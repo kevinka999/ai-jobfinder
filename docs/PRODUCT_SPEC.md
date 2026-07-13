@@ -135,7 +135,7 @@ The prompt must request the required import fields and may request optional enri
 
 ### External AI Result Format
 
-The external AI result must be pasted as a JSON object:
+The external AI result must be supplied as a pasted JSON object or one or more uploaded `.json` files. Each JSON source must use this object shape:
 
 ```json
 {
@@ -159,13 +159,16 @@ The external AI result must be pasted as a JSON object:
 
 ### Import JSON Action
 
-The user pastes JSON into the frontend.
+The user can paste JSON into the frontend and can also select multiple JSON files. Selected files show by filename and can be removed before import.
 
 Frontend behavior:
 
-1. Parse the pasted JSON before submission.
-2. If JSON syntax is invalid, show a client-side error.
-3. If JSON is valid, send the parsed object to the backend.
+1. Parse the pasted JSON and each selected file before submission.
+2. If any JSON syntax is invalid, show a client-side error.
+3. If any parsed JSON source does not contain a `jobs` array, show a client-side schema error.
+4. Submit each parsed JSON source to the backend as a separate import request.
+5. Remove each successfully processed selected file from the selected file list so retrying does not re-import it.
+6. Clear successfully processed pasted JSON so retrying does not re-import it.
 
 Backend behavior:
 

@@ -349,9 +349,9 @@ The prompt should include the same compact JSON Schema used by the search prompt
 
 ### POST /jobs/import
 
-Imports valid jobs from pasted external AI JSON.
+Imports valid jobs from external AI JSON.
 
-Frontend parses pasted JSON before calling this endpoint. Backend receives a JSON object and performs strict schema validation.
+Frontend parses pasted JSON and/or uploaded JSON files before calling this endpoint. When multiple valid JSON sources are present, the frontend calls this endpoint once per parsed source to keep request bodies bounded. Backend receives one JSON object per request and performs strict schema validation.
 
 #### Request
 

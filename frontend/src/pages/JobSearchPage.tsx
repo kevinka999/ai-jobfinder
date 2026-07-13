@@ -1,5 +1,14 @@
-import { Clipboard, Link, Plus, Search, Upload, X } from 'lucide-react';
-import { useState, type ReactNode } from 'react';
+import {
+  Clipboard,
+  FileText,
+  Link,
+  Plus,
+  Search,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react';
+import { useRef, useState, type ReactNode } from 'react';
 import { Button } from '../components/Button';
 import { MultiSelect } from '../components/MultiSelect';
 import { useToast } from '../components/toastContext';
@@ -35,6 +44,29 @@ type PromptResponse = {
 
 type PromptTab = 'search' | 'links';
 
+type ImportJsonFile = {
+  id: string;
+  file: File;
+  name: string;
+};
+
+type ImportPayload = {
+  jobs: unknown[];
+};
+
+type ImportSource = {
+  fileId?: string;
+  name: string;
+  payload: ImportPayload;
+};
+
+type ImportTotals = {
+  createdActive: number;
+  createdDraft: number;
+  invalid: number;
+  received: number;
+};
+
 export function JobSearchPage() {
   const [activePromptTab, setActivePromptTab] = useState<PromptTab>('search');
   const [sourcePlatformIds, setSourcePlatformIds] = useState<SourcePlatformId[]>(
@@ -49,9 +81,12 @@ export function JobSearchPage() {
   const [jobLinks, setJobLinks] = useState<string[]>([]);
   const [jobLinkInput, setJobLinkInput] = useState('');
   const [jsonText, setJsonText] = useState('');
+  const [jsonFiles, setJsonFiles] = useState<ImportJsonFile[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingLinkPrompt, setIsGeneratingLinkPrompt] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const jsonFileIdCounter = useRef(0);
   const toast = useToast();
 
   function addCity() {
@@ -135,25 +170,62 @@ export function JobSearchPage() {
   async function importJobs() {
     setIsImporting(true);
 
-    let parsedJson: unknown;
+    let importSources: ImportSource[];
 
     try {
-      parsedJson = JSON.parse(jsonText);
-    } catch {
-      toast.error('Pasted JSON is not valid.');
+      importSources = await buildImportSources(jsonText, jsonFiles);
+    } catch (caughtError) {
+      toast.error(getErrorMessage(caughtError));
       setIsImporting(false);
       return;
     }
 
-    try {
-      const result = await apiRequest<ImportJobsResponse>('/jobs/import', {
-        body: JSON.stringify(parsedJson),
-        method: 'POST',
-      });
-      const added = result.summary.createdActive + result.summary.createdDraft;
-      const message = formatImportToastMessage(result);
+    const totals: ImportTotals = {
+      createdActive: 0,
+      createdDraft: 0,
+      invalid: 0,
+      received: 0,
+    };
+    let firstInvalidRow:
+      | { errors: string[]; index: number; sourceName: string }
+      | undefined;
+    let processedSources = 0;
 
-      if (result.summary.invalid === 0) {
+    try {
+      for (const importSource of importSources) {
+        const result = await apiRequest<ImportJobsResponse>('/jobs/import', {
+          body: JSON.stringify(importSource.payload),
+          method: 'POST',
+        });
+
+        processedSources += 1;
+        totals.createdActive += result.summary.createdActive;
+        totals.createdDraft += result.summary.createdDraft;
+        totals.invalid += result.summary.invalid;
+        totals.received += result.summary.received;
+
+        if (!firstInvalidRow && result.invalidRows[0]) {
+          firstInvalidRow = {
+            ...result.invalidRows[0],
+            sourceName: importSource.name,
+          };
+        }
+
+        if (importSource.fileId) {
+          removeJsonFile(importSource.fileId);
+        } else {
+          setJsonText('');
+        }
+      }
+
+      const added = totals.createdActive + totals.createdDraft;
+      const message = formatImportToastMessage(
+        totals,
+        processedSources,
+        firstInvalidRow,
+      );
+
+      if (totals.invalid === 0) {
         toast.success(message, { durationMs: 7000 });
       } else if (added > 0) {
         toast.warning(message, { durationMs: 9000 });
@@ -161,10 +233,41 @@ export function JobSearchPage() {
         toast.error(message, { durationMs: 9000 });
       }
     } catch (caughtError) {
-      toast.error(`Could not import jobs: ${getErrorMessage(caughtError)}`);
+      toast.error(
+        `Could not import jobs after ${processedSources} source(s): ${getErrorMessage(caughtError)}`,
+        { durationMs: 9000 },
+      );
     } finally {
       setIsImporting(false);
     }
+  }
+
+  function addJsonFiles(files: FileList | null) {
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    const nextFiles = Array.from(files).map((file) => {
+      jsonFileIdCounter.current += 1;
+
+      return {
+        file,
+        id: `${file.name}-${file.size}-${file.lastModified}-${jsonFileIdCounter.current}`,
+        name: file.name,
+      };
+    });
+
+    setJsonFiles((currentFiles) => [...currentFiles, ...nextFiles]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }
+
+  function removeJsonFile(fileId: string) {
+    setJsonFiles((currentFiles) =>
+      currentFiles.filter((currentFile) => currentFile.id !== fileId),
+    );
   }
 
   const generateButtonDisabled =
@@ -304,7 +407,10 @@ export function JobSearchPage() {
         <div className={panelTitleRowClass}>
           <h2 className={panelTitleClass}>Import JSON</h2>
           <Button
-            disabled={isImporting || jsonText.trim().length === 0}
+            disabled={
+              isImporting ||
+              (jsonText.trim().length === 0 && jsonFiles.length === 0)
+            }
             icon={<Upload size={16} />}
             isLoading={isImporting}
             onClick={importJobs}
@@ -312,6 +418,60 @@ export function JobSearchPage() {
           >
             Import
           </Button>
+        </div>
+        <div className="grid gap-cluster">
+          <div className={fieldClassName}>
+            <span className={fieldLabelClassName}>JSON files</span>
+            <div className="flex flex-wrap items-center gap-inline">
+              <input
+                aria-label="JSON files"
+                accept="application/json,.json"
+                className="sr-only"
+                id="job-import-json-files"
+                multiple
+                onChange={(event) => addJsonFiles(event.target.files)}
+                ref={fileInputRef}
+                type="file"
+              />
+              <Button
+                icon={<FileText size={16} />}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Add files
+              </Button>
+              {jsonFiles.length > 0 ? (
+                <span className="text-sm text-app-text-muted">
+                  {jsonFiles.length} selected
+                </span>
+              ) : null}
+            </div>
+          </div>
+          {jsonFiles.length > 0 ? (
+            <ul
+              aria-label="Selected JSON files"
+              className="grid gap-1.5 rounded-control border border-app-border bg-app-surface-muted p-2"
+            >
+              {jsonFiles.map((jsonFile) => (
+                <li
+                  className="grid min-h-9 grid-cols-[minmax(0,1fr)_auto] items-center gap-inline rounded-control bg-app-surface px-2"
+                  key={jsonFile.id}
+                >
+                  <span
+                    className="truncate text-sm font-medium text-app-text"
+                    title={jsonFile.name}
+                  >
+                    {jsonFile.name}
+                  </span>
+                  <Button
+                    aria-label={`Remove ${jsonFile.name}`}
+                    icon={<Trash2 size={16} />}
+                    onClick={() => removeJsonFile(jsonFile.id)}
+                    variant="ghost"
+                  />
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
         <Textarea
           className="h-full min-h-72 resize-none"
@@ -431,17 +591,100 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unexpected error';
 }
 
-function formatImportToastMessage(result: ImportJobsResponse): string {
-  const { createdActive, createdDraft, invalid, received } = result.summary;
+function formatImportToastMessage(
+  totals: ImportTotals,
+  sourceCount: number,
+  firstInvalidRow?: { errors: string[]; index: number; sourceName: string },
+): string {
+  const { createdActive, createdDraft, invalid, received } = totals;
   const added = createdActive + createdDraft;
-  const summary = `Import finished: ${added} added (${createdActive} active, ${createdDraft} draft), ${invalid} invalid out of ${received}.`;
-  const firstInvalidRow = result.invalidRows[0];
+  const summary = `Import finished across ${sourceCount} source(s): ${added} added (${createdActive} active, ${createdDraft} draft), ${invalid} invalid out of ${received}.`;
 
   if (!firstInvalidRow) {
     return summary;
   }
 
-  return `${summary} First error: row ${firstInvalidRow.index + 1}: ${firstInvalidRow.errors.join(', ')}.`;
+  return `${summary} First error in ${firstInvalidRow.sourceName}, row ${firstInvalidRow.index + 1}: ${firstInvalidRow.errors.join(', ')}.`;
+}
+
+async function buildImportSources(
+  jsonText: string,
+  jsonFiles: ImportJsonFile[],
+): Promise<ImportSource[]> {
+  const importSources: ImportSource[] = [];
+  const trimmedJsonText = jsonText.trim();
+
+  if (trimmedJsonText.length > 0) {
+    importSources.push({
+      name: 'Pasted JSON',
+      payload: parseImportPayload(trimmedJsonText, 'Pasted JSON'),
+    });
+  }
+
+  const fileSources = await Promise.all(
+    jsonFiles.map(async (jsonFile) => {
+      const fileText = await readFileText(jsonFile.file);
+      return {
+        fileId: jsonFile.id,
+        name: jsonFile.name,
+        payload: parseImportPayload(fileText, jsonFile.name),
+      };
+    }),
+  );
+
+  importSources.push(...fileSources);
+
+  if (importSources.length === 0) {
+    throw new Error('Add pasted JSON or at least one JSON file before importing.');
+  }
+
+  return importSources;
+}
+
+function parseImportPayload(rawJson: string, sourceName: string): ImportPayload {
+  let parsedJson: unknown;
+
+  try {
+    parsedJson = JSON.parse(rawJson);
+  } catch {
+    throw new Error(`${sourceName} is not valid JSON.`);
+  }
+
+  if (!isImportPayload(parsedJson)) {
+    throw new Error(`${sourceName} must use the import schema with a jobs array.`);
+  }
+
+  return parsedJson;
+}
+
+function isImportPayload(value: unknown): value is ImportPayload {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'jobs' in value &&
+    Array.isArray((value as { jobs: unknown }).jobs)
+  );
+}
+
+function readFileText(file: File): Promise<string> {
+  if (typeof file.text === 'function') {
+    return file.text();
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.addEventListener('error', () => reject(reader.error));
+    reader.addEventListener('load', () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error(`${file.name} could not be read as text.`));
+    });
+    reader.readAsText(file);
+  });
 }
 
 function parseInputItems(value: string): string[] {

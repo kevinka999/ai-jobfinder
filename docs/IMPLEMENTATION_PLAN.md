@@ -357,9 +357,11 @@ References: [Job search prompt API](API_CONTRACT.md#job-search-prompt-api), [job
 - Call specific job links prompt generation endpoint.
 - Show generated prompt with copy affordance.
 - Build pasted JSON textarea.
+- Build multiple JSON file picker with removable selected files.
 - Parse JSON client-side.
 - Show client syntax errors.
-- Submit parsed object to import endpoint.
+- Submit parsed JSON sources to the import endpoint one source at a time.
+- Remove successfully processed selected files from the import list.
 - Show import summary.
 - Show invalid row errors when present.
 
@@ -367,6 +369,7 @@ References: [Job search prompt API](API_CONTRACT.md#job-search-prompt-api), [job
 
 - User can generate a prompt.
 - User can paste external AI JSON.
+- User can select multiple external AI JSON files and remove selected files before import.
 - Invalid JSON is caught before API call.
 - Valid JSON is submitted.
 - Import results are understandable.
