@@ -95,6 +95,8 @@ The user profile can store a cover-letter instruction template that prefills the
 
 The cover-letter structure/template is not editable in the user profile. Cover-letter structure and base instructions are hardcoded in the backend prompt.
 
+The backend prompt should keep cover letters concise, practical, and evidence-backed. It should focus on two or three role-relevant capabilities, support them with resume examples, explain why the role or company fits the candidate's next step, and avoid generic company praise, unsupported adjective claims, full-stack inventories, or chronological resume repetition.
+
 ## Page 2: Job Search
 
 The Job Search page helps the user prepare and import external AI search results.

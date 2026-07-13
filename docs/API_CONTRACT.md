@@ -693,8 +693,12 @@ The backend must:
 3. call the injected AI provider;
 4. use the hardcoded backend cover-letter structure/template prompt;
 5. include optional user instructions;
-6. instruct the AI provider to write English draft Markdown, translating referenced job-posting details to English;
-7. return draft Markdown for the frontend to show in an editable textarea.
+6. instruct the AI provider to keep the letter concise and evidence-backed;
+7. instruct the AI provider to emphasize only two or three core job-relevant capabilities, each supported by resume evidence;
+8. instruct the AI provider to answer why the company or role fits, what qualifies the candidate, and which practical experience the candidate offers;
+9. instruct the AI provider to avoid generic praise, excessive emotional language, unsupported adjective claims, full-stack inventories, and chronological resume repetition;
+10. instruct the AI provider to write English draft Markdown, translating referenced job-posting details to English;
+11. return draft Markdown for the frontend to show in an editable textarea.
 
 #### Request
 
@@ -718,7 +722,7 @@ type Response = {
 Revises the current cover-letter draft using user instructions.
 
 The frontend sends the current draft Markdown, including any manual edits the user made before requesting revision.
-The AI provider is instructed to keep the revised Markdown in English, translating referenced job-posting details to English.
+The AI provider is instructed to preserve or restore the same concise, evidence-backed cover-letter structure used for first drafts. It should keep only two or three role-relevant capabilities, support claims with resume evidence, remove generic praise or unsupported adjective claims, and keep the revised Markdown in English while translating referenced job-posting details to English.
 
 #### Request
 

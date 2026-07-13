@@ -445,6 +445,14 @@ There is no user-editable cover-letter structure/template in the database.
 
 The cover-letter base structure/template is hardcoded in the backend prompt.
 
+The hardcoded prompt should produce concise, evidence-backed letters:
+
+- open with the target role, company, supported seniority or level, supported years of experience, main work area, and two or three directly relevant technologies;
+- answer why the company or role fits, what qualifies the candidate, and which practical experiences or characteristics the candidate offers;
+- select only two or three job-relevant capabilities and support them with resume evidence;
+- connect the position to the candidate's next professional step through stack, product, architecture, domain, ownership, or responsibility;
+- avoid generic praise, excessive emotional language, unsupported adjective claims, full-stack inventories, and chronological resume repetition.
+
 ## AI Provider Domain
 
 The backend should depend on an AI provider interface, not directly on OpenAI throughout the domain modules.

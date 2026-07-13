@@ -269,6 +269,7 @@ References: [application ports](../backend/docs/ARCHITECTURE.md#application-port
 - Enforce active-job-only rule.
 - Load user resume and job details for draft/revision generation.
 - Use hardcoded backend cover-letter structure/template prompt.
+- Prompt should keep drafts and revisions concise, practical, evidence-backed, focused on two or three role-relevant capabilities, and free of generic praise or unsupported claims.
 - Accept optional user instructions for first draft.
 - Accept revision instructions for revisions.
 - Keep generated text stateless.
