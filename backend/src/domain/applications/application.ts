@@ -9,6 +9,7 @@ export type Application = {
   id: string;
   userId: string;
   jobId: string;
+  companyMatchKey?: string;
   status: ApplicationStatus;
   notes?: string;
   statusHistory: ApplicationStatusHistoryEntry[];

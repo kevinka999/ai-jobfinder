@@ -43,6 +43,7 @@ export interface JobRepository {
     title: string;
   }): Promise<Job | null>;
   findById(input: { userId: string; jobId: string }): Promise<Job | null>;
+  findByIds(input: { userId: string; jobIds: string[] }): Promise<Job[]>;
   list(input: { userId: string; status?: JobStatus }): Promise<Job[]>;
   updateEditableFields(input: {
     userId: string;

@@ -23,6 +23,7 @@ export class MongoApplicationRepository implements ApplicationRepository {
     const application = await this.applicationModel.create({
       userId: input.userId,
       jobId: new Types.ObjectId(input.jobId),
+      companyMatchKey: input.companyMatchKey,
       status: input.status,
       statusHistory: [
         {
@@ -88,6 +89,66 @@ export class MongoApplicationRepository implements ApplicationRepository {
     );
   }
 
+  async listMissingCompanyMatchKey(input: {
+    userId: string;
+  }): Promise<DomainApplication[]> {
+    const applications = await this.applicationModel
+      .find({
+        userId: input.userId,
+        $or: [
+          { companyMatchKey: { $exists: false } },
+          { companyMatchKey: null },
+          { companyMatchKey: '' },
+        ],
+      })
+      .exec();
+
+    return applications.map((application) =>
+      mapApplicationDocument(application),
+    );
+  }
+
+  async listByCompanyMatchKeys(input: {
+    userId: string;
+    companyMatchKeys: string[];
+  }): Promise<DomainApplication[]> {
+    if (input.companyMatchKeys.length === 0) {
+      return [];
+    }
+
+    const applications = await this.applicationModel
+      .find({
+        userId: input.userId,
+        companyMatchKey: { $in: input.companyMatchKeys },
+      })
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return applications.map((application) =>
+      mapApplicationDocument(application),
+    );
+  }
+
+  async updateCompanyMatchKeyByJobId(input: {
+    userId: string;
+    jobId: string;
+    companyMatchKey: string;
+  }): Promise<void> {
+    if (!Types.ObjectId.isValid(input.jobId)) {
+      return;
+    }
+
+    await this.applicationModel
+      .updateMany(
+        {
+          userId: input.userId,
+          jobId: new Types.ObjectId(input.jobId),
+        },
+        { $set: { companyMatchKey: input.companyMatchKey } },
+      )
+      .exec();
+  }
+
   async updateTracking(input: {
     userId: string;
     applicationId: string;
@@ -148,6 +209,7 @@ function mapApplicationDocument(
     id: application._id.toString(),
     userId: application.userId,
     jobId: application.jobId.toString(),
+    companyMatchKey: application.companyMatchKey,
     status: application.status,
     notes: application.notes,
     statusHistory: application.statusHistory.map((entry) => ({

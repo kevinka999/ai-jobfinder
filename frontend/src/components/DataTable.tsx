@@ -12,6 +12,7 @@ export type DataTableSortState = {
 };
 
 export type DataTableColumn<T> = {
+  defaultSortDirection?: DataTableSortDirection;
   header: string;
   id?: string;
   render: (row: T) => ReactNode;
@@ -128,7 +129,7 @@ function getNextSortState<T>(
   const columnId = getColumnId(column);
 
   if (sortState?.columnId !== columnId) {
-    return { columnId, direction: 'asc' };
+    return { columnId, direction: column.defaultSortDirection ?? 'asc' };
   }
 
   return {

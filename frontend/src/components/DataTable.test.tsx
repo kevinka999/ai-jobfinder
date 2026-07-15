@@ -4,6 +4,7 @@ import { DataTable } from './DataTable';
 import type { DataTableColumn } from './DataTable';
 
 type TestRow = {
+  createdAt: string;
   id: string;
   name: string;
   score?: number;
@@ -21,12 +22,33 @@ const columns: Array<DataTableColumn<TestRow>> = [
     render: (row) => row.score ?? '—',
     sortValue: (row) => row.score,
   },
+  {
+    defaultSortDirection: 'desc',
+    header: 'Inserted',
+    id: 'inserted',
+    render: (row) => row.createdAt,
+    sortValue: (row) => new Date(row.createdAt),
+  },
 ];
 
 const rows: TestRow[] = [
-  { id: 'first', name: 'Backend Engineer', score: 72 },
-  { id: 'second', name: 'Frontend Engineer', score: 94 },
-  { id: 'third', name: 'Platform Engineer' },
+  {
+    createdAt: '2026-07-11T09:00:00.000Z',
+    id: 'first',
+    name: 'Backend Engineer',
+    score: 72,
+  },
+  {
+    createdAt: '2026-07-12T09:00:00.000Z',
+    id: 'second',
+    name: 'Frontend Engineer',
+    score: 94,
+  },
+  {
+    createdAt: '2026-07-10T09:00:00.000Z',
+    id: 'third',
+    name: 'Platform Engineer',
+  },
 ];
 
 describe('DataTable', () => {
@@ -78,6 +100,29 @@ describe('DataTable', () => {
     expect(getRenderedNames()).toEqual([
       'Backend Engineer',
       'Frontend Engineer',
+      'Platform Engineer',
+    ]);
+  });
+
+  it('uses a column default sort direction on the first header click', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <DataTable
+        columns={columns}
+        emptyLabel="No rows."
+        getRowKey={(row) => row.id}
+        rows={rows}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: /sort by inserted descending/i }),
+    );
+
+    expect(getRenderedNames()).toEqual([
+      'Frontend Engineer',
+      'Backend Engineer',
       'Platform Engineer',
     ]);
   });

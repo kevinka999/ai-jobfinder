@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import type { Application } from '../../../domain/applications/application';
 import type { Job } from '../../../domain/jobs/job';
+import { normalizeCompanyMatchKey } from '../../../domain/jobs/company-name-normalization';
 import { APPLICATION_REPOSITORY } from '../../ports/application-repository.port';
 import type { ApplicationRepository } from '../../ports/application-repository.port';
 import { JOB_REPOSITORY } from '../../ports/job-repository.port';
@@ -69,6 +70,7 @@ export class ApplyJobUseCase {
     const application = await this.applicationRepository.create({
       userId: user.id,
       jobId: input.jobId,
+      companyMatchKey: normalizeCompanyMatchKey(updatedJob.companyName),
       status: 'applied',
       statusChangedAt: new Date(),
     });

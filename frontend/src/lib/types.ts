@@ -71,6 +71,22 @@ export type ApplicationResponse = {
   updatedAt: string;
 };
 
+export type CompanyApplicationHistoryResponse = {
+  jobId: string;
+  companyName: string;
+  applications: Array<{
+    id: string;
+    jobId: string;
+    applicationUrl: string;
+    companyName: string;
+    techStack?: string[];
+    title: string;
+    status: ApplicationStatus;
+    createdAt: string;
+  }>;
+  matchCount: number;
+};
+
 export type JobEditableFields = {
   companyName: string;
   title: string;

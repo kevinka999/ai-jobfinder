@@ -120,6 +120,29 @@ export class MongoJobRepository implements JobRepository {
     return job ? mapJobDocument(job) : null;
   }
 
+  async findByIds(input: {
+    userId: string;
+    jobIds: string[];
+  }): Promise<DomainJob[]> {
+    const objectIds = input.jobIds
+      .filter((jobId) => Types.ObjectId.isValid(jobId))
+      .map((jobId) => new Types.ObjectId(jobId));
+
+    if (objectIds.length === 0) {
+      return [];
+    }
+
+    const jobs = await this.jobModel
+      .find({
+        _id: { $in: objectIds },
+        userId: input.userId,
+        deletedAt: null,
+      })
+      .exec();
+
+    return jobs.map((job) => mapJobDocument(job));
+  }
+
   async list(input: {
     userId: string;
     status?: JobStatus;

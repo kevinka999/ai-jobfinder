@@ -235,6 +235,8 @@ Draft jobs are possible duplicates.
 
 Draft jobs show enough information for the user to decide whether to keep or delete them. The table should also expose the possible duplicated job reference when `metadata.possibleDuplicatedJobId` exists, so the user can compare the imported draft with the existing job.
 
+Draft jobs should show the job insertion date so the newest imported drafts can be found quickly.
+
 Draft job actions are intentionally limited:
 
 - Keep;
@@ -262,8 +264,8 @@ Active job row fields should include at minimum:
 - application URL;
 - source platform;
 - location if available;
-- work model if available;
 - matching score if available.
+- job insertion date.
 
 Active job actions:
 
@@ -306,6 +308,8 @@ Jobs can be edited from both:
 - the Applications page.
 
 The Applications table also exposes the same job favorite star and can be sorted so favorited job applications appear first.
+
+Jobs and Applications tables show a previous-company-applications badge beside the company name inside the Job column. The count is loaded after the main table data so the table remains usable while the secondary lookup is still pending. A loading skeleton appears in the badge position until the lookup completes. The count excludes the row's own job and matches other applications by a normalized company-name key that removes common legal suffixes such as `GmbH`, `AG`, `Ltd`, or `Inc`. When the count is greater than zero, the user can click the badge to open a drawer that lists the matched application job titles, statuses, tech stacks, and posting links.
 
 ### Generate Cover Letter Flow
 
@@ -375,7 +379,7 @@ The table should show:
 - job title;
 - application URL;
 - current application status;
-- application created date;
+- application insertion date;
 - last updated date.
 
 ### Application Actions

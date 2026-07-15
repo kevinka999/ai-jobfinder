@@ -6,6 +6,7 @@ export const APPLICATION_REPOSITORY = Symbol('APPLICATION_REPOSITORY');
 export type CreateApplicationInput = {
   userId: string;
   jobId: string;
+  companyMatchKey: string;
   status: ApplicationStatus;
   statusChangedAt: Date;
 };
@@ -24,6 +25,16 @@ export interface ApplicationRepository {
     userId: string;
     status?: ApplicationStatus;
   }): Promise<Application[]>;
+  listMissingCompanyMatchKey(input: { userId: string }): Promise<Application[]>;
+  listByCompanyMatchKeys(input: {
+    userId: string;
+    companyMatchKeys: string[];
+  }): Promise<Application[]>;
+  updateCompanyMatchKeyByJobId(input: {
+    userId: string;
+    jobId: string;
+    companyMatchKey: string;
+  }): Promise<void>;
   updateTracking(input: {
     userId: string;
     applicationId: string;

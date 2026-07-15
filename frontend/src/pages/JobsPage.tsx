@@ -12,6 +12,10 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/Button';
 import { CheckboxMenu } from '../components/CheckboxMenu';
+import {
+  CompanyHistoryBadge,
+  CompanyHistoryDrawer,
+} from '../components/CompanyHistory';
 import { ConfirmActionButton } from '../components/ConfirmActionButton';
 import { DataTable } from '../components/DataTable';
 import type { DataTableColumn } from '../components/DataTable';
@@ -44,6 +48,7 @@ import {
 import { apiBlob, apiRequest } from '../lib/api';
 import {
   ApplicationResponse,
+  CompanyApplicationHistoryResponse,
   JobEditableFields,
   JobResponse,
   SOURCE_PLATFORMS,
@@ -78,6 +83,12 @@ export function JobsPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingJob, setEditingJob] = useState<JobResponse | null>(null);
   const [coverLetterJob, setCoverLetterJob] = useState<JobResponse | null>(null);
+  const [companyHistoryByJobId, setCompanyHistoryByJobId] = useState<
+    Record<string, CompanyApplicationHistoryResponse>
+  >({});
+  const [selectedCompanyHistoryJobId, setSelectedCompanyHistoryJobId] =
+    useState<string | null>(null);
+  const [isCompanyHistoryLoading, setIsCompanyHistoryLoading] = useState(false);
   const [activeJobNameFilter, setActiveJobNameFilter] = useState('');
   const [activeSourceFilters, setActiveSourceFilters] = useState<
     SourcePlatformId[]
@@ -106,6 +117,9 @@ export function JobsPage() {
   );
   const hasActiveJobFilters =
     !!activeJobNameFilter.trim() || activeSourceFilters.length > 0;
+  const selectedCompanyHistory = selectedCompanyHistoryJobId
+    ? companyHistoryByJobId[selectedCompanyHistoryJobId] ?? null
+    : null;
 
   const loadJobs = useCallback(async (showSuccessToast = false) => {
     setIsLoading(true);
@@ -128,6 +142,53 @@ export function JobsPage() {
   useEffect(() => {
     void loadJobs();
   }, [loadJobs]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadCompanyHistory() {
+      if (activeJobs.length === 0) {
+        setCompanyHistoryByJobId({});
+        setIsCompanyHistoryLoading(false);
+        return;
+      }
+
+      setIsCompanyHistoryLoading(true);
+
+      try {
+        const histories = await apiRequest<CompanyApplicationHistoryResponse[]>(
+          '/applications/company-history',
+          {
+            body: JSON.stringify({
+              jobIds: activeJobs.map((job) => job.id),
+            }),
+            method: 'POST',
+          },
+        );
+
+        if (!ignore) {
+          setCompanyHistoryByJobId(toCompanyHistoryMap(histories));
+        }
+      } catch (caughtError) {
+        if (!ignore) {
+          setCompanyHistoryByJobId({});
+          toast.error(
+            `Could not load company applications: ${getErrorMessage(caughtError)}`,
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setIsCompanyHistoryLoading(false);
+        }
+      }
+    }
+
+    void loadCompanyHistory();
+
+    return () => {
+      ignore = true;
+    };
+  }, [activeJobs, toast]);
 
   async function keepDraft(job: JobResponse) {
     await mutateJob(
@@ -245,6 +306,13 @@ export function JobsPage() {
       sortValue: (job) => job.metadata?.possibleDuplicatedJobId,
     },
     {
+      defaultSortDirection: 'desc',
+      header: 'Inserted',
+      id: 'draft-inserted',
+      render: (job) => formatShortDate(job.createdAt),
+      sortValue: (job) => new Date(job.createdAt),
+    },
+    {
       header: 'Actions',
       render: (job) => (
         <div className={tableActionsClass}>
@@ -297,7 +365,20 @@ export function JobsPage() {
     {
       header: 'Job',
       id: 'job',
-      render: (job) => <JobTitleCell job={job} />,
+      render: (job) => (
+        <JobTitleCell
+          companyMeta={
+            <CompanyHistoryBadge
+              history={companyHistoryByJobId[job.id]}
+              isLoading={isCompanyHistoryLoading}
+              onOpen={(history) =>
+                setSelectedCompanyHistoryJobId(history.jobId)
+              }
+            />
+          }
+          job={job}
+        />
+      ),
       sortValue: getJobSortLabel,
     },
     {
@@ -311,15 +392,17 @@ export function JobsPage() {
       sortValue: (job) => job.location,
     },
     {
-      header: 'Work',
-      render: (job) => job.workModel ?? '—',
-      sortValue: (job) => job.workModel,
-    },
-    {
       header: 'Match',
       id: 'match',
       render: (job) => job.matchingScore ?? '—',
       sortValue: (job) => job.matchingScore,
+    },
+    {
+      defaultSortDirection: 'desc',
+      header: 'Inserted',
+      id: 'inserted',
+      render: (job) => formatShortDate(job.createdAt),
+      sortValue: (job) => new Date(job.createdAt),
     },
     {
       header: 'Actions',
@@ -446,6 +529,10 @@ export function JobsPage() {
       <CoverLetterDrawer
         job={coverLetterJob}
         onClose={() => setCoverLetterJob(null)}
+      />
+      <CompanyHistoryDrawer
+        history={selectedCompanyHistory}
+        onClose={() => setSelectedCompanyHistoryJobId(null)}
       />
     </section>
   );
@@ -959,6 +1046,14 @@ function toDateInputValue(value?: string): string {
   return value?.slice(0, 10) ?? '';
 }
 
+function formatShortDate(value: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date(value));
+}
+
 function getSourceLabel(sourcePlatformId: SourcePlatformId): string {
   return (
     SOURCE_PLATFORMS.find((platform) => platform.id === sourcePlatformId)
@@ -972,6 +1067,14 @@ function getJobSortLabel(job: JobResponse): string {
 
 function getFavoriteSortValue(job: JobResponse): number {
   return job.isFavorite ? 0 : 1;
+}
+
+function toCompanyHistoryMap(
+  histories: CompanyApplicationHistoryResponse[],
+): Record<string, CompanyApplicationHistoryResponse> {
+  return Object.fromEntries(
+    histories.map((history) => [history.jobId, history]),
+  );
 }
 
 function filterActiveJobs(

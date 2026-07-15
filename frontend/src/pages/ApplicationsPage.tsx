@@ -8,6 +8,10 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '../components/Button';
 import { CheckboxMenu } from '../components/CheckboxMenu';
+import {
+  CompanyHistoryBadge,
+  CompanyHistoryDrawer,
+} from '../components/CompanyHistory';
 import { DataTable } from '../components/DataTable';
 import type { DataTableColumn } from '../components/DataTable';
 import { Drawer } from '../components/Drawer';
@@ -41,6 +45,7 @@ import {
   APPLICATION_STATUS_OPTIONS,
   ApplicationResponse,
   ApplicationStatus,
+  CompanyApplicationHistoryResponse,
   JobEditableFields,
   JobResponse,
   SOURCE_PLATFORMS,
@@ -58,6 +63,12 @@ export function ApplicationsPage() {
   const [applications, setApplications] = useState<ApplicationResponse[]>([]);
   const [selectedApplication, setSelectedApplication] =
     useState<ApplicationResponse | null>(null);
+  const [companyHistoryByJobId, setCompanyHistoryByJobId] = useState<
+    Record<string, CompanyApplicationHistoryResponse>
+  >({});
+  const [selectedCompanyHistoryJobId, setSelectedCompanyHistoryJobId] =
+    useState<string | null>(null);
+  const [isCompanyHistoryLoading, setIsCompanyHistoryLoading] = useState(false);
   const [jobFilter, setJobFilter] = useState('');
   const [appliedDateFilter, setAppliedDateFilter] = useState('');
   const [statusFilters, setStatusFilters] = useState<ApplicationStatus[]>([]);
@@ -105,6 +116,62 @@ export function ApplicationsPage() {
   );
   const hasActiveFilters =
     !!jobFilter.trim() || !!appliedDateFilter || statusFilters.length > 0;
+  const selectedCompanyHistory = selectedCompanyHistoryJobId
+    ? companyHistoryByJobId[selectedCompanyHistoryJobId] ?? null
+    : null;
+
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadCompanyHistory() {
+      const jobIds = Array.from(
+        new Set(
+          applications
+            .map((application) => application.job?.id)
+            .filter((jobId): jobId is string => jobId !== undefined),
+        ),
+      );
+
+      if (jobIds.length === 0) {
+        setCompanyHistoryByJobId({});
+        setIsCompanyHistoryLoading(false);
+        return;
+      }
+
+      setIsCompanyHistoryLoading(true);
+
+      try {
+        const histories = await apiRequest<CompanyApplicationHistoryResponse[]>(
+          '/applications/company-history',
+          {
+            body: JSON.stringify({ jobIds }),
+            method: 'POST',
+          },
+        );
+
+        if (!ignore) {
+          setCompanyHistoryByJobId(toCompanyHistoryMap(histories));
+        }
+      } catch (caughtError) {
+        if (!ignore) {
+          setCompanyHistoryByJobId({});
+          toast.error(
+            `Could not load company applications: ${getErrorMessage(caughtError)}`,
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setIsCompanyHistoryLoading(false);
+        }
+      }
+    }
+
+    void loadCompanyHistory();
+
+    return () => {
+      ignore = true;
+    };
+  }, [applications, toast]);
 
   async function moveApplicationStatus(
     application: ApplicationResponse,
@@ -202,7 +269,18 @@ export function ApplicationsPage() {
       id: 'job',
       render: (application) =>
         application.job ? (
-          <JobTitleCell job={application.job} />
+          <JobTitleCell
+            companyMeta={
+              <CompanyHistoryBadge
+                history={companyHistoryByJobId[application.job.id]}
+                isLoading={isCompanyHistoryLoading}
+                onOpen={(history) =>
+                  setSelectedCompanyHistoryJobId(history.jobId)
+                }
+              />
+            }
+            job={application.job}
+          />
         ) : (
           application.jobId
         ),
@@ -214,8 +292,10 @@ export function ApplicationsPage() {
       sortValue: (application) => application.status,
     },
     {
-      header: 'Applied',
-      render: (application) => formatDate(application.createdAt),
+      defaultSortDirection: 'desc',
+      header: 'Inserted',
+      id: 'inserted',
+      render: (application) => formatShortDate(application.createdAt),
       sortValue: (application) => new Date(application.createdAt),
     },
     {
@@ -287,7 +367,7 @@ export function ApplicationsPage() {
             />
           </label>
           <div className={fieldClassName}>
-            <span className={fieldLabelClassName}>Applied date</span>
+            <span className={fieldLabelClassName}>Inserted date</span>
             <input
               className={inputClassName}
               onChange={(event) => setAppliedDateFilter(event.target.value)}
@@ -336,6 +416,10 @@ export function ApplicationsPage() {
           setSelectedApplication(updatedApplication);
           await loadApplications();
         }}
+      />
+      <CompanyHistoryDrawer
+        history={selectedCompanyHistory}
+        onClose={() => setSelectedCompanyHistoryJobId(null)}
       />
     </section>
   );
@@ -649,6 +733,14 @@ function formatDate(value: string): string {
   }).format(new Date(value));
 }
 
+function formatShortDate(value: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date(value));
+}
+
 function getApplicationJobSortLabel(application: ApplicationResponse): string {
   if (!application.job) {
     return application.jobId;
@@ -676,6 +768,14 @@ function updateApplicationJob(
   }
 
   return { ...application, job: updatedJob };
+}
+
+function toCompanyHistoryMap(
+  histories: CompanyApplicationHistoryResponse[],
+): Record<string, CompanyApplicationHistoryResponse> {
+  return Object.fromEntries(
+    histories.map((history) => [history.jobId, history]),
+  );
 }
 
 function filterApplications(

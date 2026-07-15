@@ -39,6 +39,7 @@ describe('job workflow use cases', () => {
       softDeleteActive: jest.fn(),
       findDuplicateCandidate: jest.fn(),
       findById: jest.fn(),
+      findByIds: jest.fn(),
       list: jest.fn(),
       updateEditableFields: jest.fn(),
       updateFavorite: jest.fn(),
@@ -49,6 +50,9 @@ describe('job workflow use cases', () => {
       findById: jest.fn(),
       findByUserAndJobId: jest.fn(),
       list: jest.fn(),
+      listByCompanyMatchKeys: jest.fn(),
+      listMissingCompanyMatchKey: jest.fn(),
+      updateCompanyMatchKeyByJobId: jest.fn(),
       updateTracking: jest.fn(),
     };
   });
@@ -160,6 +164,7 @@ describe('job workflow use cases', () => {
     expect(applicationRepository.create).toHaveBeenCalledWith({
       userId: user.id,
       jobId: activeJob.id,
+      companyMatchKey: 'example',
       status: 'applied',
       statusChangedAt: expect.any(Date) as Date,
     });
@@ -188,7 +193,11 @@ describe('job workflow use cases', () => {
     jobRepository.updateEditableFields.mockResolvedValue(updatedJob);
 
     await expect(
-      new UpdateJobUseCase(userRepository, jobRepository).execute({
+      new UpdateJobUseCase(
+        userRepository,
+        jobRepository,
+        applicationRepository,
+      ).execute({
         jobId: updatedJob.id,
         fields: { companyName: 'Updated GmbH' },
       }),
@@ -199,6 +208,13 @@ describe('job workflow use cases', () => {
       jobId: updatedJob.id,
       fields: { companyName: 'Updated GmbH' },
     });
+    expect(
+      applicationRepository.updateCompanyMatchKeyByJobId,
+    ).toHaveBeenCalledWith({
+      userId: user.id,
+      jobId: updatedJob.id,
+      companyMatchKey: 'updated',
+    });
     expect(jobRepository.updateStatus).not.toHaveBeenCalled();
   });
 
@@ -206,7 +222,11 @@ describe('job workflow use cases', () => {
     jobRepository.updateEditableFields.mockResolvedValue(null);
 
     await expect(
-      new UpdateJobUseCase(userRepository, jobRepository).execute({
+      new UpdateJobUseCase(
+        userRepository,
+        jobRepository,
+        applicationRepository,
+      ).execute({
         jobId: 'missing',
         fields: { companyName: 'Updated GmbH' },
       }),

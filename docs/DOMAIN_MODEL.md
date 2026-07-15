@@ -326,6 +326,7 @@ type Application = {
   _id: string;
   userId: string;
   jobId: string;
+  companyMatchKey?: string;
   status: ApplicationStatus;
   notes?: string;
   statusHistory: Array<{
@@ -387,6 +388,12 @@ Owner user ID.
 
 Associated job ID.
 
+`companyMatchKey`
+
+Denormalized normalized company-name key copied from the associated job when the application is created. It exists so previous applications at the same company can be looked up from the `applications` collection without a fuzzy scan. If the job's company name is edited later, the application record's key is updated to match.
+
+The normalization lowercases names, removes accents and punctuation, collapses spaces, and strips common legal/company suffixes such as `GmbH`, dotted `m.b.H`, `AG`, `KG`, `OG`, `Ltd`, `Limited`, `Inc`, `Corp`, `Corporation`, `LLC`, `PLC`, and `SE`. This is deterministic company-name cleanup, not fuzzy matching.
+
 `status`
 
 Current application status.
@@ -422,6 +429,15 @@ Last application update time.
 - If only notes change, do not append status history.
 - Application notes are editable.
 - Application status history is append-only from user actions.
+- Previous-company-application lookup matches applications by `userId` and `companyMatchKey`, excludes the row's own job, and returns the matched application job title, status, tech stack, and posting URL for the drawer.
+
+### Application Index Plan
+
+MongoDB indexes for `applications` should support the main user-scoped workflows:
+
+- `{ userId: 1, status: 1 }` for status-filtered application lists;
+- `{ userId: 1, jobId: 1 }` for finding or syncing the application attached to a job;
+- `{ userId: 1, companyMatchKey: 1, createdAt: -1 }` for fast previous-company-application lookups, returning newest matches first.
 
 ## Cover Letter Domain
 

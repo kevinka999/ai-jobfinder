@@ -31,6 +31,9 @@ export class Application {
   @Prop({ ref: 'Job', required: true, type: SchemaTypes.ObjectId })
   jobId!: Types.ObjectId;
 
+  @Prop({ trim: true, type: String })
+  companyMatchKey?: string;
+
   @Prop({ enum: APPLICATION_STATUSES, required: true, type: String })
   status!: ApplicationStatus;
 
@@ -53,3 +56,4 @@ export const ApplicationSchema = SchemaFactory.createForClass(Application);
 
 ApplicationSchema.index({ userId: 1, status: 1 });
 ApplicationSchema.index({ userId: 1, jobId: 1 });
+ApplicationSchema.index({ userId: 1, companyMatchKey: 1, createdAt: -1 });

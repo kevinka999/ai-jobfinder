@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ApplicationsController } from './application/use-cases/applications/applications.controller';
 import { GetApplicationUseCase } from './application/use-cases/applications/get-application.use-case';
+import { ListCompanyApplicationHistoryUseCase } from './application/use-cases/applications/list-company-application-history.use-case';
 import { ListApplicationsUseCase } from './application/use-cases/applications/list-applications.use-case';
 import { UpdateApplicationUseCase } from './application/use-cases/applications/update-application.use-case';
 import { CoverLettersController } from './application/use-cases/cover-letters/cover-letters.controller';
@@ -71,6 +72,7 @@ import { PdfModule } from './infrastructure/pdf/pdf.module';
     DeleteJobUseCase,
     ApplyJobUseCase,
     ListApplicationsUseCase,
+    ListCompanyApplicationHistoryUseCase,
     GetApplicationUseCase,
     UpdateApplicationUseCase,
     GenerateCoverLetterDraftUseCase,
