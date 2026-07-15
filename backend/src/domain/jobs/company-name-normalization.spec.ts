@@ -7,6 +7,11 @@ describe('company name normalization', () => {
     expect(normalizeCompanyMatchKey('Example GmbH & Co KG')).toBe('example');
   });
 
+  it('removes generic company descriptors from company names', () => {
+    expect(normalizeCompanyMatchKey('Sprad Software GmbH')).toBe('sprad');
+    expect(normalizeCompanyMatchKey('Sprad')).toBe('sprad');
+  });
+
   it('normalizes punctuation, accents, and whitespace', () => {
     expect(
       normalizeCompanyMatchKey(

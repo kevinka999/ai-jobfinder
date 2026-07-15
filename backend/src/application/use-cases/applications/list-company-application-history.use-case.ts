@@ -38,7 +38,7 @@ export class ListCompanyApplicationHistoryUseCase {
     jobIds: string[];
   }): Promise<CompanyApplicationHistoryOutput[]> {
     const user = await this.userRepository.resolveDefaultUser();
-    await this.backfillMissingCompanyMatchKeys(user.id);
+    await this.refreshCompanyMatchKeys(user.id);
 
     const uniqueJobIds = Array.from(new Set(input.jobIds));
     const targetJobs = await this.jobRepository.findByIds({
@@ -102,9 +102,8 @@ export class ListCompanyApplicationHistoryUseCase {
     });
   }
 
-  private async backfillMissingCompanyMatchKeys(userId: string): Promise<void> {
-    const applications =
-      await this.applicationRepository.listMissingCompanyMatchKey({ userId });
+  private async refreshCompanyMatchKeys(userId: string): Promise<void> {
+    const applications = await this.applicationRepository.list({ userId });
 
     if (applications.length === 0) {
       return;
@@ -124,10 +123,16 @@ export class ListCompanyApplicationHistoryUseCase {
           return;
         }
 
+        const companyMatchKey = normalizeCompanyMatchKey(job.companyName);
+
+        if (application.companyMatchKey === companyMatchKey) {
+          return;
+        }
+
         await this.applicationRepository.updateCompanyMatchKeyByJobId({
           userId,
           jobId: application.jobId,
-          companyMatchKey: normalizeCompanyMatchKey(job.companyName),
+          companyMatchKey,
         });
       }),
     );

@@ -392,7 +392,7 @@ Associated job ID.
 
 Denormalized normalized company-name key copied from the associated job when the application is created. It exists so previous applications at the same company can be looked up from the `applications` collection without a fuzzy scan. If the job's company name is edited later, the application record's key is updated to match.
 
-The normalization lowercases names, removes accents and punctuation, collapses spaces, and strips common legal/company suffixes such as `GmbH`, dotted `m.b.H`, `AG`, `KG`, `OG`, `Ltd`, `Limited`, `Inc`, `Corp`, `Corporation`, `LLC`, `PLC`, and `SE`. This is deterministic company-name cleanup, not fuzzy matching.
+The normalization lowercases names, removes accents and punctuation, collapses spaces, strips common legal/company suffixes such as `GmbH`, dotted `m.b.H`, `AG`, `KG`, `OG`, `Ltd`, `Limited`, `Inc`, `Corp`, `Corporation`, `LLC`, `PLC`, and `SE`, and removes generic descriptors such as `Software`, `Technology`, `Digital`, `Solutions`, `Services`, or `Group` when a company-specific stem remains. This is deterministic company-name cleanup, not fuzzy matching.
 
 `status`
 

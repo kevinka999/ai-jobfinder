@@ -662,7 +662,7 @@ The backend must:
 4. exclude the requested row's own job from its match list;
 5. return matched application job titles, statuses, tech stacks, and application URLs.
 
-Company matching is deterministic string normalization, not fuzzy matching. The match key lowercases names, removes accents and punctuation, collapses spaces, and strips common legal suffixes such as `GmbH`, `m.b.H`, `AG`, `KG`, `OG`, `Ltd`, `Limited`, `Inc`, `Corp`, `Corporation`, `LLC`, `PLC`, and `SE`.
+Company matching is deterministic string normalization, not fuzzy matching. The match key lowercases names, removes accents and punctuation, collapses spaces, strips common legal suffixes such as `GmbH`, `m.b.H`, `AG`, `KG`, `OG`, `Ltd`, `Limited`, `Inc`, `Corp`, `Corporation`, `LLC`, `PLC`, and `SE`, and removes generic descriptors such as `Software`, `Technology`, `Digital`, `Solutions`, `Services`, or `Group` when a company-specific stem remains.
 
 #### Request
 

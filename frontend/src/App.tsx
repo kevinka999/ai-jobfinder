@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   BriefcaseBusiness,
+  BarChart3,
   FileSearch,
   Files,
   Moon,
@@ -9,6 +10,7 @@ import {
 } from 'lucide-react';
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { cx } from './lib/classNames';
+import { AnalyticsPage } from './pages/AnalyticsPage';
 import { ApplicationsPage } from './pages/ApplicationsPage';
 import { JobSearchPage } from './pages/JobSearchPage';
 import { JobsPage } from './pages/JobsPage';
@@ -27,6 +29,7 @@ const NAV_ITEMS: Array<{
   { to: '/job-search', label: 'Job Search', icon: FileSearch },
   { to: '/jobs', label: 'Jobs', icon: BriefcaseBusiness },
   { to: '/applications', label: 'Applications', icon: Files },
+  { to: '/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
 export function App() {
@@ -54,7 +57,7 @@ export function App() {
           </div>
         </div>
         <nav
-          className="grid grid-cols-4 gap-1 md:grid-cols-1"
+          className="grid grid-cols-5 gap-1 md:grid-cols-1"
           aria-label="Main navigation"
         >
           {NAV_ITEMS.map((item) => {
@@ -113,6 +116,7 @@ export function App() {
           <Route element={<JobSearchPage />} path="/job-search" />
           <Route element={<JobsPage />} path="/jobs" />
           <Route element={<ApplicationsPage />} path="/applications" />
+          <Route element={<AnalyticsPage />} path="/analytics" />
           <Route element={<Navigate replace to="/profile" />} path="*" />
         </Routes>
       </main>

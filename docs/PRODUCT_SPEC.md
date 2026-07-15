@@ -309,7 +309,7 @@ Jobs can be edited from both:
 
 The Applications table also exposes the same job favorite star and can be sorted so favorited job applications appear first.
 
-Jobs and Applications tables show a previous-company-applications badge beside the company name inside the Job column. The count is loaded after the main table data so the table remains usable while the secondary lookup is still pending. A loading skeleton appears in the badge position until the lookup completes. The count excludes the row's own job and matches other applications by a normalized company-name key that removes common legal suffixes such as `GmbH`, `AG`, `Ltd`, or `Inc`. When the count is greater than zero, the user can click the badge to open a drawer that lists the matched application job titles, statuses, tech stacks, and posting links.
+Jobs and Applications tables show a previous-company-applications badge beside the company name inside the Job column. The count is loaded after the main table data so the table remains usable while the secondary lookup is still pending. A loading skeleton appears in the badge position until the lookup completes. The count excludes the row's own job and matches other applications by a normalized company-name key that removes common legal suffixes such as `GmbH`, `AG`, `Ltd`, or `Inc`, and generic descriptors such as `Software` when a company-specific stem remains. When the count is greater than zero, the user can click the badge to open a drawer that lists the matched application job titles, statuses, tech stacks, and posting links.
 
 ### Generate Cover Letter Flow
 
@@ -417,6 +417,29 @@ When status changes:
 - `updatedAt` is updated.
 
 Status history entries do not store notes. Notes are only stored at the root of the application record.
+
+## Page 5: Analytics
+
+The Analytics page gives a compact overview of the user's application pipeline using the existing Applications data.
+
+The first version does not require a dedicated analytics API. The frontend can compute the metrics from `GET /applications` because application responses include the current `status`, `createdAt`, and `statusHistory`.
+
+### General Metrics
+
+The page shows big-number cards for:
+
+- total jobs applied to, counted from all application records;
+- rejected applications, counted from current `status = "rejected"`;
+- applications still waiting for reply, counted from current `status = "applied"`;
+- applications in process, counted from applications whose current status is not `applied` or `rejected`.
+
+### Daily Overview
+
+The page includes a date field. For the selected day, it shows:
+
+- applications created on that day, using `applications.createdAt`;
+- applications rejected on that day, using `statusHistory` entries with `status = "rejected"`;
+- applications with good news on that day, using `statusHistory` entries whose status is neither `applied` nor `rejected`.
 
 ## Non-Goals For MVP
 

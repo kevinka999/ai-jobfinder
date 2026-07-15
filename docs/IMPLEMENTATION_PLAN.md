@@ -296,11 +296,12 @@ References: [API contract overview](API_CONTRACT.md#overview), [shared API types
 - Scaffold React, TypeScript, Vite app in `frontend/`.
 - Add routing.
 - Add API client wrapper.
-- Add layout/navigation for four pages:
+- Add layout/navigation for five pages:
   - User Profile;
   - Job Search;
   - Jobs;
-  - Applications.
+  - Applications;
+  - Analytics.
 - Add common components:
   - table;
   - drawer;
@@ -450,6 +451,26 @@ References: [Applications API](API_CONTRACT.md#applications-api), [Jobs API](API
 - Notes update without adding history entries.
 - Job details can be edited from Applications page.
 
+## Phase 15A: Analytics Frontend
+
+- [x] Phase complete
+
+References: [Applications API](API_CONTRACT.md#applications-api), [Application domain](DOMAIN_MODEL.md#application), and [Analytics product behavior](PRODUCT_SPEC.md#page-5-analytics).
+
+### Tasks
+
+- Add Analytics navigation and route.
+- Load applications through the existing `GET /applications` endpoint.
+- Show overall big-number cards for total applied, rejected, waiting reply, and in-process applications.
+- Add a day selector.
+- Show selected-day counts for applications created, rejected, and moved to any non-applied, non-rejected status.
+
+### Acceptance Criteria
+
+- Analytics does not require a dedicated backend endpoint for the first version.
+- General metrics are derived from the current application status.
+- Daily metrics use application `createdAt` and `statusHistory` timestamps.
+
 ## Phase 16: Tests And Verification
 
 - [x] Phase complete
@@ -480,6 +501,7 @@ References: [backend architecture](../backend/docs/ARCHITECTURE.md), [API contra
 - Cover-letter wizard steps.
 - PDF download handling.
 - Application status update.
+- Analytics summary and selected-day metrics.
 
 ## Implementation Notes
 

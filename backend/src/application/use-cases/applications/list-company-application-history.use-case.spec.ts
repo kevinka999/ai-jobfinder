@@ -52,37 +52,38 @@ describe('ListCompanyApplicationHistoryUseCase', () => {
     };
   });
 
-  it('backfills old application keys and excludes the requested job itself', async () => {
+  it('refreshes stale application keys and excludes the requested job itself', async () => {
     const currentJob = buildJob({
       id: '64a000000000000000000001',
-      companyName: 'Example GmbH',
+      companyName: 'Sprad',
       title: 'Frontend Developer',
     });
     const previousJob = buildJob({
       id: '64a000000000000000000002',
-      companyName: 'Example G.m.b.H.',
+      companyName: 'Sprad Software GmbH',
       title: 'React Engineer',
     });
     const currentApplication = buildApplication({
       id: '64a000000000000000000010',
       jobId: currentJob.id,
-      companyMatchKey: 'example',
+      companyMatchKey: 'sprad',
     });
     const previousApplication = buildApplication({
       id: '64a000000000000000000011',
       jobId: previousJob.id,
-      companyMatchKey: 'example',
+      companyMatchKey: 'sprad software',
     });
-    applicationRepository.listMissingCompanyMatchKey.mockResolvedValue([
-      buildApplication({ jobId: previousJob.id }),
+    applicationRepository.list.mockResolvedValue([
+      currentApplication,
+      previousApplication,
     ]);
     jobRepository.findByIds
-      .mockResolvedValueOnce([previousJob])
+      .mockResolvedValueOnce([currentJob, previousJob])
       .mockResolvedValueOnce([currentJob])
       .mockResolvedValueOnce([currentJob, previousJob]);
     applicationRepository.listByCompanyMatchKeys.mockResolvedValue([
       currentApplication,
-      previousApplication,
+      { ...previousApplication, companyMatchKey: 'sprad' },
     ]);
 
     const result = await new ListCompanyApplicationHistoryUseCase(
@@ -96,11 +97,11 @@ describe('ListCompanyApplicationHistoryUseCase', () => {
     ).toHaveBeenCalledWith({
       userId: user.id,
       jobId: previousJob.id,
-      companyMatchKey: 'example',
+      companyMatchKey: 'sprad',
     });
     expect(applicationRepository.listByCompanyMatchKeys).toHaveBeenCalledWith({
       userId: user.id,
-      companyMatchKeys: ['example'],
+      companyMatchKeys: ['sprad'],
     });
     expect(result).toEqual([
       {

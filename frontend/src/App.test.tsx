@@ -29,6 +29,7 @@ describe('App', () => {
     expect(
       screen.getByRole('link', { name: /applications/i }),
     ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /analytics/i })).toBeInTheDocument();
   });
 
   it('switches and stores the menu theme', async () => {

@@ -33,6 +33,22 @@ const LEGAL_SUFFIX_TOKENS = new Set([
   'ug',
 ]);
 
+const COMPANY_DESCRIPTOR_TOKENS = new Set([
+  'consulting',
+  'digital',
+  'group',
+  'service',
+  'services',
+  'software',
+  'solution',
+  'solutions',
+  'system',
+  'systems',
+  'tech',
+  'technologies',
+  'technology',
+]);
+
 export function normalizeCompanyMatchKey(companyName: string): string {
   const withoutDottedLegalForms = LEGAL_SUFFIX_REPLACEMENTS.reduce(
     (value, [pattern, replacement]) => value.replace(pattern, replacement),
@@ -47,6 +63,11 @@ export function normalizeCompanyMatchKey(companyName: string): string {
     .split(/\s+/)
     .filter(Boolean)
     .filter((token) => !LEGAL_SUFFIX_TOKENS.has(token));
+  const withoutDescriptors = normalizedTokens.filter(
+    (token) => !COMPANY_DESCRIPTOR_TOKENS.has(token),
+  );
 
-  return normalizedTokens.join(' ');
+  return (
+    withoutDescriptors.length > 0 ? withoutDescriptors : normalizedTokens
+  ).join(' ');
 }
