@@ -35,6 +35,7 @@ import { AiModule } from './infrastructure/ai/ai.module';
 import { validateEnvironment } from './infrastructure/config/validate-environment';
 import { DatabaseModule } from './infrastructure/database/database.module';
 import { PdfModule } from './infrastructure/pdf/pdf.module';
+import { JobMatchingModule } from './infrastructure/job-matching/job-matching.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { PdfModule } from './infrastructure/pdf/pdf.module';
     AiModule,
     DatabaseModule,
     PdfModule,
+    JobMatchingModule,
   ],
   controllers: [
     AppController,
