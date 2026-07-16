@@ -33,6 +33,13 @@ $ pnpm install
 
 ## Compile and run the project
 
+Start MongoDB and Redis from the repository root before running the API or
+matching worker:
+
+```bash
+docker compose up -d
+```
+
 ```bash
 # development
 $ pnpm run start
@@ -42,6 +49,9 @@ $ pnpm run start:dev
 
 # production mode
 $ pnpm run start:prod
+
+# matching worker (after `pnpm build`)
+$ pnpm run start:matching-worker
 ```
 
 ## Run tests
