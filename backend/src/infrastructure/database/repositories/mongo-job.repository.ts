@@ -257,10 +257,12 @@ export class MongoJobRepository implements JobRepository {
 
   async markMatchingPending(input: { userId: string; jobId: string; profileVersion: number; incrementRequestedVersion?: boolean }): Promise<DomainJob | null> {
     if (!Types.ObjectId.isValid(input.jobId)) return null;
+    const current = await this.findById({ userId: input.userId, jobId: input.jobId });
+    if (!current) return null;
     const job = await this.jobModel.findOneAndUpdate(
       { _id: new Types.ObjectId(input.jobId), userId: input.userId, deletedAt: null },
       {
-        $set: { 'matching.status': 'pending', 'matching.profileVersion': input.profileVersion, 'matching.errorMessage': undefined },
+        $set: { 'matching.status': 'pending', 'matching.profileVersion': input.profileVersion, 'matching.inputVersion': current.matching.inputVersion, 'matching.errorMessage': undefined },
         ...(input.incrementRequestedVersion ? { $inc: { 'matching.requestedVersion': 1 } } : {}),
       },
       { returnDocument: 'after', runValidators: true },
@@ -340,8 +342,8 @@ function mapJobDocument(job: JobDocument): DomainJob {
       ? {
           status: job.matching.status,
           profileVersion: job.matching.profileVersion,
-          inputVersion: job.matching.inputVersion,
-          requestedVersion: job.matching.requestedVersion,
+          inputVersion: job.matching.inputVersion ?? 1,
+          requestedVersion: job.matching.requestedVersion ?? 1,
           scoredAt: job.matching.scoredAt,
           errorMessage: job.matching.errorMessage,
           evidence: job.matching.evidence,

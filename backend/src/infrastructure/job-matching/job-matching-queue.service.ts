@@ -30,7 +30,8 @@ export class JobMatchingQueueService implements OnModuleDestroy {
   }
 
   async enqueue(message: JobMatchingQueueMessage): Promise<'queued' | 'alreadyQueued'> {
-    const jobId = `job-match:${message.jobId}:${message.profileVersion}:${message.inputVersion}:${message.requestedVersion}`;
+    // BullMQ reserves ':' for its Redis key namespace and rejects it in custom IDs.
+    const jobId = `job-match-${message.jobId}-${message.profileVersion}-${message.inputVersion}-${message.requestedVersion}`;
     const existing = await this.queue.getJob(jobId);
     if (existing) return 'alreadyQueued';
     await this.queue.add('match-job', message, { jobId });
