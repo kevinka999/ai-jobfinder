@@ -13,6 +13,9 @@ import {
   normalizeComparableText,
 } from '../../../domain/jobs/duplicate-normalization';
 import { Job, JobDocument } from '../schemas/job.schema';
+import { createPendingJobMatching } from '../../../domain/jobs/job-matching';
+import type { MatchingRevisionInput } from '../../../application/ports/job-repository.port';
+import type { JobMatchingEvidence } from '../../../domain/jobs/job-matching';
 
 @Injectable()
 export class MongoJobRepository implements JobRepository {
@@ -31,6 +34,7 @@ export class MongoJobRepository implements JobRepository {
             ),
           }
         : undefined,
+      matching: createPendingJobMatching(1),
     });
 
     return mapJobDocument(job);
@@ -168,6 +172,9 @@ export class MongoJobRepository implements JobRepository {
       return null;
     }
 
+    const matchingInputChanged = ['title', 'description', 'techStack'].some(
+      (field) => field in input.fields,
+    );
     const job = await this.jobModel
       .findOneAndUpdate(
         {
@@ -179,7 +186,13 @@ export class MongoJobRepository implements JobRepository {
           $set: {
             ...input.fields,
             ...buildNormalizedFieldUpdates(input.fields),
+            ...(matchingInputChanged
+              ? { 'matching.status': 'pending', 'matching.errorMessage': undefined }
+              : {}),
           },
+          ...(matchingInputChanged
+            ? { $inc: { 'matching.inputVersion': 1, 'matching.requestedVersion': 1 } }
+            : {}),
         },
         { returnDocument: 'after', runValidators: true },
       )
@@ -235,6 +248,52 @@ export class MongoJobRepository implements JobRepository {
 
     return job ? mapJobDocument(job) : null;
   }
+
+  async listForMatching(input: { userId: string }): Promise<DomainJob[]> {
+    const jobs = await this.jobModel.find({ userId: input.userId, deletedAt: null }).exec();
+    return jobs.map(mapJobDocument);
+  }
+
+  async markMatchingPending(input: { userId: string; jobId: string; profileVersion: number; incrementRequestedVersion?: boolean }): Promise<DomainJob | null> {
+    if (!Types.ObjectId.isValid(input.jobId)) return null;
+    const job = await this.jobModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(input.jobId), userId: input.userId, deletedAt: null },
+      {
+        $set: { 'matching.status': 'pending', 'matching.profileVersion': input.profileVersion, 'matching.errorMessage': undefined },
+        ...(input.incrementRequestedVersion ? { $inc: { 'matching.requestedVersion': 1 } } : {}),
+      },
+      { returnDocument: 'after', runValidators: true },
+    ).exec();
+    return job ? mapJobDocument(job) : null;
+  }
+
+  async markMatchingProcessing(input: MatchingRevisionInput): Promise<DomainJob | null> {
+    const job = await this.findOneAndUpdateMatching(input, { 'matching.status': 'processing', 'matching.errorMessage': undefined });
+    return job ? mapJobDocument(job) : null;
+  }
+
+  async completeMatching(input: MatchingRevisionInput & { matchingScore: number; matchingReason: string; evidence: JobMatchingEvidence }): Promise<DomainJob | null> {
+    const job = await this.findOneAndUpdateMatching(input, {
+      matchingScore: input.matchingScore, matchingReason: input.matchingReason,
+      'matching.status': 'completed', 'matching.scoredAt': new Date(),
+      'matching.errorMessage': undefined, 'matching.evidence': input.evidence,
+    });
+    return job ? mapJobDocument(job) : null;
+  }
+
+  async failMatching(input: MatchingRevisionInput & { errorMessage: string }): Promise<DomainJob | null> {
+    const job = await this.findOneAndUpdateMatching(input, { 'matching.status': 'failed', 'matching.errorMessage': input.errorMessage.slice(0, 300) });
+    return job ? mapJobDocument(job) : null;
+  }
+
+  private async findOneAndUpdateMatching(input: MatchingRevisionInput, updates: Record<string, unknown>): Promise<JobDocument | null> {
+    if (!Types.ObjectId.isValid(input.jobId)) return null;
+    return this.jobModel.findOneAndUpdate({
+      _id: new Types.ObjectId(input.jobId), userId: input.userId, deletedAt: null,
+      'matching.profileVersion': input.profileVersion, 'matching.inputVersion': input.inputVersion,
+      'matching.requestedVersion': input.requestedVersion,
+    }, { $set: updates }, { returnDocument: 'after', runValidators: true }).exec();
+  }
 }
 
 function buildNormalizedFieldUpdates(
@@ -276,6 +335,17 @@ function mapJobDocument(job: JobDocument): DomainJob {
     techStack: job.techStack,
     matchingScore: job.matchingScore,
     matchingReason: job.matchingReason,
+    matching: job.matching
+      ? {
+          status: job.matching.status,
+          profileVersion: job.matching.profileVersion,
+          inputVersion: job.matching.inputVersion,
+          requestedVersion: job.matching.requestedVersion,
+          scoredAt: job.matching.scoredAt,
+          errorMessage: job.matching.errorMessage,
+          evidence: job.matching.evidence,
+        }
+      : { status: 'stale', profileVersion: 1, inputVersion: 1, requestedVersion: 1 },
     postedAt: job.postedAt,
     applyDeadline: job.applyDeadline,
     contactInfo: job.contactInfo,

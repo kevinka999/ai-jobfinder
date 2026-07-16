@@ -2,6 +2,7 @@ import type { Job, JobMetadata } from '../../domain/jobs/job';
 import type { JobStatus } from '../../domain/jobs/job-status';
 import type { WorkModel } from '../../domain/jobs/work-model';
 import type { SourcePlatformId } from '../../domain/source-platforms/source-platform';
+import type { JobMatchingEvidence } from '../../domain/jobs/job-matching';
 
 export const JOB_REPOSITORY = Symbol('JOB_REPOSITORY');
 
@@ -60,4 +61,26 @@ export interface JobRepository {
     jobId: string;
     status: JobStatus;
   }): Promise<Job | null>;
+  listForMatching(input: { userId: string }): Promise<Job[]>;
+  markMatchingPending(input: {
+    userId: string;
+    jobId: string;
+    profileVersion: number;
+    incrementRequestedVersion?: boolean;
+  }): Promise<Job | null>;
+  markMatchingProcessing(input: MatchingRevisionInput): Promise<Job | null>;
+  completeMatching(input: MatchingRevisionInput & {
+    matchingScore: number;
+    matchingReason: string;
+    evidence: JobMatchingEvidence;
+  }): Promise<Job | null>;
+  failMatching(input: MatchingRevisionInput & { errorMessage: string }): Promise<Job | null>;
 }
+
+export type MatchingRevisionInput = {
+  userId: string;
+  jobId: string;
+  profileVersion: number;
+  inputVersion: number;
+  requestedVersion: number;
+};

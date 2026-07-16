@@ -27,6 +27,7 @@ export class MongoUserRepository implements UserRepository {
             jobTitleKeywords: [],
             resumeMarkdown: '',
             technicalSkillKeywords: [],
+            matchingProfileVersion: 1,
           },
         },
         {
@@ -71,6 +72,7 @@ export class MongoUserRepository implements UserRepository {
             jobTitleKeywords: toStringKeywords(input.jobTitleKeywords),
             technicalSkillKeywords,
           },
+          $inc: { matchingProfileVersion: 1 },
         },
         {
           returnDocument: 'after',
@@ -122,6 +124,7 @@ export class MongoUserRepository implements UserRepository {
               input.technicalSkillKeywords,
             ),
           },
+          $inc: { matchingProfileVersion: 1 },
         },
         {
           returnDocument: 'after',
@@ -145,6 +148,7 @@ function toUserProfile(user: UserDocument): UserProfile {
     technicalSkillKeywords: toTechnicalSkillKeywords(
       user.technicalSkillKeywords,
     ),
+    matchingProfileVersion: Math.max(1, user.matchingProfileVersion ?? 1),
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };

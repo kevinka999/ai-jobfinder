@@ -10,6 +10,8 @@ import { JOB_STATUSES } from '../../../domain/jobs/job-status';
 import type { JobStatus } from '../../../domain/jobs/job-status';
 import { WORK_MODELS } from '../../../domain/jobs/work-model';
 import type { WorkModel } from '../../../domain/jobs/work-model';
+import { JOB_MATCHING_STATUSES } from '../../../domain/jobs/job-matching';
+import type { JobMatchingStatus } from '../../../domain/jobs/job-matching';
 
 export type JobDocument = HydratedDocument<Job>;
 
@@ -20,6 +22,29 @@ export class JobMetadata {
 }
 
 const JobMetadataSchema = SchemaFactory.createForClass(JobMetadata);
+
+@Schema({ _id: false })
+export class JobMatchingEvidence {
+  @Prop({ required: true, type: Number }) titleScore!: number;
+  @Prop({ required: true, type: Number }) technicalScore!: number;
+  @Prop({ required: true, type: Number }) responsibilityScore!: number;
+  @Prop({ required: true, type: Number }) requirementScore!: number;
+  @Prop({ default: [], required: true, type: [String] }) matchedSkills!: string[];
+  @Prop({ default: [], required: true, type: [String] }) missingOrWeakAreas!: string[];
+}
+const JobMatchingEvidenceSchema = SchemaFactory.createForClass(JobMatchingEvidence);
+
+@Schema({ _id: false })
+export class JobMatching {
+  @Prop({ enum: JOB_MATCHING_STATUSES, required: true, type: String }) status!: JobMatchingStatus;
+  @Prop({ required: true, type: Number }) profileVersion!: number;
+  @Prop({ required: true, type: Number }) inputVersion!: number;
+  @Prop({ required: true, type: Number }) requestedVersion!: number;
+  @Prop({ type: Date }) scoredAt?: Date;
+  @Prop({ trim: true, type: String }) errorMessage?: string;
+  @Prop({ type: JobMatchingEvidenceSchema }) evidence?: JobMatchingEvidence;
+}
+const JobMatchingSchema = SchemaFactory.createForClass(JobMatching);
 
 @Schema({
   collection: 'jobs',
@@ -69,6 +94,9 @@ export class Job {
 
   @Prop({ trim: true, type: String })
   matchingReason?: string;
+
+  @Prop({ required: true, type: JobMatchingSchema })
+  matching!: JobMatching;
 
   @Prop({ type: Date })
   postedAt?: Date;

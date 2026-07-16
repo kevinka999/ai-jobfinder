@@ -31,6 +31,9 @@ export class User {
   @Prop({ default: [], required: true, type: [SchemaTypes.Mixed] })
   technicalSkillKeywords!: StoredTechnicalSkillKeyword[];
 
+  @Prop({ default: 1, required: true, type: Number })
+  matchingProfileVersion!: number;
+
   createdAt!: Date;
 
   updatedAt!: Date;

@@ -9,6 +9,7 @@ export class UserProfileResponseDto {
   coverLetterInstructionTemplate!: string;
   jobTitleKeywords!: string[];
   technicalSkillKeywords!: TechnicalSkillKeyword[];
+  matchingProfileVersion!: number;
   createdAt!: string;
   updatedAt!: string;
 
@@ -19,6 +20,7 @@ export class UserProfileResponseDto {
       coverLetterInstructionTemplate: profile.coverLetterInstructionTemplate,
       jobTitleKeywords: profile.jobTitleKeywords,
       technicalSkillKeywords: profile.technicalSkillKeywords,
+      matchingProfileVersion: profile.matchingProfileVersion,
       createdAt: profile.createdAt.toISOString(),
       updatedAt: profile.updatedAt.toISOString(),
     };

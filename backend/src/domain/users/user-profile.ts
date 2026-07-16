@@ -11,6 +11,7 @@ export type UserProfile = {
   coverLetterInstructionTemplate: string;
   jobTitleKeywords: string[];
   technicalSkillKeywords: TechnicalSkillKeyword[];
+  matchingProfileVersion: number;
   createdAt: Date;
   updatedAt: Date;
 };

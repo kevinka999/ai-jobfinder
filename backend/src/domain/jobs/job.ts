@@ -1,6 +1,7 @@
 import type { SourcePlatformId } from '../source-platforms/source-platform';
 import type { JobStatus } from './job-status';
 import type { WorkModel } from './work-model';
+import type { JobMatching } from './job-matching';
 
 export type JobMetadata = {
   possibleDuplicatedJobId?: string;
@@ -22,6 +23,7 @@ export type Job = {
   techStack?: string[];
   matchingScore?: number;
   matchingReason?: string;
+  matching: JobMatching;
   postedAt?: Date | string;
   applyDeadline?: Date | string;
   contactInfo?: string;

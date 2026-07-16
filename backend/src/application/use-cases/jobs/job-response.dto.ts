@@ -2,6 +2,7 @@ import type { Job, JobMetadata } from '../../../domain/jobs/job';
 import type { JobStatus } from '../../../domain/jobs/job-status';
 import type { WorkModel } from '../../../domain/jobs/work-model';
 import type { SourcePlatformId } from '../../../domain/source-platforms/source-platform';
+import type { JobMatching } from '../../../domain/jobs/job-matching';
 
 export class JobResponseDto {
   id!: string;
@@ -19,6 +20,7 @@ export class JobResponseDto {
   techStack?: string[];
   matchingScore?: number;
   matchingReason?: string;
+  matching!: JobMatching;
   postedAt?: string;
   applyDeadline?: string;
   contactInfo?: string;
@@ -45,6 +47,7 @@ export class JobResponseDto {
       techStack: job.techStack,
       matchingScore: job.matchingScore,
       matchingReason: job.matchingReason,
+      matching: job.matching,
       postedAt: formatOptionalDate(job.postedAt),
       applyDeadline: formatOptionalDate(job.applyDeadline),
       contactInfo: job.contactInfo,
