@@ -8,6 +8,7 @@ import { JOB_REPOSITORY } from '../../ports/job-repository.port';
 import type { JobRepository } from '../../ports/job-repository.port';
 import { USER_REPOSITORY } from '../../ports/user-repository.port';
 import type { UserRepository } from '../../ports/user-repository.port';
+import { ScheduleJobMatchingUseCase } from './schedule-job-matching.use-case';
 
 @Injectable()
 export class UpdateJobUseCase {
@@ -18,6 +19,7 @@ export class UpdateJobUseCase {
     private readonly jobRepository: JobRepository,
     @Inject(APPLICATION_REPOSITORY)
     private readonly applicationRepository: ApplicationRepository,
+    private readonly scheduleJobMatching: ScheduleJobMatchingUseCase,
   ) {}
 
   async execute(input: {
@@ -41,6 +43,10 @@ export class UpdateJobUseCase {
         jobId: input.jobId,
         companyMatchKey: normalizeCompanyMatchKey(job.companyName),
       });
+    }
+
+    if (input.fields.title !== undefined || input.fields.description !== undefined || input.fields.techStack !== undefined) {
+      await this.scheduleJobMatching.execute(job, user.matchingProfileVersion);
     }
 
     return job;

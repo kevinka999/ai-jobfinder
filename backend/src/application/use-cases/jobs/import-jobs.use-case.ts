@@ -10,6 +10,7 @@ import { USER_REPOSITORY } from '../../ports/user-repository.port';
 import type { UserRepository } from '../../ports/user-repository.port';
 import { Job } from '../../../domain/jobs/job';
 import { JobImportItemDto, InvalidJobImportRowDto } from './import-jobs.dto';
+import { ScheduleJobMatchingUseCase } from './schedule-job-matching.use-case';
 
 export type ImportJobsOutput = {
   createdActiveJobs: Job[];
@@ -35,6 +36,7 @@ export class ImportJobsUseCase {
     private readonly userRepository: UserRepository,
     @Inject(JOB_REPOSITORY)
     private readonly jobRepository: JobRepository,
+    private readonly scheduleJobMatching: ScheduleJobMatchingUseCase,
   ) {}
 
   async execute(requestBody: unknown): Promise<ImportJobsOutput> {
@@ -60,6 +62,7 @@ export class ImportJobsUseCase {
           ? { possibleDuplicatedJobId: duplicate.id }
           : undefined,
       });
+      await this.scheduleJobMatching.execute(createdJob, user.matchingProfileVersion);
 
       if (createdJob.status === 'draft') {
         createdDraftJobs.push(createdJob);

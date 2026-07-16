@@ -25,8 +25,9 @@ export class MongoJobRepository implements JobRepository {
   ) {}
 
   async create(input: CreateJobInput): Promise<DomainJob> {
+    const { matchingScore: _matchingScore, matchingReason: _matchingReason, ...persistedInput } = input;
     const job = await this.jobModel.create({
-      ...input,
+      ...persistedInput,
       metadata: input.metadata?.possibleDuplicatedJobId
         ? {
             possibleDuplicatedJobId: new Types.ObjectId(
