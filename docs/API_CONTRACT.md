@@ -71,6 +71,7 @@ type UserProfileResponse = {
     keyword: string;
     weight: number;
   }>;
+  matchingProfileVersion: number;
   createdAt: string;
   updatedAt: string;
 };
@@ -95,6 +96,22 @@ type JobResponse = {
   techStack?: string[];
   matchingScore?: number;
   matchingReason?: string;
+  matching: {
+    status: "pending" | "processing" | "completed" | "failed" | "stale";
+    profileVersion: number;
+    inputVersion: number;
+    requestedVersion: number;
+    scoredAt?: string;
+    errorMessage?: string;
+    evidence?: {
+      titleScore: number;
+      technicalScore: number;
+      responsibilityScore: number;
+      requirementScore: number;
+      matchedSkills: string[];
+      missingOrWeakAreas: string[];
+    };
+  };
   postedAt?: string;
   applyDeadline?: string;
   contactInfo?: string;
@@ -900,6 +917,31 @@ Optional fields:
 - `techStack`;
 - `matchingScore`;
 - `matchingReason`;
+
+External `matchingScore` and `matchingReason` values are accepted for import
+compatibility but are discarded when a job is persisted. The backend worker owns
+the returned score, reason, and `matching` lifecycle. `JobStatus` remains
+independent from matching state.
+
+### `POST /jobs/matching/recalculate`
+
+Queues one current matching request for every non-deleted draft, active, and
+applied job owned by the default user. Returns `202 Accepted` without waiting
+for results.
+
+```ts
+type RecalculateMatchingResponse = {
+  summary: {
+    eligible: number;
+    queued: number;
+    alreadyQueued: number;
+    failedToQueue: number;
+  };
+};
+```
+
+`pending` and `stale` results are not final scores, `processing` means the
+worker is evaluating the job, and `failed` contains only a safe display error.
 - `postedAt`;
 - `applyDeadline`;
 - `contactInfo`;

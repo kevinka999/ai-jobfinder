@@ -141,7 +141,7 @@ Profile changes mark existing jobs as stale/pending but do not automatically enq
 
 ## Phase 1: Shared Contract And Product Documentation
 
-- [ ] Phase complete
+- [x] Phase complete
 
 References: [Product spec](PRODUCT_SPEC.md), [domain model](DOMAIN_MODEL.md), [API contract](API_CONTRACT.md), and [backend architecture](../backend/docs/ARCHITECTURE.md).
 

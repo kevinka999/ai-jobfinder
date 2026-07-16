@@ -28,6 +28,7 @@ type User = {
     keyword: string;
     weight: number;
   }>;
+  matchingProfileVersion: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -85,6 +86,9 @@ Standard timestamps.
 - If keyword extraction fails, the user document is not changed.
 - Saving the cover-letter instruction template does not extract keywords or modify the resume.
 - Saving profile keywords does not extract keywords or modify the resume.
+- `matchingProfileVersion` starts at `1` and increments after successful resume
+  keyword extraction or keyword saves. Existing results become stale until the
+  user requests bulk recalculation.
 - There is no stored cover-letter structure/template on the user document.
 
 ## Job
@@ -108,6 +112,7 @@ type Job = {
   techStack?: string[];
   matchingScore?: number;
   matchingReason?: string;
+  matching: JobMatching;
   postedAt?: Date | string;
   applyDeadline?: Date | string;
   contactInfo?: string;
@@ -124,6 +129,33 @@ type Job = {
 ```ts
 type JobStatus = "draft" | "active" | "applied";
 ```
+
+Job workflow status is independent from matching lifecycle status.
+
+### JobMatching
+
+```ts
+type JobMatching = {
+  status: "pending" | "processing" | "completed" | "failed" | "stale";
+  profileVersion: number;
+  inputVersion: number;
+  requestedVersion: number;
+  scoredAt?: Date | string;
+  errorMessage?: string;
+  evidence?: {
+    titleScore: number;
+    technicalScore: number;
+    responsibilityScore: number;
+    requirementScore: number;
+    matchedSkills: string[];
+    missingOrWeakAreas: string[];
+  };
+};
+```
+
+Only `completed` results are final. Pending and stale results await newer work,
+processing means a worker is evaluating the job, and failed provides a safe
+user-visible error. Existing jobs default to stale without an invented score.
 
 `draft`
 
@@ -232,11 +264,12 @@ Optional list of technologies from the external AI search result.
 
 `matchingScore`
 
-Optional numeric match score returned by the external AI search result.
+Optional numeric score owned by the backend worker. External import scores are
+temporary compatibility input and are discarded on persistence.
 
 `matchingReason`
 
-Optional explanation for the match score.
+Optional short explanation for the backend-owned score.
 
 `postedAt`
 

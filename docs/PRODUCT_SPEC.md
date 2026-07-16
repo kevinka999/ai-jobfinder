@@ -127,7 +127,7 @@ For a broad search prompt, backend receives:
 
 Backend loads the default user's stored keywords and fills a deterministic prompt template. The prompt instructs the external AI agent to search the selected platforms, locations, and work models, then scrape job details and return a JSON object with a `jobs` array.
 
-Candidate matching is secondary metadata in the prompt. The prompt includes stored job-title keywords and technical-skill keywords grouped by saved weight into strong, moderate, and weak or historical bands. It instructs the external AI agent to score job fit from `0` to `100` based on evidence strength in the posting, not isolated keyword overlap.
+Candidate matching is secondary metadata in the prompt. External scores remain accepted for backwards-compatible import validation but are discarded on persistence. After a job is persisted, the backend asynchronously calculates the authoritative, explainable score from the saved profile.
 
 For a specific job links prompt, backend receives one or more posting URLs. Backend loads the default user's stored keywords and fills a deterministic prompt template that instructs the external AI agent to scrape only those links, extract job details, use weighted profile signals for secondary matching fields, use `others` for direct employer links or unknown sources, and return the same `jobs` array shape.
 
@@ -265,6 +265,7 @@ Active job row fields should include at minimum:
 - source platform;
 - location if available;
 - matching score if available.
+- matching lifecycle when a result is pending, stale, scoring, or failed.
 - job insertion date.
 
 Active job actions:
@@ -297,6 +298,7 @@ It should show and allow editing of job fields such as:
 - tech stack;
 - matching score;
 - matching reason;
+- matching evidence and lifecycle state.
 - posted date;
 - apply deadline;
 - contact info;
