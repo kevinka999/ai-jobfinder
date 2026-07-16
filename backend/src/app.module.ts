@@ -27,6 +27,7 @@ import { ListJobsUseCase } from './application/use-cases/jobs/list-jobs.use-case
 import { UpdateJobFavoriteUseCase } from './application/use-cases/jobs/update-job-favorite.use-case';
 import { UpdateJobUseCase } from './application/use-cases/jobs/update-job.use-case';
 import { ScheduleJobMatchingUseCase } from './application/use-cases/jobs/schedule-job-matching.use-case';
+import { RecalculateJobMatchingUseCase } from './application/use-cases/jobs/recalculate-job-matching.use-case';
 import { ResolveDefaultUserUseCase } from './application/use-cases/users/resolve-default-user.use-case';
 import { SaveCoverLetterInstructionTemplateUseCase } from './application/use-cases/users/save-cover-letter-instruction-template.use-case';
 import { SaveProfileKeywordsUseCase } from './application/use-cases/users/save-profile-keywords.use-case';
@@ -71,6 +72,7 @@ import { JobMatchingModule } from './infrastructure/job-matching/job-matching.mo
     CreateJobUseCase,
     UpdateJobUseCase,
     ScheduleJobMatchingUseCase,
+    RecalculateJobMatchingUseCase,
     UpdateJobFavoriteUseCase,
     KeepDraftJobUseCase,
     DeleteJobUseCase,

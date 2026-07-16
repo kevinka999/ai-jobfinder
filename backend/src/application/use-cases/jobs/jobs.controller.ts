@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  HttpCode,
 } from '@nestjs/common';
 import { ApplicationResponseDto } from '../applications/application-response.dto';
 import { ApplyJobUseCase } from './apply-job.use-case';
@@ -26,6 +27,7 @@ import { KeepDraftJobUseCase } from './keep-draft-job.use-case';
 import { ListJobsUseCase } from './list-jobs.use-case';
 import { UpdateJobFavoriteUseCase } from './update-job-favorite.use-case';
 import { UpdateJobUseCase } from './update-job.use-case';
+import { RecalculateJobMatchingUseCase } from './recalculate-job-matching.use-case';
 
 @Controller('jobs')
 export class JobsController {
@@ -39,6 +41,7 @@ export class JobsController {
     private readonly keepDraftJobUseCase: KeepDraftJobUseCase,
     private readonly deleteJobUseCase: DeleteJobUseCase,
     private readonly applyJobUseCase: ApplyJobUseCase,
+    private readonly recalculateJobMatchingUseCase: RecalculateJobMatchingUseCase,
   ) {}
 
   @Get()
@@ -78,6 +81,12 @@ export class JobsController {
       invalidRows: result.invalidRows,
       summary: result.summary,
     };
+  }
+
+  @Post('matching/recalculate')
+  @HttpCode(202)
+  recalculateMatching() {
+    return this.recalculateJobMatchingUseCase.execute();
   }
 
   @Patch(':jobId')
