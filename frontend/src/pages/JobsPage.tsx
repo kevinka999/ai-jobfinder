@@ -144,6 +144,22 @@ export function JobsPage() {
   }, [loadJobs]);
 
   useEffect(() => {
+    if (!jobs.some((job) => job.matching?.status === 'pending' || job.matching?.status === 'processing')) return;
+    const timer = window.setInterval(() => void loadJobs(), 5000);
+    return () => window.clearInterval(timer);
+  }, [jobs, loadJobs]);
+
+  async function recalculateMatching() {
+    try {
+      const result = await apiRequest<{ summary: { eligible: number; queued: number; alreadyQueued: number; failedToQueue: number } }>('/jobs/matching/recalculate', { method: 'POST' });
+      toast.success(`Queued ${result.summary.queued} of ${result.summary.eligible} jobs for matching.`);
+      await loadJobs();
+    } catch (caughtError) {
+      toast.error(`Could not queue matching: ${getErrorMessage(caughtError)}`);
+    }
+  }
+
+  useEffect(() => {
     let ignore = false;
 
     async function loadCompanyHistory() {
@@ -394,7 +410,7 @@ export function JobsPage() {
     {
       header: 'Match',
       id: 'match',
-      render: (job) => job.matchingScore ?? '—',
+      render: (job) => job.matching?.status === 'completed' ? job.matchingScore ?? '—' : job.matching?.status === 'failed' ? 'Failed' : job.matching?.status === 'processing' ? 'Scoring…' : 'Pending',
       sortValue: (job) => job.matchingScore,
     },
     {
@@ -458,6 +474,9 @@ export function JobsPage() {
           onClick={() => loadJobs(true)}
         >
           Refresh
+        </Button>
+        <Button icon={<RefreshCw size={16} />} onClick={recalculateMatching}>
+          Recalculate matching scores
         </Button>
       </div>
       {error ? <ErrorState message={error} /> : null}
