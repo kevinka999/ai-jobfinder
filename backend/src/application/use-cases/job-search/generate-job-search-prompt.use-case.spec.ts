@@ -19,11 +19,6 @@ type PromptSchema = {
         properties: {
           sourcePlatformId: { enum: string[] };
           workModel: { enum: string[] };
-          matchingScore: {
-            type: string;
-            minimum: number;
-            maximum: number;
-          };
         };
       };
     };
@@ -45,7 +40,7 @@ describe('GenerateJobSearchPromptUseCase', () => {
     };
 
     useCase = new GenerateJobSearchPromptUseCase(userRepository);
-    linksUseCase = new GenerateJobLinksPromptUseCase(userRepository);
+    linksUseCase = new GenerateJobLinksPromptUseCase();
   });
 
   it('loads stored keywords and returns a deterministic prompt', async () => {
@@ -61,6 +56,7 @@ describe('GenerateJobSearchPromptUseCase', () => {
         { keyword: 'Docker', weight: 6 },
         { keyword: 'Java', weight: 2 },
       ],
+      matchingProfileVersion: 1,
       createdAt: now,
       updatedAt: now,
     };
@@ -84,16 +80,7 @@ describe('GenerateJobSearchPromptUseCase', () => {
       'Strong technical skills (weight 8-10): React (9/10), TypeScript (10/10), NestJS (8/10)',
     );
     expect(result.prompt).toContain(
-      'Moderate technical skills (weight 4-7): Docker (6/10)',
-    );
-    expect(result.prompt).toContain(
-      'Weak or historical technical skills (weight 1-3): Java (2/10)',
-    );
-    expect(result.prompt).toContain(
-      'Score from 0 to 100 based on evidence strength in the posting, not isolated keyword presence.',
-    );
-    expect(result.prompt).toContain(
-      'Scrape and extract job details first. Matching score is secondary metadata',
+      'Return only positions that are strong fits',
     );
     expect(result.prompt).toContain('Return JSON only');
     expect(result.prompt).toContain(
@@ -125,11 +112,8 @@ describe('GenerateJobSearchPromptUseCase', () => {
     expect(schema.properties.jobs.items.properties.workModel).toEqual({
       enum: ['onsite', 'hybrid', 'remote'],
     });
-    expect(schema.properties.jobs.items.properties.matchingScore).toEqual({
-      type: 'number',
-      minimum: 0,
-      maximum: 100,
-    });
+    expect(schema.properties.jobs.items.properties).not.toHaveProperty('matchingScore');
+    expect(schema.properties.jobs.items.properties).not.toHaveProperty('matchingReason');
   });
 
   it('loads stored keywords and returns a deterministic prompt for pasted job links', async () => {
@@ -142,6 +126,7 @@ describe('GenerateJobSearchPromptUseCase', () => {
         { keyword: 'React', weight: 9 },
         { keyword: 'TypeScript', weight: 10 },
       ],
+      matchingProfileVersion: 1,
       createdAt: now,
       updatedAt: now,
     };
@@ -155,19 +140,14 @@ describe('GenerateJobSearchPromptUseCase', () => {
       ],
     });
 
-    expect(userRepository.resolveDefaultUser.mock.calls).toHaveLength(1);
+    expect(userRepository.resolveDefaultUser.mock.calls).toHaveLength(0);
     expect(result.prompt).toContain(
       '- https://example.com/jobs/frontend-developer',
     );
     expect(result.prompt).toContain('- https://www.linkedin.com/jobs/view/123');
     expect(result.prompt).toContain('Do not search for additional jobs.');
-    expect(result.prompt).toContain('Frontend Developer');
-    expect(result.prompt).toContain(
-      'Strong technical skills (weight 8-10): React (9/10), TypeScript (10/10)',
-    );
-    expect(result.prompt).toContain(
-      'Do not over-score based only on isolated keyword overlap.',
-    );
+    expect(result.prompt).not.toContain('Candidate matching profile');
+    expect(result.prompt).not.toContain('matchingScore');
     expect(result.prompt).toContain(
       'Translate every human-readable output field to English',
     );
@@ -204,12 +184,6 @@ describe('buildJobSearchPrompt', () => {
     expect(prompt).toContain(
       'Strong technical skills (weight 8-10): (none stored)',
     );
-    expect(prompt).toContain(
-      'Moderate technical skills (weight 4-7): (none stored)',
-    );
-    expect(prompt).toContain(
-      'Weak or historical technical skills (weight 1-3): (none stored)',
-    );
 
     const schema = extractJsonSchema(prompt);
     expect(schema.properties.jobs.items.properties.sourcePlatformId).toEqual({
@@ -223,13 +197,11 @@ describe('buildJobSearchPrompt', () => {
   it('builds link prompts with others source guidance for direct posting URLs', () => {
     const prompt = buildJobLinksPrompt({
       jobLinks: ['https://company.example/careers/42'],
-      jobTitleKeywords: [],
-      technicalSkillKeywords: [],
     });
 
     expect(prompt).toContain('- https://company.example/careers/42');
     expect(prompt).toContain('sourcePlatformId "others"');
-    expect(prompt).toContain('Job-title keywords: (none stored)');
+    expect(prompt).not.toContain('Job-title keywords');
 
     const schema = extractJsonSchema(prompt);
     expect(schema.properties.jobs.items.properties.sourcePlatformId).toEqual({

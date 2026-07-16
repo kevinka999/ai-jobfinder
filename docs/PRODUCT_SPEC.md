@@ -127,9 +127,9 @@ For a broad search prompt, backend receives:
 
 Backend loads the default user's stored keywords and fills a deterministic prompt template. The prompt instructs the external AI agent to search the selected platforms, locations, and work models, then scrape job details and return a JSON object with a `jobs` array.
 
-Candidate matching is secondary metadata in the prompt. External scores remain accepted for backwards-compatible import validation but are discarded on persistence. After a job is persisted, the backend asynchronously calculates the authoritative, explainable score from the saved profile.
+The broad search prompt uses the stored job-title keywords and strong technical skills to find only strong-fit positions. It does not request or return matching scores; after a job is persisted, the backend asynchronously calculates the authoritative, explainable score from the saved profile.
 
-For a specific job links prompt, backend receives one or more posting URLs. Backend loads the default user's stored keywords and fills a deterministic prompt template that instructs the external AI agent to scrape only those links, extract job details, use weighted profile signals for secondary matching fields, use `others` for direct employer links or unknown sources, and return the same `jobs` array shape.
+For a specific job links prompt, backend receives one or more posting URLs and fills a deterministic prompt template that instructs the external AI agent only to scrape those links and return the same `jobs` array shape. It does not load profile keywords or request matching data.
 
 The prompt must request the required import fields and may request optional enrichment fields.
 
@@ -149,9 +149,7 @@ The external AI result must be supplied as a pasted JSON object or one or more u
       "location": "Vienna",
       "workModel": "hybrid",
       "salaryText": "EUR 60,000 to EUR 75,000",
-      "techStack": ["React", "TypeScript", "Node.js"],
-      "matchingScore": 86,
-      "matchingReason": "Strong match for React, TypeScript, Node.js, and frontend experience."
+      "techStack": ["React", "TypeScript", "Node.js"]
     }
   ]
 }

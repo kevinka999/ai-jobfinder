@@ -296,20 +296,12 @@ The generated prompt should instruct the external AI agent to:
 - search only the selected source platforms;
 - search in the selected cities;
 - respect selected work models;
-- use the user's generated job-title keywords;
-- group the user's generated technical-skill keywords into strong, moderate, and weak or historical bands using the saved weights;
+- use the user's generated job-title keywords and strong technical-skill keywords to return only strong-fit positions;
 - scrape and extract job details as the primary task;
 - include application links;
 - include job descriptions;
-- translate human-readable output fields to English, including role descriptions and matching reasons;
-- include matching score and matching reason as secondary metadata when possible;
-- score from `0` to `100` based on evidence strength in the posting, not isolated keyword presence;
-- use these score bands:
-  - `80-100`: strong fit around stored job-title keywords and strong technical skills;
-  - `60-79`: reasonable fit with several stored strengths and some gaps;
-  - `40-59`: partial or stretch fit where core responsibilities lean away from strong stored skills;
-  - `0-39`: weak fit where the role is mostly outside the stored profile or centered on weak, historical, or absent skills;
-- avoid over-scoring roles where only isolated keywords overlap;
+- translate human-readable output fields to English;
+- not include `matchingScore` or `matchingReason` in generated JSON;
 - return only valid JSON using the object wrapper shape:
 
 ```json
@@ -335,11 +327,10 @@ This endpoint does not call AI.
 
 The backend must:
 
-1. load the default user's stored job-title keywords and weighted technical-skill keywords;
-2. validate one or more posting URLs;
-3. fill a hardcoded prompt template;
-4. include the required JSON result shape;
-5. return the prompt string.
+1. validate one or more posting URLs;
+2. fill a hardcoded prompt template;
+3. include the required JSON result shape;
+4. return the prompt string.
 
 #### Request
 
@@ -363,15 +354,11 @@ The generated prompt should instruct the external AI agent to:
 
 - scrape only the provided job links;
 - not search for additional jobs;
-- use the user's generated job-title keywords;
-- group the user's generated technical-skill keywords into strong, moderate, and weak or historical bands using the saved weights;
 - include application links;
 - include job descriptions;
 - use `others` as `sourcePlatformId` for direct employer links, non-platform posting URLs, or any source that is not one of the hardcoded platform IDs;
-- translate human-readable output fields to English, including role descriptions and matching reasons;
-- include matching score and matching reason as secondary metadata when possible;
-- score from `0` to `100` based on evidence strength in the posting, not isolated keyword presence;
-- avoid over-scoring roles where only isolated keywords overlap;
+- translate human-readable output fields to English;
+- not include `matchingScore` or `matchingReason` in generated JSON;
 - return only valid JSON using the object wrapper shape:
 
 ```json

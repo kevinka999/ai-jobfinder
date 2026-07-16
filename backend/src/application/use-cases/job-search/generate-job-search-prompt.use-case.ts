@@ -33,7 +33,7 @@ const REQUIRED_JOB_FIELDS = [
 ] as const;
 
 const ENGLISH_OUTPUT_RULE =
-  'Translate every human-readable output field to English, including title, description, location, salaryText, techStack entries, matchingReason, contactInfo, and rawText. Keep company names, URLs, enum values, dates, and technical product names unchanged.';
+  'Translate every human-readable output field to English, including title, description, location, salaryText, techStack entries, contactInfo, and rawText. Keep company names, URLs, enum values, dates, and technical product names unchanged.';
 
 type JsonSchemaObject = {
   type: 'object';
@@ -66,22 +66,11 @@ export class GenerateJobSearchPromptUseCase {
 
 @Injectable()
 export class GenerateJobLinksPromptUseCase {
-  constructor(
-    @Inject(USER_REPOSITORY)
-    private readonly userRepository: UserRepository,
-  ) {}
-
   async execute(
     input: GenerateJobLinksPromptInput,
   ): Promise<GenerateJobSearchPromptOutput> {
-    const profile = await this.userRepository.resolveDefaultUser();
-
     return {
-      prompt: buildJobLinksPrompt({
-        ...input,
-        jobTitleKeywords: profile.jobTitleKeywords,
-        technicalSkillKeywords: profile.technicalSkillKeywords,
-      }),
+      prompt: buildJobLinksPrompt(input),
     };
   }
 }
@@ -109,12 +98,12 @@ export function buildJobSearchPrompt(input: {
     `- Cities: ${formatList(input.cities)}`,
     `- Work models: ${formatList(input.workModels)}`,
     '',
-    ...buildCandidateMatchingProfileSection({
+    ...buildStrongFitSearchSection({
       jobTitleKeywords: input.jobTitleKeywords,
       technicalSkillKeywords: input.technicalSkillKeywords,
     }),
     '',
-    'Scrape and extract job details first. Matching score is secondary metadata; do not omit a job only because the score is low.',
+    'Return only positions that are strong fits for the stored direction and strongest skills. Do not calculate or return a matching score or matching reason.',
     '',
     'Return JSON only. Do not include Markdown fences, prose, comments, or explanations.',
     'The response must match this JSON Schema:',
@@ -131,8 +120,6 @@ export function buildJobSearchPrompt(input: {
 
 export function buildJobLinksPrompt(input: {
   jobLinks: string[];
-  jobTitleKeywords: string[];
-  technicalSkillKeywords: TechnicalSkillKeyword[];
 }): string {
   const outputSchema = buildJobSearchOutputSchema({
     sourcePlatformIds: [...SOURCE_PLATFORM_IDS],
@@ -145,15 +132,9 @@ export function buildJobLinksPrompt(input: {
     'Job posting links:',
     ...input.jobLinks.map((link) => `- ${link}`),
     '',
-    ...buildCandidateMatchingProfileSection({
-      jobTitleKeywords: input.jobTitleKeywords,
-      technicalSkillKeywords: input.technicalSkillKeywords,
-    }),
-    '',
     'For each link, extract the job details from that exact posting. Do not search for additional jobs.',
     'Use sourcePlatformId "others" for direct employer career pages or any link that is not one of the known job platforms.',
     'Use sourcePlatformId "manual" only for jobs that were manually created inside the app, not for AI-extracted link results.',
-    'Scrape and extract job details first. Matching score is secondary metadata; do not omit a job only because the score is low.',
     '',
     'Return JSON only. Do not include Markdown fences, prose, comments, or explanations.',
     'The response must match this JSON Schema:',
@@ -196,12 +177,6 @@ function buildJobSearchOutputSchema(input: {
               type: 'array',
               items: { type: 'string' },
             },
-            matchingScore: {
-              type: 'number',
-              minimum: 0,
-              maximum: 100,
-            },
-            matchingReason: { type: 'string' },
             postedAt: { type: 'string', format: 'date' },
             applyDeadline: { type: 'string', format: 'date' },
             contactInfo: { type: 'string' },
@@ -227,7 +202,7 @@ function formatList(values: readonly string[]): string {
   return values.join(', ');
 }
 
-function buildCandidateMatchingProfileSection(input: {
+function buildStrongFitSearchSection(input: {
   jobTitleKeywords: string[];
   technicalSkillKeywords: TechnicalSkillKeyword[];
 }): string[] {
@@ -236,28 +211,12 @@ function buildCandidateMatchingProfileSection(input: {
     8,
     10,
   );
-  const moderateSkills = filterSkillsByWeight(
-    input.technicalSkillKeywords,
-    4,
-    7,
-  );
-  const weakSkills = filterSkillsByWeight(input.technicalSkillKeywords, 1, 3);
-
   return [
-    'Candidate matching profile:',
-    '- Evaluate job fit against this stored profile. Score from 0 to 100 based on evidence strength in the posting, not isolated keyword presence.',
+    'Strong-fit search profile:',
+    '- Search only for roles whose central responsibilities align with these job-title keywords and strong technical skills.',
     `- Job-title keywords: ${formatList(input.jobTitleKeywords)}`,
     `- Strong technical skills (weight 8-10): ${formatTechnicalSkillKeywords(strongSkills)}`,
-    `- Moderate technical skills (weight 4-7): ${formatTechnicalSkillKeywords(moderateSkills)}`,
-    `- Weak or historical technical skills (weight 1-3): ${formatTechnicalSkillKeywords(weakSkills)}`,
-    '',
-    'Scoring guidance:',
-    '- 80-100: strong fit; core responsibilities center on stored job-title keywords and strong technical skills.',
-    '- 60-79: reasonable fit; role matches several stored strengths but has gaps or heavier secondary areas.',
-    '- 40-59: partial or stretch fit; some useful overlap, but core responsibilities lean away from strong stored skills.',
-    '- 0-39: weak fit; role is mostly outside the stored profile or centered on weak, historical, or absent skills.',
-    '- Do not over-score based only on isolated keyword overlap. Penalize roles where the main responsibility is outside the stored profile, even if a few familiar technologies appear.',
-    '- When possible, include matchingScore and matchingReason grounded in the job description, candidate keywords, and technical-skill weights.',
+    '- Do not include roles where only isolated keywords overlap or where the core work is outside this direction.',
   ];
 }
 
