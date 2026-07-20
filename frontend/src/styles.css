@@ -28,6 +28,10 @@
     font: inherit;
   }
 
+  button {
+    user-select: none;
+  }
+
   a {
     color: inherit;
     text-decoration: none;
