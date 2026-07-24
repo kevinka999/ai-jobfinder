@@ -8,10 +8,8 @@ import {
 } from '../../../application/ports/job-repository.port';
 import type { Job as DomainJob } from '../../../domain/jobs/job';
 import type { JobStatus } from '../../../domain/jobs/job-status';
-import {
-  normalizeApplicationUrl,
-  normalizeComparableText,
-} from '../../../domain/jobs/duplicate-normalization';
+import { normalizeApplicationUrl } from '../../../domain/jobs/duplicate-normalization';
+import { normalizeCompanyMatchKey } from '../../../domain/jobs/company-name-normalization';
 import { Job, JobDocument } from '../schemas/job.schema';
 import { createPendingJobMatching } from '../../../domain/jobs/job-matching';
 import type { MatchingRevisionInput } from '../../../application/ports/job-repository.port';
@@ -25,7 +23,9 @@ export class MongoJobRepository implements JobRepository {
   ) {}
 
   async create(input: CreateJobInput): Promise<DomainJob> {
-    const { matchingScore: _matchingScore, matchingReason: _matchingReason, ...persistedInput } = input;
+    const persistedInput = { ...input };
+    delete persistedInput.matchingScore;
+    delete persistedInput.matchingReason;
     const job = await this.jobModel.create({
       ...persistedInput,
       metadata: input.metadata?.possibleDuplicatedJobId
@@ -84,26 +84,55 @@ export class MongoJobRepository implements JobRepository {
     userId: string;
     applicationUrl: string;
     companyName: string;
-    title: string;
   }): Promise<DomainJob | null> {
     const normalizedApplicationUrl = normalizeApplicationUrl(
       input.applicationUrl,
     );
-    const normalizedCompanyName = normalizeComparableText(input.companyName);
-    const normalizedTitle = normalizeComparableText(input.title);
+    const normalizedCompanyName = normalizeCompanyMatchKey(input.companyName);
     const job = await this.jobModel
       .findOne({
         userId: input.userId,
         status: { $in: ['active', 'applied'] },
         $or: [
           { normalizedApplicationUrl },
-          { normalizedCompanyName, normalizedTitle },
+          { normalizedCompanyName },
         ],
       })
       .sort({ createdAt: 1 })
       .exec();
 
-    return job ? mapJobDocument(job) : null;
+    if (job) {
+      return mapJobDocument(job);
+    }
+
+    // Existing records may still contain the older basic company
+    // normalization. Compare their source names with the shared company
+    // matcher so a matcher upgrade does not miss previously stored jobs.
+    const legacyCandidates = await this.jobModel
+      .find({
+        userId: input.userId,
+        status: { $in: ['active', 'applied'] },
+      })
+      .sort({ createdAt: 1 })
+      .exec();
+    const legacyMatch = legacyCandidates.find(
+      (candidate) =>
+        normalizeCompanyMatchKey(candidate.companyName) ===
+        normalizedCompanyName,
+    );
+
+    if (!legacyMatch) {
+      return null;
+    }
+
+    await this.jobModel
+      .updateOne(
+        { _id: legacyMatch._id, userId: input.userId },
+        { $set: { normalizedCompanyName } },
+      )
+      .exec();
+
+    return mapJobDocument(legacyMatch);
   }
 
   async findById(input: {
@@ -311,11 +340,9 @@ function buildNormalizedFieldUpdates(
   }
 
   if (fields.companyName !== undefined) {
-    updates.normalizedCompanyName = normalizeComparableText(fields.companyName);
-  }
-
-  if (fields.title !== undefined) {
-    updates.normalizedTitle = normalizeComparableText(fields.title);
+    updates.normalizedCompanyName = normalizeCompanyMatchKey(
+      fields.companyName,
+    );
   }
 
   return updates;

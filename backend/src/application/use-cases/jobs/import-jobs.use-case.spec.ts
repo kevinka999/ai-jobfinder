@@ -7,6 +7,7 @@ import {
   ImportJobsUseCase,
   validateImportJobsRequest,
 } from './import-jobs.use-case';
+import type { ScheduleJobMatchingUseCase } from './schedule-job-matching.use-case';
 
 describe('ImportJobsUseCase', () => {
   const now = new Date('2026-07-08T12:00:00.000Z');
@@ -15,12 +16,17 @@ describe('ImportJobsUseCase', () => {
     resumeMarkdown: '# Resume',
     coverLetterInstructionTemplate: '',
     jobTitleKeywords: [],
-    technicalSkillKeywords: [],
+    mainTechnicalSkillKeywords: [],
+    secondaryTechnicalSkillKeywords: [],
+    matchingProfileVersion: 1,
     createdAt: now,
     updatedAt: now,
   };
   let userRepository: jest.Mocked<UserRepository>;
   let jobRepository: jest.Mocked<JobRepository>;
+  let scheduleJobMatching: jest.Mocked<
+    Pick<ScheduleJobMatchingUseCase, 'execute'>
+  >;
   let useCase: ImportJobsUseCase;
 
   beforeEach(() => {
@@ -41,7 +47,14 @@ describe('ImportJobsUseCase', () => {
       updateFavorite: jest.fn(),
       updateStatus: jest.fn(),
     };
-    useCase = new ImportJobsUseCase(userRepository, jobRepository);
+    scheduleJobMatching = {
+      execute: jest.fn(),
+    };
+    useCase = new ImportJobsUseCase(
+      userRepository,
+      jobRepository,
+      scheduleJobMatching as ScheduleJobMatchingUseCase,
+    );
   });
 
   it('imports valid rows and returns invalid row errors without failing the whole request', async () => {
@@ -88,8 +101,13 @@ describe('ImportJobsUseCase', () => {
     });
   });
 
-  it('creates duplicate imports as drafts with the possible duplicate id', async () => {
-    const duplicateJob = buildJob({ id: '64a000000000000000000001' });
+  it('creates another posting from the same company as a draft for manual review', async () => {
+    const duplicateJob = buildJob({
+      id: '64a000000000000000000001',
+      companyName: 'Sprad Software GmbH',
+      title: 'React Engineer',
+      applicationUrl: 'https://first-portal.example/jobs/123',
+    });
     jobRepository.findDuplicateCandidate.mockResolvedValue(duplicateJob);
     jobRepository.create.mockImplementation(async (input) => ({
       ...input,
@@ -101,15 +119,20 @@ describe('ImportJobsUseCase', () => {
     const result = await useCase.execute({
       jobs: [
         {
-          companyName: 'Example GmbH',
-          title: 'Frontend Developer',
-          applicationUrl: 'https://example.com/jobs/1',
-          description: 'React and TypeScript role.',
+          companyName: 'Sprad',
+          title: 'Platform Engineer',
+          applicationUrl: 'https://second-portal.example/jobs/456',
+          description: 'A differently worded role description.',
           sourcePlatformId: 'linkedin',
         },
       ],
     });
 
+    expect(jobRepository.findDuplicateCandidate).toHaveBeenCalledWith({
+      userId: user.id,
+      applicationUrl: 'https://second-portal.example/jobs/456',
+      companyName: 'Sprad',
+    });
     expect(jobRepository.create).toHaveBeenCalledWith(
       expect.objectContaining({
         status: 'draft',

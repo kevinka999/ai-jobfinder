@@ -8,7 +8,8 @@ export class UserProfileResponseDto {
   resumeMarkdown!: string;
   coverLetterInstructionTemplate!: string;
   jobTitleKeywords!: string[];
-  technicalSkillKeywords!: TechnicalSkillKeyword[];
+  mainTechnicalSkillKeywords!: TechnicalSkillKeyword[];
+  secondaryTechnicalSkillKeywords!: TechnicalSkillKeyword[];
   matchingProfileVersion!: number;
   createdAt!: string;
   updatedAt!: string;
@@ -19,7 +20,8 @@ export class UserProfileResponseDto {
       resumeMarkdown: profile.resumeMarkdown,
       coverLetterInstructionTemplate: profile.coverLetterInstructionTemplate,
       jobTitleKeywords: profile.jobTitleKeywords,
-      technicalSkillKeywords: profile.technicalSkillKeywords,
+      mainTechnicalSkillKeywords: profile.mainTechnicalSkillKeywords,
+      secondaryTechnicalSkillKeywords: profile.secondaryTechnicalSkillKeywords,
       matchingProfileVersion: profile.matchingProfileVersion,
       createdAt: profile.createdAt.toISOString(),
       updatedAt: profile.updatedAt.toISOString(),

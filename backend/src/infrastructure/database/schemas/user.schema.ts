@@ -29,7 +29,14 @@ export class User {
   jobTitleKeywords!: string[];
 
   @Prop({ default: [], required: true, type: [SchemaTypes.Mixed] })
-  technicalSkillKeywords!: StoredTechnicalSkillKeyword[];
+  mainTechnicalSkillKeywords!: StoredTechnicalSkillKeyword[];
+
+  @Prop({ default: [], required: true, type: [SchemaTypes.Mixed] })
+  secondaryTechnicalSkillKeywords!: StoredTechnicalSkillKeyword[];
+
+  // Kept temporarily so profiles saved before the category split remain readable.
+  @Prop({ required: false, type: [SchemaTypes.Mixed] })
+  technicalSkillKeywords?: StoredTechnicalSkillKeyword[];
 
   @Prop({ default: 1, required: true, type: Number })
   matchingProfileVersion!: number;

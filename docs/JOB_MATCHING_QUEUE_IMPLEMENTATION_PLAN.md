@@ -4,7 +4,7 @@
 
 This plan replaces imported, external `matchingScore` values with a backend-owned, asynchronous job-matching workflow.
 
-Each BullMQ message represents exactly one persisted job. A worker compares that job's title, full description, and optional `techStack` with the default user's stored job-title keywords and weighted technical-skill keywords, then saves an explainable score from `0` to `100`.
+Each BullMQ message represents exactly one persisted job. A worker compares that job's title, full description, and optional `techStack` with the default user's stored job-title keywords and weighted main and secondary technical-skill keywords, then saves an explainable score from `0` to `100`.
 
 The feature has two required entry points:
 
@@ -59,7 +59,11 @@ type JobMatchInput = {
   };
   profile: {
     jobTitleKeywords: string[];
-    technicalSkillKeywords: Array<{
+    mainTechnicalSkillKeywords: Array<{
+      keyword: string;
+      weight: number; // 1-10
+    }>;
+    secondaryTechnicalSkillKeywords: Array<{
       keyword: string;
       weight: number; // 1-10
     }>;

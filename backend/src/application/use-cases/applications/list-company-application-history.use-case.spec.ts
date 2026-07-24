@@ -13,7 +13,8 @@ describe('ListCompanyApplicationHistoryUseCase', () => {
     resumeMarkdown: '# Resume',
     coverLetterInstructionTemplate: '',
     jobTitleKeywords: [],
-    technicalSkillKeywords: [],
+    mainTechnicalSkillKeywords: [],
+    secondaryTechnicalSkillKeywords: [],
     createdAt: now,
     updatedAt: now,
   };

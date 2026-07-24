@@ -34,7 +34,8 @@ export class SaveResumeUseCase {
     return this.userRepository.saveResumeWithKeywords({
       resumeMarkdown: input.resumeMarkdown,
       jobTitleKeywords: keywords.jobTitleKeywords,
-      technicalSkillKeywords: keywords.technicalSkillKeywords,
+      mainTechnicalSkillKeywords: keywords.mainTechnicalSkillKeywords,
+      secondaryTechnicalSkillKeywords: keywords.secondaryTechnicalSkillKeywords,
     });
   }
 }

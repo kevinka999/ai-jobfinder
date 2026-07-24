@@ -14,12 +14,14 @@ describe('OpenAI provider response parsing', () => {
             '',
             'Node.js Developer',
           ],
-          technicalSkillKeywords: [' React ', 'TypeScript', 'React'],
+          mainTechnicalSkillKeywords: [' React ', 'TypeScript', 'React'],
+          secondaryTechnicalSkillKeywords: [' Kafka ', 'Kafka', 'React'],
         }),
       ),
     ).toEqual({
       jobTitleKeywords: ['Frontend Developer', 'Node.js Developer'],
-      technicalSkillKeywords: ['React', 'TypeScript'],
+      mainTechnicalSkillKeywords: ['React', 'TypeScript'],
+      secondaryTechnicalSkillKeywords: ['Kafka'],
     });
   });
 
@@ -28,7 +30,8 @@ describe('OpenAI provider response parsing', () => {
       parseResumeKeywordsOutput(
         JSON.stringify({
           jobTitleKeywords: 'Frontend Developer',
-          technicalSkillKeywords: [],
+          mainTechnicalSkillKeywords: [],
+          secondaryTechnicalSkillKeywords: [],
         }),
       ),
     ).toThrow('OpenAI keyword response must include string arrays.');

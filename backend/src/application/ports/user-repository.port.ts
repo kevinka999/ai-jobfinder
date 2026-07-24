@@ -10,13 +10,15 @@ export interface UserRepository {
   saveResumeWithKeywords(input: {
     resumeMarkdown: string;
     jobTitleKeywords: string[];
-    technicalSkillKeywords: string[];
+    mainTechnicalSkillKeywords: string[];
+    secondaryTechnicalSkillKeywords: string[];
   }): Promise<UserProfile>;
   saveCoverLetterInstructionTemplate(input: {
     coverLetterInstructionTemplate: string;
   }): Promise<UserProfile>;
   saveProfileKeywords(input: {
     jobTitleKeywords: string[];
-    technicalSkillKeywords: TechnicalSkillKeyword[];
+    mainTechnicalSkillKeywords: TechnicalSkillKeyword[];
+    secondaryTechnicalSkillKeywords: TechnicalSkillKeyword[];
   }): Promise<UserProfile>;
 }

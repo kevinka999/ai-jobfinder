@@ -24,7 +24,11 @@ type User = {
   resumeMarkdown: string;
   coverLetterInstructionTemplate: string;
   jobTitleKeywords: string[];
-  technicalSkillKeywords: Array<{
+  mainTechnicalSkillKeywords: Array<{
+    keyword: string;
+    weight: number;
+  }>;
+  secondaryTechnicalSkillKeywords: Array<{
     keyword: string;
     weight: number;
   }>;
@@ -59,20 +63,26 @@ Examples:
 - React Developer;
 - Node.js Developer.
 
-`technicalSkillKeywords`
+`mainTechnicalSkillKeywords`
 
-AI-generated technical-skill keywords extracted from the resume, with a user-editable experience weight from `1` to `10`. After extraction, the user can manually add, delete, and weight technical-skill keywords without re-saving the resume.
+AI-generated foundational technologies that define the candidate's primary engineering direction and target roles. These are generally programming languages, major runtimes/platforms, or role-defining application frameworks, such as Java, .NET, React, or Node.js.
 
-The keyword text is replaced every time the resume is saved successfully. Existing weights are preserved for keywords that remain present after extraction; new technical-skill keywords start with weight `5`.
+`secondaryTechnicalSkillKeywords`
+
+AI-generated supporting technologies such as libraries, messaging systems, databases, cloud services, infrastructure and testing tools, and protocols. A supporting technology remains secondary regardless of the candidate's expertise; for example, Kafka is secondary even when its weight is `10`.
+
+Both technical-skill lists have a user-editable experience weight from `1` to `10`. After extraction, the user can manually add, delete, and weight skills without re-saving the resume. A skill belongs to exactly one list.
+
+The keyword text and category are replaced every time the resume is saved successfully. Existing weights are preserved for keywords that remain present, including when extraction moves a keyword between categories; new technical-skill keywords start with weight `5`.
 
 Manual keyword edits are stored separately from resume extraction workflow intent: the user can adjust keywords and weights without re-saving the resume or calling the AI provider.
 
 Examples:
 
-- `{ keyword: "NestJS", weight: 10 }`;
-- `{ keyword: "Java", weight: 2 }`;
-- `{ keyword: "React", weight: 9 }`;
-- `{ keyword: "Docker", weight: 6 }`.
+- main: `{ keyword: "Java", weight: 8 }`;
+- main: `{ keyword: "React", weight: 9 }`;
+- secondary: `{ keyword: "Kafka", weight: 10 }`;
+- secondary: `{ keyword: "Docker", weight: 6 }`.
 
 `createdAt`, `updatedAt`
 
@@ -313,7 +323,7 @@ Soft-deleted active jobs are still included in this comparison. Existing `draft`
 An imported job becomes a draft if either rule matches:
 
 1. normalized `applicationUrl` matches;
-2. normalized `companyName` plus normalized `title` matches.
+2. the company-name match key matches, regardless of title or description.
 
 Otherwise the imported job becomes active.
 
@@ -328,12 +338,16 @@ Recommended URL normalization:
 - remove trailing slash;
 - remove common tracking query parameters such as `utm_*` when practical.
 
-Recommended company and title normalization:
+Company names use the same deterministic match-key normalization as previous-company application history:
 
 - trim whitespace;
 - lowercase;
 - collapse repeated spaces;
-- remove punctuation that does not change meaning when practical.
+- remove accents and punctuation;
+- strip common legal suffixes such as `GmbH`, `AG`, `Ltd`, and `Inc`;
+- remove generic descriptors such as `Business`, `Data`, `Software`, `Technology`, `Digital`, `Solutions`, `Services`, and `Group` when a company-specific stem remains.
+
+Titles and descriptions are intentionally not part of the company duplicate rule. Another posting from the same company becomes a draft for manual review because different portals may use different titles or descriptions for the same role.
 
 The app may compute normalization during import or store internal normalized helper fields for indexing. These helper fields do not need to be exposed in API responses.
 
@@ -425,7 +439,7 @@ Associated job ID.
 
 Denormalized normalized company-name key copied from the associated job when the application is created. It exists so previous applications at the same company can be looked up from the `applications` collection without a fuzzy scan. If the job's company name is edited later, the application record's key is updated to match.
 
-The normalization lowercases names, removes accents and punctuation, collapses spaces, strips common legal/company suffixes such as `GmbH`, dotted `m.b.H`, `AG`, `KG`, `OG`, `Ltd`, `Limited`, `Inc`, `Corp`, `Corporation`, `LLC`, `PLC`, and `SE`, and removes generic descriptors such as `Software`, `Technology`, `Digital`, `Solutions`, `Services`, or `Group` when a company-specific stem remains. This is deterministic company-name cleanup, not fuzzy matching.
+The normalization lowercases names, removes accents and punctuation, collapses spaces, strips common legal/company suffixes such as `GmbH`, dotted `m.b.H`, `AG`, `KG`, `OG`, `Ltd`, `Limited`, `Inc`, `Corp`, `Corporation`, `LLC`, `PLC`, and `SE`, and removes generic descriptors such as `Business`, `Data`, `Software`, `Technology`, `Digital`, `Solutions`, `Services`, or `Group` when a company-specific stem remains. This is deterministic company-name cleanup, not fuzzy matching.
 
 `status`
 

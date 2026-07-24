@@ -15,11 +15,13 @@ export class SaveProfileKeywordsUseCase {
 
   execute(input: {
     jobTitleKeywords: string[];
-    technicalSkillKeywords: TechnicalSkillKeyword[];
+    mainTechnicalSkillKeywords: TechnicalSkillKeyword[];
+    secondaryTechnicalSkillKeywords: TechnicalSkillKeyword[];
   }): Promise<UserProfile> {
     return this.userRepository.saveProfileKeywords({
       jobTitleKeywords: input.jobTitleKeywords,
-      technicalSkillKeywords: input.technicalSkillKeywords,
+      mainTechnicalSkillKeywords: input.mainTechnicalSkillKeywords,
+      secondaryTechnicalSkillKeywords: input.secondaryTechnicalSkillKeywords,
     });
   }
 }

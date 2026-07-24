@@ -24,7 +24,8 @@ describe('SaveCoverLetterInstructionTemplateUseCase', () => {
       resumeMarkdown: '# Resume',
       coverLetterInstructionTemplate: 'Keep it concise.',
       jobTitleKeywords: ['Frontend Developer'],
-      technicalSkillKeywords: [{ keyword: 'React', weight: 9 }],
+      mainTechnicalSkillKeywords: [{ keyword: 'React', weight: 9 }],
+      secondaryTechnicalSkillKeywords: [],
       createdAt: now,
       updatedAt: now,
     };

@@ -4,7 +4,8 @@ export const AI_PROVIDER = Symbol('AI_PROVIDER');
 
 export type ResumeKeywordExtractionResult = {
   jobTitleKeywords: string[];
-  technicalSkillKeywords: string[];
+  mainTechnicalSkillKeywords: string[];
+  secondaryTechnicalSkillKeywords: string[];
 };
 
 export type CoverLetterJobInput = {

@@ -18,7 +18,8 @@ describe('job workflow use cases', () => {
     resumeMarkdown: '# Resume',
     coverLetterInstructionTemplate: '',
     jobTitleKeywords: [],
-    technicalSkillKeywords: [],
+    mainTechnicalSkillKeywords: [],
+    secondaryTechnicalSkillKeywords: [],
     createdAt: now,
     updatedAt: now,
   };

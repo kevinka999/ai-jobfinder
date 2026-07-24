@@ -55,7 +55,8 @@ export class UsersController {
   ): Promise<UserProfileResponseDto> {
     const profile = await this.saveProfileKeywordsUseCase.execute({
       jobTitleKeywords: request.jobTitleKeywords,
-      technicalSkillKeywords: request.technicalSkillKeywords,
+      mainTechnicalSkillKeywords: request.mainTechnicalSkillKeywords,
+      secondaryTechnicalSkillKeywords: request.secondaryTechnicalSkillKeywords,
     });
 
     return UserProfileResponseDto.fromDomain(profile);

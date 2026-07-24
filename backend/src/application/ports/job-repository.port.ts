@@ -41,7 +41,6 @@ export interface JobRepository {
     userId: string;
     applicationUrl: string;
     companyName: string;
-    title: string;
   }): Promise<Job | null>;
   findById(input: { userId: string; jobId: string }): Promise<Job | null>;
   findByIds(input: { userId: string; jobIds: string[] }): Promise<Job[]>;

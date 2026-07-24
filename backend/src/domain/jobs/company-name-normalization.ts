@@ -34,7 +34,9 @@ const LEGAL_SUFFIX_TOKENS = new Set([
 ]);
 
 const COMPANY_DESCRIPTOR_TOKENS = new Set([
+  'business',
   'consulting',
+  'data',
   'digital',
   'group',
   'service',

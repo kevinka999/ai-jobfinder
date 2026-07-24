@@ -4,7 +4,8 @@ export type SourcePlatformId =
 export type WorkModel = 'onsite' | 'hybrid' | 'remote';
 
 export type JobStatus = 'draft' | 'active' | 'applied';
-export type JobMatchingStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'stale';
+export type JobMatchingStatus =
+  'pending' | 'processing' | 'completed' | 'failed' | 'stale';
 
 export type ApplicationStatus =
   | 'applied'
@@ -19,7 +20,8 @@ export type UserProfileResponse = {
   resumeMarkdown: string;
   coverLetterInstructionTemplate: string;
   jobTitleKeywords: string[];
-  technicalSkillKeywords: TechnicalSkillKeyword[];
+  mainTechnicalSkillKeywords: TechnicalSkillKeyword[];
+  secondaryTechnicalSkillKeywords: TechnicalSkillKeyword[];
   matchingProfileVersion: number;
   createdAt: string;
   updatedAt: string;
@@ -52,7 +54,14 @@ export type JobResponse = {
     inputVersion: number;
     requestedVersion: number;
     errorMessage?: string;
-    evidence?: { titleScore: number; technicalScore: number; responsibilityScore: number; requirementScore: number; matchedSkills: string[]; missingOrWeakAreas: string[] };
+    evidence?: {
+      titleScore: number;
+      technicalScore: number;
+      responsibilityScore: number;
+      requirementScore: number;
+      matchedSkills: string[];
+      missingOrWeakAreas: string[];
+    };
   };
   postedAt?: string;
   applyDeadline?: string;

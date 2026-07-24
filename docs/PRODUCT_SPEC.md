@@ -29,7 +29,7 @@ The MVP is single-user and has no login. The backend still stores `userId` on al
 
 - Resume data is user-provided Markdown text.
 - AI is used only for:
-  - extracting resume job-title keywords and technical-skill keywords;
+  - extracting resume job-title keywords and classifying technical skills as main or secondary;
   - generating cover-letter drafts;
   - revising cover-letter drafts.
 - AI is not used to generate the scraping prompt.
@@ -69,9 +69,9 @@ The User Profile page lets the user paste their technical resume and experience 
 - Save resume Markdown.
 - Save reusable cover-letter instruction text.
 - View extracted job-title keywords.
-- View extracted technical-skill keywords.
+- View extracted main and secondary technical-skill keywords.
 - Add, delete, and save job-title keywords.
-- Add, delete, weight, and save technical-skill keywords from `1` to `10`.
+- Add, delete, weight, and save main and secondary technical-skill keywords from `1` to `10`.
 
 ### Save Resume Behavior
 
@@ -80,16 +80,17 @@ When the user saves the resume:
 1. Frontend sends the Markdown text to the backend.
 2. Backend calls the AI provider to extract:
    - `jobTitleKeywords`;
-   - `technicalSkillKeywords`.
+   - `mainTechnicalSkillKeywords`;
+   - `secondaryTechnicalSkillKeywords`.
 3. If extraction succeeds, backend saves the resume Markdown and replaces the stored generated keywords.
 4. Backend returns the updated profile.
 5. If extraction fails, nothing is saved. The user must retry.
 
 There is no Markdown validation for MVP beyond accepting text from the request.
 
-Job-title keywords and technical-skill keywords can be saved separately from the resume. This does not call the AI provider and does not modify the resume Markdown.
+Job-title keywords and both technical-skill categories can be saved separately from the resume. This does not call the AI provider and does not modify the resume Markdown.
 
-Generated keyword text is still replaced every time the resume is saved successfully. After extraction, the user can manually add or delete keywords without re-saving the resume. Existing technical-skill weights are preserved for keywords that remain present after extraction; new technical-skill keywords start with weight `5`.
+Generated keyword text and technical-skill categories are still replaced every time the resume is saved successfully. After extraction, the user can manually add or delete keywords without re-saving the resume. Existing technical-skill weights are preserved for keywords that remain present, even across a category change; new technical-skill keywords start with weight `5`.
 
 The user profile can store a cover-letter instruction template that prefills the cover-letter drawer's step-one instructions. It can be edited per generation and is saved separately from the resume.
 
@@ -127,7 +128,7 @@ For a broad search prompt, backend receives:
 
 Backend loads the default user's stored keywords and fills a deterministic prompt template. The prompt instructs the external AI agent to search the selected platforms, locations, and work models, then scrape job details and return a JSON object with a `jobs` array.
 
-The broad search prompt uses the stored job-title keywords and strong technical skills to find only strong-fit positions. It does not request or return matching scores; after a job is persisted, the backend asynchronously calculates the authoritative, explainable score from the saved profile.
+The broad search prompt returns only active/open postings whose roles and core stacks match the stored job-title keywords and strong main technical skills. Strong secondary skills are only a minor bonus and cannot compensate for a mismatch in the main technologies. Postings that explicitly require any level of German are excluded. Postings written in English or mentioning English as the working language or an international environment are prioritized; postings with no language information remain eligible. The prompt does not request or return matching scores; after a job is persisted, the backend asynchronously calculates the authoritative, explainable score from the saved profile.
 
 For a specific job links prompt, backend receives one or more posting URLs and fills a deterministic prompt template that instructs the external AI agent only to scrape those links and return the same `jobs` array shape. It does not load profile keywords or request matching data.
 
@@ -210,7 +211,9 @@ Soft-deleted active jobs are still included during duplicate detection so re-imp
 An imported job becomes `draft` if either of these deterministic rules matches:
 
 1. normalized `applicationUrl` matches an existing active or applied job;
-2. normalized `companyName` plus normalized `title` matches an existing active or applied job.
+2. the company-name match key matches an existing active or applied job, even when the title or description differs.
+
+Company-name matching reuses the same deterministic normalization as previous-company application history. It lowercases names, removes accents and punctuation, collapses spaces, strips common legal suffixes, and removes generic descriptors when a company-specific stem remains. This intentionally treats another posting from the same company as a possible duplicate that the user must review manually.
 
 No fuzzy matching, duplicate confidence, duplicate reason, or duplicate candidate array is needed for MVP.
 
@@ -309,7 +312,7 @@ Jobs can be edited from both:
 
 The Applications table also exposes the same job favorite star and can be sorted so favorited job applications appear first.
 
-Jobs and Applications tables show a previous-company-applications badge beside the company name inside the Job column. The count is loaded after the main table data so the table remains usable while the secondary lookup is still pending. A loading skeleton appears in the badge position until the lookup completes. The count excludes the row's own job and matches other applications by a normalized company-name key that removes common legal suffixes such as `GmbH`, `AG`, `Ltd`, or `Inc`, and generic descriptors such as `Software` when a company-specific stem remains. When the count is greater than zero, the user can click the badge to open a drawer that lists the matched application job titles, statuses, tech stacks, and posting links.
+Jobs and Applications tables show a previous-company-applications badge beside the company name inside the Job column. The count is loaded after the main table data so the table remains usable while the secondary lookup is still pending. A loading skeleton appears in the badge position until the lookup completes. The count excludes the row's own job and matches other applications by a normalized company-name key that removes common legal suffixes such as `GmbH`, `AG`, `Ltd`, or `Inc`, and generic descriptors such as `Software`, `Business`, or `Data` when a company-specific stem remains. When the count is greater than zero, the user can click the badge to open a drawer that lists the matched application job titles, statuses, tech stacks, and posting links.
 
 ### Generate Cover Letter Flow
 

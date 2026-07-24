@@ -10,6 +10,16 @@ describe('company name normalization', () => {
   it('removes generic company descriptors from company names', () => {
     expect(normalizeCompanyMatchKey('Sprad Software GmbH')).toBe('sprad');
     expect(normalizeCompanyMatchKey('Sprad')).toBe('sprad');
+    expect(normalizeCompanyMatchKey('HEROLD Business Data GmbH')).toBe(
+      'herold',
+    );
+    expect(normalizeCompanyMatchKey('HEROLD')).toBe('herold');
+  });
+
+  it('keeps descriptor-only company names usable', () => {
+    expect(normalizeCompanyMatchKey('Business Data GmbH')).toBe(
+      'business data',
+    );
   });
 
   it('normalizes punctuation, accents, and whitespace', () => {

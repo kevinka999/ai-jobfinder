@@ -36,5 +36,10 @@ export class SaveProfileKeywordsRequestDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => TechnicalSkillKeywordRequestDto)
-  technicalSkillKeywords!: TechnicalSkillKeywordRequestDto[];
+  mainTechnicalSkillKeywords!: TechnicalSkillKeywordRequestDto[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TechnicalSkillKeywordRequestDto)
+  secondaryTechnicalSkillKeywords!: TechnicalSkillKeywordRequestDto[];
 }

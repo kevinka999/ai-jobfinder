@@ -19,11 +19,18 @@ export function ProfilePage() {
   const [coverLetterInstructionTemplate, setCoverLetterInstructionTemplate] =
     useState('');
   const [jobTitleKeywords, setJobTitleKeywords] = useState<string[]>([]);
-  const [technicalSkillKeywords, setTechnicalSkillKeywords] = useState<
+  const [mainTechnicalSkillKeywords, setMainTechnicalSkillKeywords] = useState<
     TechnicalSkillKeyword[]
   >([]);
+  const [secondaryTechnicalSkillKeywords, setSecondaryTechnicalSkillKeywords] =
+    useState<TechnicalSkillKeyword[]>([]);
   const [newJobTitleKeyword, setNewJobTitleKeyword] = useState('');
-  const [newTechnicalSkillKeyword, setNewTechnicalSkillKeyword] = useState('');
+  const [newMainTechnicalSkillKeyword, setNewMainTechnicalSkillKeyword] =
+    useState('');
+  const [
+    newSecondaryTechnicalSkillKeyword,
+    setNewSecondaryTechnicalSkillKeyword,
+  ] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSavingResume, setIsSavingResume] = useState(false);
   const [isSavingInstructionTemplate, setIsSavingInstructionTemplate] =
@@ -38,7 +45,10 @@ export function ProfilePage() {
       nextProfile.coverLetterInstructionTemplate,
     );
     setJobTitleKeywords(nextProfile.jobTitleKeywords);
-    setTechnicalSkillKeywords(nextProfile.technicalSkillKeywords);
+    setMainTechnicalSkillKeywords(nextProfile.mainTechnicalSkillKeywords);
+    setSecondaryTechnicalSkillKeywords(
+      nextProfile.secondaryTechnicalSkillKeywords,
+    );
   }, []);
 
   useEffect(() => {
@@ -128,7 +138,11 @@ export function ProfilePage() {
       const nextProfile = await apiRequest<UserProfileResponse>(
         '/users/profile/keywords',
         {
-          body: JSON.stringify({ jobTitleKeywords, technicalSkillKeywords }),
+          body: JSON.stringify({
+            jobTitleKeywords,
+            mainTechnicalSkillKeywords,
+            secondaryTechnicalSkillKeywords,
+          }),
           method: 'POST',
         },
       );
@@ -159,12 +173,20 @@ export function ProfilePage() {
     );
   }
 
-  function addTechnicalSkillKeyword() {
-    const keyword = newTechnicalSkillKeyword.trim();
+  function addTechnicalSkillKeyword(category: 'main' | 'secondary') {
+    const keyword = (
+      category === 'main'
+        ? newMainTechnicalSkillKeyword
+        : newSecondaryTechnicalSkillKeyword
+    ).trim();
+    const allTechnicalSkills = [
+      ...mainTechnicalSkillKeywords,
+      ...secondaryTechnicalSkillKeywords,
+    ];
 
     if (
       !keyword ||
-      technicalSkillKeywords.some(
+      allTechnicalSkills.some(
         (skill) =>
           skill.keyword.toLocaleLowerCase() === keyword.toLocaleLowerCase(),
       )
@@ -172,21 +194,41 @@ export function ProfilePage() {
       return;
     }
 
-    setTechnicalSkillKeywords((currentSkills) => [
-      ...currentSkills,
-      { keyword, weight: 5 },
-    ]);
-    setNewTechnicalSkillKeyword('');
+    const setSkills =
+      category === 'main'
+        ? setMainTechnicalSkillKeywords
+        : setSecondaryTechnicalSkillKeywords;
+    setSkills((currentSkills) => [...currentSkills, { keyword, weight: 5 }]);
+    if (category === 'main') {
+      setNewMainTechnicalSkillKeyword('');
+    } else {
+      setNewSecondaryTechnicalSkillKeyword('');
+    }
   }
 
-  function deleteTechnicalSkillKeyword(keyword: string) {
-    setTechnicalSkillKeywords((currentSkills) =>
+  function deleteTechnicalSkillKeyword(
+    category: 'main' | 'secondary',
+    keyword: string,
+  ) {
+    const setSkills =
+      category === 'main'
+        ? setMainTechnicalSkillKeywords
+        : setSecondaryTechnicalSkillKeywords;
+    setSkills((currentSkills) =>
       currentSkills.filter((skill) => skill.keyword !== keyword),
     );
   }
 
-  function updateTechnicalSkillWeight(keyword: string, weight: number) {
-    setTechnicalSkillKeywords((currentSkills) =>
+  function updateTechnicalSkillWeight(
+    category: 'main' | 'secondary',
+    keyword: string,
+    weight: number,
+  ) {
+    const setSkills =
+      category === 'main'
+        ? setMainTechnicalSkillKeywords
+        : setSecondaryTechnicalSkillKeywords;
+    setSkills((currentSkills) =>
       currentSkills.map((skill) =>
         skill.keyword === keyword
           ? { ...skill, weight: clampTechnicalSkillWeight(weight) }
@@ -267,13 +309,30 @@ export function ProfilePage() {
             values={jobTitleKeywords}
           />
           <TechnicalSkillKeywordSection
-            label="Technical-skill keywords"
-            newKeyword={newTechnicalSkillKeyword}
-            onAdd={addTechnicalSkillKeyword}
-            onDelete={deleteTechnicalSkillKeyword}
-            onNewKeywordChange={setNewTechnicalSkillKeyword}
-            onWeightChange={updateTechnicalSkillWeight}
-            values={technicalSkillKeywords}
+            description="Core languages, runtimes, and role-defining frameworks."
+            label="Main technical skills"
+            newKeyword={newMainTechnicalSkillKeyword}
+            onAdd={() => addTechnicalSkillKeyword('main')}
+            onDelete={(keyword) => deleteTechnicalSkillKeyword('main', keyword)}
+            onNewKeywordChange={setNewMainTechnicalSkillKeyword}
+            onWeightChange={(keyword, weight) =>
+              updateTechnicalSkillWeight('main', keyword, weight)
+            }
+            values={mainTechnicalSkillKeywords}
+          />
+          <TechnicalSkillKeywordSection
+            description="Supporting libraries, platforms, and tools, regardless of expertise."
+            label="Secondary technical skills"
+            newKeyword={newSecondaryTechnicalSkillKeyword}
+            onAdd={() => addTechnicalSkillKeyword('secondary')}
+            onDelete={(keyword) =>
+              deleteTechnicalSkillKeyword('secondary', keyword)
+            }
+            onNewKeywordChange={setNewSecondaryTechnicalSkillKeyword}
+            onWeightChange={(keyword, weight) =>
+              updateTechnicalSkillWeight('secondary', keyword, weight)
+            }
+            values={secondaryTechnicalSkillKeywords}
           />
         </aside>
       </div>
@@ -348,6 +407,7 @@ function JobTitleKeywordSection({
 }
 
 function TechnicalSkillKeywordSection({
+  description,
   label,
   newKeyword,
   onAdd,
@@ -356,6 +416,7 @@ function TechnicalSkillKeywordSection({
   onWeightChange,
   values,
 }: {
+  description: string;
   label: string;
   newKeyword: string;
   onAdd: () => void;
@@ -369,9 +430,10 @@ function TechnicalSkillKeywordSection({
       <h2 className="mb-2.5 mt-0 text-[15px] font-bold text-app-text">
         {label}
       </h2>
+      <p className="mb-2 text-xs text-app-text-muted">{description}</p>
       <div className="mb-2 grid grid-cols-[minmax(0,1fr)_36px] gap-inline">
         <input
-          aria-label="New technical-skill keyword"
+          aria-label={`New ${label.toLocaleLowerCase()} keyword`}
           className={`${inputClassName} h-8`}
           onChange={(event) => onNewKeywordChange(event.target.value)}
           onKeyDown={(event) => {
@@ -383,10 +445,10 @@ function TechnicalSkillKeywordSection({
           value={newKeyword}
         />
         <Button
-          aria-label="Add technical-skill keyword"
+          aria-label={`Add ${label.toLocaleLowerCase()} keyword`}
           icon={<Plus size={15} />}
           onClick={onAdd}
-          title="Add technical skill"
+          title={`Add ${label.toLocaleLowerCase()} keyword`}
           variant="secondary"
         />
       </div>

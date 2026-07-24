@@ -58,7 +58,9 @@ export class GenerateJobSearchPromptUseCase {
       prompt: buildJobSearchPrompt({
         ...input,
         jobTitleKeywords: profile.jobTitleKeywords,
-        technicalSkillKeywords: profile.technicalSkillKeywords,
+        mainTechnicalSkillKeywords: profile.mainTechnicalSkillKeywords,
+        secondaryTechnicalSkillKeywords:
+          profile.secondaryTechnicalSkillKeywords,
       }),
     };
   }
@@ -66,12 +68,12 @@ export class GenerateJobSearchPromptUseCase {
 
 @Injectable()
 export class GenerateJobLinksPromptUseCase {
-  async execute(
+  execute(
     input: GenerateJobLinksPromptInput,
   ): Promise<GenerateJobSearchPromptOutput> {
-    return {
+    return Promise.resolve({
       prompt: buildJobLinksPrompt(input),
-    };
+    });
   }
 }
 
@@ -80,7 +82,8 @@ export function buildJobSearchPrompt(input: {
   cities: string[];
   workModels: WorkModel[];
   jobTitleKeywords: string[];
-  technicalSkillKeywords: TechnicalSkillKeyword[];
+  mainTechnicalSkillKeywords: TechnicalSkillKeyword[];
+  secondaryTechnicalSkillKeywords: TechnicalSkillKeyword[];
 }): string {
   const platforms = input.sourcePlatformIds.map(
     (id) => `${SOURCE_PLATFORMS[id].label} (${id})`,
@@ -97,13 +100,17 @@ export function buildJobSearchPrompt(input: {
     `- Source platforms: ${formatList(platforms)}`,
     `- Cities: ${formatList(input.cities)}`,
     `- Work models: ${formatList(input.workModels)}`,
+    '- Include only currently active/open job postings.',
     '',
     ...buildStrongFitSearchSection({
       jobTitleKeywords: input.jobTitleKeywords,
-      technicalSkillKeywords: input.technicalSkillKeywords,
+      mainTechnicalSkillKeywords: input.mainTechnicalSkillKeywords,
+      secondaryTechnicalSkillKeywords: input.secondaryTechnicalSkillKeywords,
     }),
     '',
-    'Return only positions that are strong fits for the stored direction and strongest skills. Do not calculate or return a matching score or matching reason.',
+    ...buildJobLanguageSection(),
+    '',
+    'Return only active positions that match the target roles and required main technologies. Order stronger English-language signals first. Do not calculate or return a matching score or matching reason.',
     '',
     'Return JSON only. Do not include Markdown fences, prose, comments, or explanations.',
     'The response must match this JSON Schema:',
@@ -118,9 +125,7 @@ export function buildJobSearchPrompt(input: {
   ].join('\n');
 }
 
-export function buildJobLinksPrompt(input: {
-  jobLinks: string[];
-}): string {
+export function buildJobLinksPrompt(input: { jobLinks: string[] }): string {
   const outputSchema = buildJobSearchOutputSchema({
     sourcePlatformIds: [...SOURCE_PLATFORM_IDS],
     workModels: [...WORK_MODELS],
@@ -204,19 +209,37 @@ function formatList(values: readonly string[]): string {
 
 function buildStrongFitSearchSection(input: {
   jobTitleKeywords: string[];
-  technicalSkillKeywords: TechnicalSkillKeyword[];
+  mainTechnicalSkillKeywords: TechnicalSkillKeyword[];
+  secondaryTechnicalSkillKeywords: TechnicalSkillKeyword[];
 }): string[] {
-  const strongSkills = filterSkillsByWeight(
-    input.technicalSkillKeywords,
+  const strongMainSkills = filterSkillsByWeight(
+    input.mainTechnicalSkillKeywords,
+    8,
+    10,
+  );
+  const strongSecondarySkills = filterSkillsByWeight(
+    input.secondaryTechnicalSkillKeywords,
     8,
     10,
   );
   return [
-    'Strong-fit search profile:',
-    '- Search only for roles whose central responsibilities align with these job-title keywords and strong technical skills.',
+    'Target profile:',
+    '- Search only for roles whose central responsibilities align with these job-title keywords and whose core stack matches the required main technologies.',
     `- Job-title keywords: ${formatList(input.jobTitleKeywords)}`,
-    `- Strong technical skills (weight 8-10): ${formatTechnicalSkillKeywords(strongSkills)}`,
-    '- Do not include roles where only isolated keywords overlap or where the core work is outside this direction.',
+    `- Required main technologies (weight 8-10): ${formatTechnicalSkillKeywords(strongMainSkills)}`,
+    `- Optional secondary technologies (weight 8-10): ${formatTechnicalSkillKeywords(strongSecondarySkills)}`,
+    '- Main technologies are the decisive technical filter: include roles that match most of them in the central responsibilities or required stack.',
+    '- Secondary technologies are only a minor bonus. Do not reject an otherwise strong role because they are absent, and never use them to compensate for a mismatch in the main technologies.',
+    '- Exclude roles whose core stack or responsibilities point in a different technical direction, even if isolated keywords overlap.',
+  ];
+}
+
+function buildJobLanguageSection(): string[] {
+  return [
+    'Language rules:',
+    '- Exclude a job when the posting explicitly requires any level of German.',
+    '- Prioritize jobs with clear English-language signals: the posting is written in English, English is stated as the working language, or the posting mentions an international team or company environment.',
+    '- Do not exclude a job merely because it does not state a working language. Keep it eligible, but rank jobs with explicit English-language signals first.',
   ];
 }
 

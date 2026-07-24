@@ -25,8 +25,9 @@ export class MongoUserRepository implements UserRepository {
             _id: DEFAULT_USER_ID,
             coverLetterInstructionTemplate: '',
             jobTitleKeywords: [],
+            mainTechnicalSkillKeywords: [],
             resumeMarkdown: '',
-            technicalSkillKeywords: [],
+            secondaryTechnicalSkillKeywords: [],
             matchingProfileVersion: 1,
           },
         },
@@ -45,23 +46,29 @@ export class MongoUserRepository implements UserRepository {
   async saveResumeWithKeywords(input: {
     resumeMarkdown: string;
     jobTitleKeywords: string[];
-    technicalSkillKeywords: string[];
+    mainTechnicalSkillKeywords: string[];
+    secondaryTechnicalSkillKeywords: string[];
   }): Promise<UserProfile> {
     const existingProfile = await this.resolveDefaultUser();
     const existingWeights = new Map(
-      existingProfile.technicalSkillKeywords.map((skill) => [
-        skill.keyword.toLocaleLowerCase(),
-        skill.weight,
-      ]),
+      [
+        ...existingProfile.mainTechnicalSkillKeywords,
+        ...existingProfile.secondaryTechnicalSkillKeywords,
+      ].map((skill) => [skill.keyword.toLocaleLowerCase(), skill.weight]),
     );
-    const technicalSkillKeywords = toStringKeywords(
-      input.technicalSkillKeywords,
-    ).map((keyword) => ({
-      keyword,
-      weight:
-        existingWeights.get(keyword.toLocaleLowerCase()) ??
-        DEFAULT_TECHNICAL_SKILL_WEIGHT,
-    }));
+    const mainTechnicalSkillKeywords = withTechnicalSkillWeights(
+      input.mainTechnicalSkillKeywords,
+      existingWeights,
+    );
+    const mainKeywords = new Set(
+      mainTechnicalSkillKeywords.map((skill) =>
+        skill.keyword.toLocaleLowerCase(),
+      ),
+    );
+    const secondaryTechnicalSkillKeywords = withTechnicalSkillWeights(
+      input.secondaryTechnicalSkillKeywords,
+      existingWeights,
+    ).filter((skill) => !mainKeywords.has(skill.keyword.toLocaleLowerCase()));
 
     const user = await this.userModel
       .findByIdAndUpdate(
@@ -70,8 +77,10 @@ export class MongoUserRepository implements UserRepository {
           $set: {
             resumeMarkdown: input.resumeMarkdown,
             jobTitleKeywords: toStringKeywords(input.jobTitleKeywords),
-            technicalSkillKeywords,
+            mainTechnicalSkillKeywords,
+            secondaryTechnicalSkillKeywords,
           },
+          $unset: { technicalSkillKeywords: '' },
           $inc: { matchingProfileVersion: 1 },
         },
         {
@@ -112,18 +121,32 @@ export class MongoUserRepository implements UserRepository {
 
   async saveProfileKeywords(input: {
     jobTitleKeywords: string[];
-    technicalSkillKeywords: TechnicalSkillKeyword[];
+    mainTechnicalSkillKeywords: TechnicalSkillKeyword[];
+    secondaryTechnicalSkillKeywords: TechnicalSkillKeyword[];
   }): Promise<UserProfile> {
+    const mainTechnicalSkillKeywords = toTechnicalSkillKeywords(
+      input.mainTechnicalSkillKeywords,
+    );
+    const mainKeywords = new Set(
+      mainTechnicalSkillKeywords.map((skill) =>
+        skill.keyword.toLocaleLowerCase(),
+      ),
+    );
+
     const user = await this.userModel
       .findByIdAndUpdate(
         DEFAULT_USER_ID,
         {
           $set: {
             jobTitleKeywords: toStringKeywords(input.jobTitleKeywords),
-            technicalSkillKeywords: toTechnicalSkillKeywords(
-              input.technicalSkillKeywords,
+            mainTechnicalSkillKeywords,
+            secondaryTechnicalSkillKeywords: toTechnicalSkillKeywords(
+              input.secondaryTechnicalSkillKeywords,
+            ).filter(
+              (skill) => !mainKeywords.has(skill.keyword.toLocaleLowerCase()),
             ),
           },
+          $unset: { technicalSkillKeywords: '' },
           $inc: { matchingProfileVersion: 1 },
         },
         {
@@ -140,18 +163,43 @@ export class MongoUserRepository implements UserRepository {
 }
 
 function toUserProfile(user: UserDocument): UserProfile {
+  const mainTechnicalSkillKeywords = toTechnicalSkillKeywords(
+    user.mainTechnicalSkillKeywords,
+  );
+  const mainKeywords = new Set(
+    mainTechnicalSkillKeywords.map((skill) =>
+      skill.keyword.toLocaleLowerCase(),
+    ),
+  );
+  const secondaryTechnicalSkillKeywords = toTechnicalSkillKeywords(
+    user.secondaryTechnicalSkillKeywords?.length
+      ? user.secondaryTechnicalSkillKeywords
+      : user.technicalSkillKeywords,
+  ).filter((skill) => !mainKeywords.has(skill.keyword.toLocaleLowerCase()));
+
   return {
     id: user._id,
     resumeMarkdown: user.resumeMarkdown,
     coverLetterInstructionTemplate: user.coverLetterInstructionTemplate ?? '',
     jobTitleKeywords: toStringKeywords(user.jobTitleKeywords),
-    technicalSkillKeywords: toTechnicalSkillKeywords(
-      user.technicalSkillKeywords,
-    ),
+    mainTechnicalSkillKeywords,
+    secondaryTechnicalSkillKeywords,
     matchingProfileVersion: Math.max(1, user.matchingProfileVersion ?? 1),
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
+}
+
+function withTechnicalSkillWeights(
+  values: unknown,
+  existingWeights: ReadonlyMap<string, number>,
+): TechnicalSkillKeyword[] {
+  return toStringKeywords(values).map((keyword) => ({
+    keyword,
+    weight:
+      existingWeights.get(keyword.toLocaleLowerCase()) ??
+      DEFAULT_TECHNICAL_SKILL_WEIGHT,
+  }));
 }
 
 function toStringKeywords(value: unknown): string[] {

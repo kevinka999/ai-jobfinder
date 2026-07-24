@@ -20,7 +20,7 @@ The current Job Search page supports deterministic prompt generation plus manual
 
 - Keep the existing manual prompt and pasted JSON import workflow working.
 - Use the same import schema and validation rules as `POST /jobs/import`.
-- Use stored user profile data, especially `jobTitleKeywords` and weighted `technicalSkillKeywords`, as the qualification source.
+- Use stored user profile data, especially `jobTitleKeywords` and weighted `mainTechnicalSkillKeywords` and `secondaryTechnicalSkillKeywords`, as the qualification source.
 - Treat company AI search as a backend automation workflow, not as frontend scraping.
 - Persist process state before queueing so every company submission has a durable audit trail.
 - Use polymorphism for the search execution provider. Codex CLI is only the first provider implementation.
@@ -72,7 +72,11 @@ Define an application port for the execution strategy.
 type CompanyJobSearchProviderInput = {
   companyName: string;
   jobTitleKeywords: string[];
-  technicalSkillKeywords: Array<{
+  mainTechnicalSkillKeywords: Array<{
+    keyword: string;
+    weight: number;
+  }>;
+  secondaryTechnicalSkillKeywords: Array<{
     keyword: string;
     weight: number;
   }>;
@@ -279,7 +283,7 @@ References: [Job import API](API_CONTRACT.md#job-import-api), [Job domain](DOMAI
 
 - Implement BullMQ processor for company search items.
 - Load the process item and mark it `processing`.
-- Load the user's stored job-title and technical-skill keywords.
+- Load the user's stored job-title and main and secondary technical-skill keywords.
 - Call the injected `CompanyJobSearchProvider`.
 - Pass returned jobs into the existing import use case or shared import service.
 - Reuse strict row-level validation, partial success, duplicate detection, active/draft creation, and invalid row handling.

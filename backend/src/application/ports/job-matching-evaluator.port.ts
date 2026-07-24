@@ -5,7 +5,11 @@ export const JOB_MATCHING_EVALUATOR = Symbol('JOB_MATCHING_EVALUATOR');
 
 export type JobMatchingEvaluationInput = {
   job: { id: string; title: string; description: string; techStack?: string[] };
-  profile: { jobTitleKeywords: string[]; technicalSkillKeywords: TechnicalSkillKeyword[] };
+  profile: {
+    jobTitleKeywords: string[];
+    mainTechnicalSkillKeywords: TechnicalSkillKeyword[];
+    secondaryTechnicalSkillKeywords: TechnicalSkillKeyword[];
+  };
 };
 
 export type JobMatchingEvaluationResult = {
@@ -15,5 +19,7 @@ export type JobMatchingEvaluationResult = {
 };
 
 export interface JobMatchingEvaluator {
-  evaluate(input: JobMatchingEvaluationInput): Promise<JobMatchingEvaluationResult>;
+  evaluate(
+    input: JobMatchingEvaluationInput,
+  ): Promise<JobMatchingEvaluationResult>;
 }

@@ -49,10 +49,13 @@ describe('GenerateJobSearchPromptUseCase', () => {
       resumeMarkdown: '# Resume',
       coverLetterInstructionTemplate: '',
       jobTitleKeywords: ['Frontend Developer', 'Full Stack Developer'],
-      technicalSkillKeywords: [
+      mainTechnicalSkillKeywords: [
         { keyword: 'React', weight: 9 },
         { keyword: 'TypeScript', weight: 10 },
         { keyword: 'NestJS', weight: 8 },
+      ],
+      secondaryTechnicalSkillKeywords: [
+        { keyword: 'Kafka', weight: 9 },
         { keyword: 'Docker', weight: 6 },
         { keyword: 'Java', weight: 2 },
       ],
@@ -75,12 +78,25 @@ describe('GenerateJobSearchPromptUseCase', () => {
     );
     expect(result.prompt).toContain('Vienna, Salzburg');
     expect(result.prompt).toContain('onsite, hybrid, remote');
+    expect(result.prompt).toContain('only currently active/open job postings');
     expect(result.prompt).toContain('Frontend Developer, Full Stack Developer');
     expect(result.prompt).toContain(
-      'Strong technical skills (weight 8-10): React (9/10), TypeScript (10/10), NestJS (8/10)',
+      'Required main technologies (weight 8-10): React (9/10), TypeScript (10/10), NestJS (8/10)',
     );
     expect(result.prompt).toContain(
-      'Return only positions that are strong fits',
+      'Optional secondary technologies (weight 8-10): Kafka (9/10)',
+    );
+    expect(result.prompt).toContain(
+      'Secondary technologies are only a minor bonus',
+    );
+    expect(result.prompt).toContain(
+      'Exclude a job when the posting explicitly requires any level of German',
+    );
+    expect(result.prompt).toContain(
+      'the posting is written in English, English is stated as the working language, or the posting mentions an international team or company environment',
+    );
+    expect(result.prompt).toContain(
+      'Do not exclude a job merely because it does not state a working language',
     );
     expect(result.prompt).toContain('Return JSON only');
     expect(result.prompt).toContain(
@@ -112,8 +128,12 @@ describe('GenerateJobSearchPromptUseCase', () => {
     expect(schema.properties.jobs.items.properties.workModel).toEqual({
       enum: ['onsite', 'hybrid', 'remote'],
     });
-    expect(schema.properties.jobs.items.properties).not.toHaveProperty('matchingScore');
-    expect(schema.properties.jobs.items.properties).not.toHaveProperty('matchingReason');
+    expect(schema.properties.jobs.items.properties).not.toHaveProperty(
+      'matchingScore',
+    );
+    expect(schema.properties.jobs.items.properties).not.toHaveProperty(
+      'matchingReason',
+    );
   });
 
   it('loads stored keywords and returns a deterministic prompt for pasted job links', async () => {
@@ -122,10 +142,11 @@ describe('GenerateJobSearchPromptUseCase', () => {
       resumeMarkdown: '# Resume',
       coverLetterInstructionTemplate: '',
       jobTitleKeywords: ['Frontend Developer'],
-      technicalSkillKeywords: [
+      mainTechnicalSkillKeywords: [
         { keyword: 'React', weight: 9 },
         { keyword: 'TypeScript', weight: 10 },
       ],
+      secondaryTechnicalSkillKeywords: [],
       matchingProfileVersion: 1,
       createdAt: now,
       updatedAt: now,
@@ -176,13 +197,17 @@ describe('buildJobSearchPrompt', () => {
       cities: ['Graz'],
       workModels: ['onsite'],
       jobTitleKeywords: [],
-      technicalSkillKeywords: [],
+      mainTechnicalSkillKeywords: [],
+      secondaryTechnicalSkillKeywords: [],
     });
 
     expect(prompt).toContain('karriere.at (karriere)');
     expect(prompt).toContain('Job-title keywords: (none stored)');
     expect(prompt).toContain(
-      'Strong technical skills (weight 8-10): (none stored)',
+      'Required main technologies (weight 8-10): (none stored)',
+    );
+    expect(prompt).toContain(
+      'Optional secondary technologies (weight 8-10): (none stored)',
     );
 
     const schema = extractJsonSchema(prompt);

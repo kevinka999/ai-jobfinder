@@ -33,17 +33,20 @@ describe('SaveResumeUseCase', () => {
       resumeMarkdown: '# Resume',
       coverLetterInstructionTemplate: '',
       jobTitleKeywords: ['Frontend Developer'],
-      technicalSkillKeywords: [
+      mainTechnicalSkillKeywords: [
         { keyword: 'React', weight: 5 },
         { keyword: 'TypeScript', weight: 5 },
       ],
+      secondaryTechnicalSkillKeywords: [{ keyword: 'Kafka', weight: 5 }],
+      matchingProfileVersion: 2,
       createdAt: now,
       updatedAt: now,
     };
 
     aiProvider.extractResumeKeywords.mockResolvedValue({
       jobTitleKeywords: ['Frontend Developer'],
-      technicalSkillKeywords: ['React', 'TypeScript'],
+      mainTechnicalSkillKeywords: ['React', 'TypeScript'],
+      secondaryTechnicalSkillKeywords: ['Kafka'],
     });
     userRepository.saveResumeWithKeywords.mockResolvedValue(updatedProfile);
 
@@ -57,7 +60,8 @@ describe('SaveResumeUseCase', () => {
     expect(userRepository.saveResumeWithKeywords).toHaveBeenCalledWith({
       resumeMarkdown: '# Resume',
       jobTitleKeywords: ['Frontend Developer'],
-      technicalSkillKeywords: ['React', 'TypeScript'],
+      mainTechnicalSkillKeywords: ['React', 'TypeScript'],
+      secondaryTechnicalSkillKeywords: ['Kafka'],
     });
   });
 

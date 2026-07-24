@@ -51,7 +51,6 @@ export class ImportJobsUseCase {
         userId: user.id,
         applicationUrl: row.value.applicationUrl,
         companyName: row.value.companyName,
-        title: row.value.title,
       });
 
       const createdJob = await this.jobRepository.create({

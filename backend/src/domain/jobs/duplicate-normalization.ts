@@ -33,12 +33,3 @@ export function normalizeApplicationUrl(value: string): string {
     return trimmedValue.toLowerCase().replace(/\/+$/, '');
   }
 }
-
-export function normalizeComparableText(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}

@@ -2,10 +2,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 import { SOURCE_PLATFORM_IDS } from '../../../domain/source-platforms/source-platform';
 import type { SourcePlatformId } from '../../../domain/source-platforms/source-platform';
-import {
-  normalizeApplicationUrl,
-  normalizeComparableText,
-} from '../../../domain/jobs/duplicate-normalization';
+import { normalizeApplicationUrl } from '../../../domain/jobs/duplicate-normalization';
+import { normalizeCompanyMatchKey } from '../../../domain/jobs/company-name-normalization';
 import { JOB_STATUSES } from '../../../domain/jobs/job-status';
 import type { JobStatus } from '../../../domain/jobs/job-status';
 import { WORK_MODELS } from '../../../domain/jobs/work-model';
@@ -122,9 +120,6 @@ export class Job {
   @Prop({ required: true, select: false, type: String })
   normalizedCompanyName!: string;
 
-  @Prop({ required: true, select: false, type: String })
-  normalizedTitle!: string;
-
   createdAt!: Date;
 
   updatedAt!: Date;
@@ -134,8 +129,7 @@ export const JobSchema = SchemaFactory.createForClass(Job);
 
 JobSchema.pre('validate', function () {
   this.normalizedApplicationUrl = normalizeApplicationUrl(this.applicationUrl);
-  this.normalizedCompanyName = normalizeComparableText(this.companyName);
-  this.normalizedTitle = normalizeComparableText(this.title);
+  this.normalizedCompanyName = normalizeCompanyMatchKey(this.companyName);
 });
 
 JobSchema.index({ userId: 1, status: 1, deletedAt: 1 });
@@ -145,6 +139,5 @@ JobSchema.index({ userId: 1, normalizedApplicationUrl: 1, status: 1 });
 JobSchema.index({
   userId: 1,
   normalizedCompanyName: 1,
-  normalizedTitle: 1,
   status: 1,
 });

@@ -10,7 +10,8 @@ export type UserProfile = {
   resumeMarkdown: string;
   coverLetterInstructionTemplate: string;
   jobTitleKeywords: string[];
-  technicalSkillKeywords: TechnicalSkillKeyword[];
+  mainTechnicalSkillKeywords: TechnicalSkillKeyword[];
+  secondaryTechnicalSkillKeywords: TechnicalSkillKeyword[];
   matchingProfileVersion: number;
   createdAt: Date;
   updatedAt: Date;

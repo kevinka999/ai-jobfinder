@@ -24,10 +24,9 @@ describe('SaveProfileKeywordsUseCase', () => {
       resumeMarkdown: '# Resume',
       coverLetterInstructionTemplate: '',
       jobTitleKeywords: ['Backend Developer', 'Full Stack Developer'],
-      technicalSkillKeywords: [
-        { keyword: 'NestJS', weight: 10 },
-        { keyword: 'Java', weight: 2 },
-      ],
+      mainTechnicalSkillKeywords: [{ keyword: 'Java', weight: 2 }],
+      secondaryTechnicalSkillKeywords: [{ keyword: 'NestJS', weight: 10 }],
+      matchingProfileVersion: 2,
       createdAt: now,
       updatedAt: now,
     };
@@ -37,19 +36,15 @@ describe('SaveProfileKeywordsUseCase', () => {
     await expect(
       useCase.execute({
         jobTitleKeywords: ['Backend Developer', 'Full Stack Developer'],
-        technicalSkillKeywords: [
-          { keyword: 'NestJS', weight: 10 },
-          { keyword: 'Java', weight: 2 },
-        ],
+        mainTechnicalSkillKeywords: [{ keyword: 'Java', weight: 2 }],
+        secondaryTechnicalSkillKeywords: [{ keyword: 'NestJS', weight: 10 }],
       }),
     ).resolves.toEqual(updatedProfile);
 
     expect(userRepository.saveProfileKeywords).toHaveBeenCalledWith({
       jobTitleKeywords: ['Backend Developer', 'Full Stack Developer'],
-      technicalSkillKeywords: [
-        { keyword: 'NestJS', weight: 10 },
-        { keyword: 'Java', weight: 2 },
-      ],
+      mainTechnicalSkillKeywords: [{ keyword: 'Java', weight: 2 }],
+      secondaryTechnicalSkillKeywords: [{ keyword: 'NestJS', weight: 10 }],
     });
     expect(userRepository.saveResumeWithKeywords).not.toHaveBeenCalled();
   });

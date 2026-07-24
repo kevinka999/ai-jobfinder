@@ -107,7 +107,7 @@ References: [dependency injection](../backend/docs/ARCHITECTURE.md#dependency-in
 
 - Use cases depend on the provider interface, not OpenAI directly.
 - OpenAI implementation is the only implementation wired for MVP.
-- Keyword extraction returns `jobTitleKeywords` and `technicalSkillKeywords`.
+- Keyword extraction returns `jobTitleKeywords`, `mainTechnicalSkillKeywords`, and `secondaryTechnicalSkillKeywords`.
 - Cover-letter methods return `draftMarkdown`.
 
 ## Phase 4: User Profile API
@@ -155,8 +155,8 @@ References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placem
 ### Acceptance Criteria
 
 - Endpoint does not call AI.
-- Prompt includes selected platforms, cities, work models, job-title keywords, technical-skill keywords, and import schema.
-- Link prompt includes provided URLs, job-title keywords, technical-skill keywords, and import schema.
+- Search prompt includes selected platforms, cities, work models, job-title keywords, both technical-skill categories, English-language preference rules, German-requirement exclusion, and import schema.
+- Link prompt includes provided URLs and the import schema.
 - Prompt instructs external AI to return JSON only.
 
 ## Phase 6: Job Import API
@@ -187,7 +187,7 @@ References: [workflow placement](../backend/docs/ARCHITECTURE.md#workflow-placem
   - `rawText`.
 - Implement row-level validation errors.
 - Import valid rows even if other rows are invalid.
-- Implement duplicate detection against current user's active and applied jobs.
+- Implement duplicate detection against current user's active and applied jobs by normalized URL or the shared company-name match key.
 - Ignore existing draft jobs in duplicate detection.
 - Store duplicates as `draft`.
 - Store non-duplicates as `active`.
@@ -330,7 +330,7 @@ References: [User profile API](API_CONTRACT.md#user-profile-api) and [User domai
 - Build save action.
 - Build cover-letter instruction template textarea with a separate save action.
 - Show extracted job-title keywords with add/delete controls.
-- Show extracted technical-skill keywords with add/delete controls and editable weights.
+- Show extracted main and secondary technical-skill keywords with add/delete controls and editable weights.
 - Build separate keyword save action.
 - Handle extraction/save loading state.
 - Handle extraction failure as a save failure.

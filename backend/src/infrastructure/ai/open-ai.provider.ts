@@ -16,13 +16,21 @@ const DEFAULT_MODEL = 'gpt-4.1-mini';
 const resumeKeywordsSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['jobTitleKeywords', 'technicalSkillKeywords'],
+  required: [
+    'jobTitleKeywords',
+    'mainTechnicalSkillKeywords',
+    'secondaryTechnicalSkillKeywords',
+  ],
   properties: {
     jobTitleKeywords: {
       type: 'array',
       items: { type: 'string' },
     },
-    technicalSkillKeywords: {
+    mainTechnicalSkillKeywords: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    secondaryTechnicalSkillKeywords: {
       type: 'array',
       items: { type: 'string' },
     },
@@ -141,17 +149,28 @@ export function parseResumeKeywordsOutput(
 ): ResumeKeywordExtractionResult {
   const value = parseJsonObject(responseText);
   const jobTitleKeywords = normalizeStringArray(value.jobTitleKeywords);
-  const technicalSkillKeywords = normalizeStringArray(
-    value.technicalSkillKeywords,
+  const mainTechnicalSkillKeywords = normalizeStringArray(
+    value.mainTechnicalSkillKeywords,
   );
+  const mainSkills = new Set(
+    mainTechnicalSkillKeywords.map((keyword) => keyword.toLocaleLowerCase()),
+  );
+  const secondaryTechnicalSkillKeywords = normalizeStringArray(
+    value.secondaryTechnicalSkillKeywords,
+  ).filter((keyword) => !mainSkills.has(keyword.toLocaleLowerCase()));
 
-  if (jobTitleKeywords.length === 0 && technicalSkillKeywords.length === 0) {
+  if (
+    jobTitleKeywords.length === 0 &&
+    mainTechnicalSkillKeywords.length === 0 &&
+    secondaryTechnicalSkillKeywords.length === 0
+  ) {
     throw new Error('OpenAI keyword extraction returned no keywords.');
   }
 
   return {
     jobTitleKeywords,
-    technicalSkillKeywords,
+    mainTechnicalSkillKeywords,
+    secondaryTechnicalSkillKeywords,
   };
 }
 

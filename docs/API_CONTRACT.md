@@ -67,7 +67,11 @@ type UserProfileResponse = {
   resumeMarkdown: string;
   coverLetterInstructionTemplate: string;
   jobTitleKeywords: string[];
-  technicalSkillKeywords: Array<{
+  mainTechnicalSkillKeywords: Array<{
+    keyword: string;
+    weight: number;
+  }>;
+  secondaryTechnicalSkillKeywords: Array<{
     keyword: string;
     weight: number;
   }>;
@@ -185,9 +189,9 @@ Saves the user's resume Markdown and regenerates keywords synchronously.
 The backend must:
 
 1. receive Markdown text;
-2. call the injected AI provider to extract `jobTitleKeywords` and `technicalSkillKeywords`;
+2. call the injected AI provider to extract `jobTitleKeywords`, `mainTechnicalSkillKeywords`, and `secondaryTechnicalSkillKeywords`;
 3. if extraction succeeds, save resume Markdown and replace old generated keywords;
-4. preserve existing technical-skill weights for keywords that remain present and assign new technical-skill keywords weight `5`;
+4. preserve existing technical-skill weights for keywords that remain present, even if their category changes, and assign new technical-skill keywords weight `5`;
 5. return the updated profile;
 6. if extraction fails, save nothing and return an error.
 
@@ -233,7 +237,7 @@ type Response = UserProfileResponse;
 
 ### POST /users/profile/keywords
 
-Saves the user's job-title keywords and technical-skill keywords separately from the resume. This endpoint does not call the AI provider and does not change the stored resume Markdown.
+Saves the user's job-title, main technical-skill, and secondary technical-skill keywords separately from the resume. This endpoint does not call the AI provider and does not change the stored resume Markdown.
 
 The request sends the full current keyword lists. Missing keywords are deleted. New keywords are added. Technical-skill weights must be integers from `1` to `10`.
 
@@ -242,7 +246,11 @@ The request sends the full current keyword lists. Missing keywords are deleted. 
 ```ts
 type Request = {
   jobTitleKeywords: string[];
-  technicalSkillKeywords: Array<{
+  mainTechnicalSkillKeywords: Array<{
+    keyword: string;
+    weight: number;
+  }>;
+  secondaryTechnicalSkillKeywords: Array<{
     keyword: string;
     weight: number;
   }>;
@@ -265,7 +273,7 @@ This endpoint does not call AI.
 
 The backend must:
 
-1. load the default user's stored job-title keywords and weighted technical-skill keywords;
+1. load the default user's stored job-title keywords and weighted main and secondary technical-skill keywords;
 2. validate selected platform IDs, cities, and work models;
 3. fill a hardcoded prompt template;
 4. include the required JSON result shape;
@@ -296,7 +304,11 @@ The generated prompt should instruct the external AI agent to:
 - search only the selected source platforms;
 - search in the selected cities;
 - respect selected work models;
-- use the user's generated job-title keywords and strong technical-skill keywords to return only strong-fit positions;
+- include only active/open postings whose roles and core stacks match the user's generated job-title keywords and strong main technical-skill keywords;
+- treat strong secondary skills only as a minor bonus, never as a substitute for matching the main technologies;
+- exclude postings that explicitly require any level of German;
+- prioritize postings written in English or explicitly mentioning English as the working language or an international team/company environment;
+- keep postings with no stated working language eligible, but rank clearer English-language opportunities first;
 - scrape and extract job details as the primary task;
 - include application links;
 - include job descriptions;
@@ -428,11 +440,13 @@ For each valid job row:
 
 1. Compare against current user's existing jobs with `status = "active"` or `status = "applied"`, including soft-deleted active jobs.
 2. If normalized `applicationUrl` matches, import as `draft`.
-3. If normalized `companyName + title` matches, import as `draft`.
+3. If the company-name match key matches, import as `draft` even when title or description differs.
 4. If no duplicate match exists, import as `active`.
 5. If imported as `draft`, set `metadata.possibleDuplicatedJobId` to the matched existing job ID.
 
 Existing draft jobs are ignored during duplicate detection.
+
+Company-name matching uses the same deterministic match-key normalization as `POST /applications/company-history`: lowercase, accent and punctuation removal, collapsed spaces, legal-suffix stripping, and generic-descriptor removal when a company-specific stem remains. Same-company imports are possible duplicates for later manual review; they are not automatically classified as the same role.
 
 Invalid rows are skipped and returned as row errors.
 
@@ -666,7 +680,7 @@ The backend must:
 4. exclude the requested row's own job from its match list;
 5. return matched application job titles, statuses, tech stacks, and application URLs.
 
-Company matching is deterministic string normalization, not fuzzy matching. The match key lowercases names, removes accents and punctuation, collapses spaces, strips common legal suffixes such as `GmbH`, `m.b.H`, `AG`, `KG`, `OG`, `Ltd`, `Limited`, `Inc`, `Corp`, `Corporation`, `LLC`, `PLC`, and `SE`, and removes generic descriptors such as `Software`, `Technology`, `Digital`, `Solutions`, `Services`, or `Group` when a company-specific stem remains.
+Company matching is deterministic string normalization, not fuzzy matching. The match key lowercases names, removes accents and punctuation, collapses spaces, strips common legal suffixes such as `GmbH`, `m.b.H`, `AG`, `KG`, `OG`, `Ltd`, `Limited`, `Inc`, `Corp`, `Corporation`, `LLC`, `PLC`, and `SE`, and removes generic descriptors such as `Business`, `Data`, `Software`, `Technology`, `Digital`, `Solutions`, `Services`, or `Group` when a company-specific stem remains.
 
 #### Request
 
@@ -836,7 +850,8 @@ export interface AiProvider {
     resumeMarkdown: string;
   }): Promise<{
     jobTitleKeywords: string[];
-    technicalSkillKeywords: string[];
+    mainTechnicalSkillKeywords: string[];
+    secondaryTechnicalSkillKeywords: string[];
   }>;
 
   generateCoverLetterDraft(input: {
